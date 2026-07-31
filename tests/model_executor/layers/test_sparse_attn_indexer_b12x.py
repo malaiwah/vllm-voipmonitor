@@ -288,6 +288,88 @@ def _install_fake_b12x_dcp_merge(monkeypatch, run_row_topk, *, world_size: int):
     )
 
 
+def test_query_split_gathers_indices_in_place_without_scores():
+    calls: list[tuple[int, int]] = []
+
+    class FakePyNccl:
+        disabled = False
+
+        def all_gather(self, output, input_):
+            calls.append((output.data_ptr(), input_.data_ptr()))
+            rows = input_.shape[0]
+            output[:rows].fill_(10)
+            output[rows:].fill_(20)
+
+    group = types.SimpleNamespace(
+        world_size=2,
+        rank_in_group=1,
+        device_communicator=types.SimpleNamespace(pynccl_comm=FakePyNccl()),
+    )
+    gathered_indices = torch.full((4, 3), -1, dtype=torch.int32)
+    local_indices = gathered_indices[2:]
+    local_indices.fill_(20)
+    scores = torch.arange(12, dtype=torch.float32).reshape(4, 3)
+    scores_before = scores.clone()
+
+    indexer_mod._query_split_all_gather_indices(group, local_indices, gathered_indices)
+
+    assert calls == [(gathered_indices.data_ptr(), local_indices.data_ptr())]
+    assert gathered_indices.tolist() == [[10] * 3, [10] * 3, [20] * 3, [20] * 3]
+    assert torch.equal(scores, scores_before)
+
+
+def test_query_split_copies_aliased_input_for_torch_distributed_fallback(
+    monkeypatch,
+):
+    calls: list[tuple[int, int]] = []
+
+    def fake_all_gather_into_tensor(output, input_, *, group):
+        assert group == "device-group"
+        calls.append((output.data_ptr(), input_.data_ptr()))
+        rows = input_.shape[0]
+        output[:rows].fill_(10)
+        output[rows:].copy_(input_)
+
+    monkeypatch.setattr(
+        torch.distributed,
+        "all_gather_into_tensor",
+        fake_all_gather_into_tensor,
+    )
+    group = types.SimpleNamespace(
+        world_size=2,
+        rank_in_group=1,
+        device_communicator=types.SimpleNamespace(
+            pynccl_comm=types.SimpleNamespace(disabled=True),
+            device_group="device-group",
+        ),
+    )
+    gathered_indices = torch.full((4, 3), -1, dtype=torch.int32)
+    local_indices = gathered_indices[2:]
+    local_indices.fill_(20)
+    local_ptr = local_indices.data_ptr()
+
+    indexer_mod._query_split_all_gather_indices(
+        group,
+        local_indices,
+        gathered_indices,
+    )
+
+    assert calls[0][0] == gathered_indices.data_ptr()
+    assert calls[0][1] != local_ptr
+    assert gathered_indices.tolist() == [[10] * 3, [10] * 3, [20] * 3, [20] * 3]
+
+
+def test_query_split_rejects_non_aliasing_local_indices():
+    group = types.SimpleNamespace(world_size=2, rank_in_group=0)
+    gathered_indices = torch.empty((4, 3), dtype=torch.int32)
+    local_indices = torch.empty((2, 3), dtype=torch.int32)
+
+    with pytest.raises(RuntimeError, match="must alias"):
+        indexer_mod._query_split_all_gather_indices(
+            group, local_indices, gathered_indices
+        )
+
+
 @pytest.mark.parametrize(
     "page_stride0",
     [
@@ -1434,9 +1516,12 @@ def test_b12x_schedule_metadata_uses_canonical_indexer_import(monkeypatch):
     monkeypatch.setattr(
         mla_indexer_mod.envs,
         "VLLM_USE_B12X_SPARSE_INDEXER",
-        True,
+        False,
     )
     builder = object.__new__(mla_indexer_mod.DeepseekV32IndexerMetadataBuilder)
+    # Backend selection is resolved once in __init__. The metadata path must
+    # use that result even when the legacy environment flag is unset.
+    builder.use_b12x_sparse_indexer = True
     builder.scheduler_metadata_buffer = torch.zeros((5, 2), dtype=torch.int32)
     builder.kv_cache_spec = types.SimpleNamespace(storage_block_size=64)
     builder.num_sms = 4
@@ -1457,6 +1542,27 @@ def test_b12x_schedule_metadata_uses_canonical_indexer_import(monkeypatch):
         ("uses_schedule", 2, 3),
         ("build_schedule", (64, 128), 64, 4, True),
     ]
+
+
+def test_b12x_schedule_metadata_respects_cached_backend_choice(monkeypatch):
+    from vllm.v1.attention.backends.mla import indexer as mla_indexer_mod
+
+    monkeypatch.setattr(
+        mla_indexer_mod.envs,
+        "VLLM_USE_B12X_SPARSE_INDEXER",
+        True,
+    )
+    builder = object.__new__(mla_indexer_mod.DeepseekV32IndexerMetadataBuilder)
+    builder.use_b12x_sparse_indexer = False
+
+    result = builder._maybe_build_b12x_schedule_metadata(
+        seq_lens=torch.tensor([64], dtype=torch.int32),
+        block_table=torch.zeros((1, 1), dtype=torch.int32),
+        num_decode_tokens=1,
+        requires_padding=False,
+    )
+
+    assert result is None
 
 
 def test_mtp_variable_decode_preserves_block_table_alignment_padding():

@@ -1950,6 +1950,41 @@ def init_distributed_environment(
             _INNER_DP_WORLD = _WORLD
 
 
+def _get_query_split_group_ranks(
+    tp_group_ranks: list[list[int]], dcp_size: int
+) -> list[list[int]]:
+    """Transpose DCP groups within each independent TP cohort.
+
+    Args:
+        tp_group_ranks: Independent TP cohorts expressed as global ranks.
+        dcp_size: Number of consecutive ranks in each DCP group.
+
+    Returns:
+        Groups joining the same DCP-rank position across each TP cohort.
+
+    Raises:
+        ValueError: If ``dcp_size`` is nonpositive or does not divide a TP
+            cohort.
+    """
+    if dcp_size <= 0:
+        raise ValueError(f"dcp_size must be positive, got {dcp_size}")
+
+    query_split_ranks: list[list[int]] = []
+    for tp_ranks in tp_group_ranks:
+        if len(tp_ranks) % dcp_size != 0:
+            raise ValueError(
+                f"TP group size {len(tp_ranks)} must be divisible by "
+                f"dcp_size {dcp_size}"
+            )
+        dcp_groups = [
+            tp_ranks[start : start + dcp_size]
+            for start in range(0, len(tp_ranks), dcp_size)
+        ]
+        for dcp_rank in range(dcp_size):
+            query_split_ranks.append([group[dcp_rank] for group in dcp_groups])
+    return query_split_ranks
+
+
 def initialize_model_parallel(
     tensor_model_parallel_size: int = 1,
     pipeline_model_parallel_size: int = 1,
@@ -2073,17 +2108,16 @@ def initialize_model_parallel(
         group_name="dcp",
     )
 
-    # Build the query-split groups for the indexer query split (Fix A).
-    # Ranks sharing the same dcp_rank (position within their DCP group)
-    # form a query-split group.  At TP=8/DCP=2 the DCP groups are
-    # {0,1},{2,3},{4,5},{6,7} and the query-split groups are
-    # {0,2,4,6} (dcp_rank=0) and {1,3,5,7} (dcp_rank=1).
+    # Build query-split groups for the sparse indexer. Ranks sharing the same
+    # dcp_rank form one group. This also applies to DCP=1: all TP ranks hold
+    # the same indexer inputs, so they can divide query rows and all-gather
+    # only the exact int32 top-k result.
     global _QUERY_SPLIT
     assert _QUERY_SPLIT is None, "query split group is already initialized"
-    if decode_context_model_parallel_size > 1 and envs.VLLM_DCP_QUERY_SPLIT:
-        query_split_ranks: list[list[int]] = []
-        for dcp_rank_idx in range(decode_context_model_parallel_size):
-            query_split_ranks.append([grp[dcp_rank_idx] for grp in group_ranks])
+    if envs.VLLM_DCP_QUERY_SPLIT:
+        query_split_ranks = _get_query_split_group_ranks(
+            tp_group_ranks, decode_context_model_parallel_size
+        )
         _QUERY_SPLIT = init_model_parallel_group(
             query_split_ranks,
             get_world_group().local_rank,
