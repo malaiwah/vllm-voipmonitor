@@ -102,6 +102,10 @@ _B12X_TRELLIS_WARMED_DEVICES: set[int] = set()
 _B12X_TRELLIS_C_TMP_CAP = 192 * 4 * 64 * 256
 _RANK_SLICED_RUNTIMES: dict[tuple[Any, ...], dict[str, Any]] = {}
 _MIXED_TRELLIS_RUNTIMES: dict[tuple[Any, ...], dict[str, Any]] = {}
+# Decode buffers are deliberately excluded: CUDA graphs capture their addresses.
+# Prefill runs eagerly, so layers with the exact same backend allocation layout
+# may safely reuse one persistent buffer set within a model instance.
+_MIXED_TRELLIS_PREFILL_BUFFERS: dict[tuple[Any, ...], Any] = {}
 _NEXT_RUNTIME_SCOPE_ID = 0
 _MIXED_TRELLIS_ROUTE_BLOCK_SIZE = 8
 _GLM52_MIXED_TRELLIS_PREFILL_BLOCK_SIZE = 32
@@ -376,12 +380,8 @@ def _load_b12x_mixed_trellis() -> Any:
     if _B12X_MIXED_TRELLIS_API is not None:
         return _B12X_MIXED_TRELLIS_API
     try:
-        module = importlib.import_module(
-            "b12x.moe._shared.kernels.w4a16.mixed_trellis"
-        )
-        prepare = importlib.import_module(
-            "b12x.moe._shared.kernels.w4a16.prepare"
-        )
+        module = importlib.import_module("b12x.moe._shared.kernels.w4a16.mixed_trellis")
+        prepare = importlib.import_module("b12x.moe._shared.kernels.w4a16.prepare")
         host = importlib.import_module("b12x.moe._shared.kernels.w4a16.host")
     except Exception as exc:
         raise RuntimeError(
@@ -394,6 +394,9 @@ def _load_b12x_mixed_trellis() -> Any:
         compile_mixed_trellis=module.compile_mixed_trellis,
         make_mixed_trellis_buffers=module.make_mixed_trellis_buffers,
         max_packed_route_slots=host.max_packed_route_slots,
+        mixed_trellis_buffer_layout=getattr(
+            module, "mixed_trellis_buffer_layout", None
+        ),
         prepare_weights=prepare.prepare_trellis256_moe_weights,
         run_mixed_trellis=module.run_mixed_trellis,
         warmup_mixed_trellis_route_pack=module.warmup_mixed_trellis_route_pack,
@@ -434,6 +437,46 @@ def _unique_tensor_storage_bytes(*buffers: Any) -> int:
                 seen.add(storage_key)
                 total += storage.nbytes()
     return total
+
+
+def _mixed_trellis_prefill_buffers(
+    *,
+    api: Any,
+    owner_token: tuple[int, bool],
+    launch: Any,
+    device: torch.device,
+    sms: int,
+) -> tuple[Any, bool]:
+    """Reuse immutable-layout prefill buffers within one model scope."""
+
+    layout_fn = getattr(api, "mixed_trellis_buffer_layout", None)
+    if layout_fn is None:
+        # Preserve compatibility with an older B12X package.  Reconstructing
+        # allocation arithmetic here would risk an unsafe false-positive match.
+        return api.make_mixed_trellis_buffers(
+            launch,
+            device=device,
+            sms=sms,
+        ), False
+
+    layout = layout_fn(launch, sms=sms)
+    key = (
+        owner_token,
+        device,
+        api.make_mixed_trellis_buffers,
+        type(layout),
+        layout,
+    )
+    buffers = _MIXED_TRELLIS_PREFILL_BUFFERS.get(key)
+    if buffers is not None:
+        return buffers, True
+    buffers = api.make_mixed_trellis_buffers(
+        launch,
+        device=device,
+        sms=sms,
+    )
+    _MIXED_TRELLIS_PREFILL_BUFFERS[key] = buffers
+    return buffers, False
 
 
 def _scratch_view(backing: torch.Tensor, spec: Any) -> torch.Tensor:
@@ -2860,6 +2903,8 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             capacity: int,
             block_size_m: int,
             tile_config: tuple[int, int, int, int],
+            *,
+            share_prefill_buffers: bool = False,
         ) -> dict[str, Any]:
             route_slots = mixed_api.max_packed_route_slots(
                 capacity * topk,
@@ -2885,14 +2930,26 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                 broadcast_suh=broadcast_suh,
                 broadcast_svh=broadcast_svh,
             )
-            return {
-                "capacity": capacity,
-                "launch": launch,
-                "buffers": mixed_api.make_mixed_trellis_buffers(
+            if share_prefill_buffers:
+                buffers, buffers_reused = _mixed_trellis_prefill_buffers(
+                    api=mixed_api,
+                    owner_token=_runtime_owner_token(self.quant_config, layer),
+                    launch=launch,
+                    device=device,
+                    sms=policy["sms"],
+                )
+            else:
+                buffers = mixed_api.make_mixed_trellis_buffers(
                     launch,
                     device=device,
                     sms=policy["sms"],
-                ),
+                )
+                buffers_reused = False
+            return {
+                "capacity": capacity,
+                "launch": launch,
+                "buffers": buffers,
+                "buffers_reused": buffers_reused,
             }
 
         decode = make_state(
@@ -2908,6 +2965,7 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                 prefill_capacity,
                 prefill_block_m,
                 mixed["prefill_tile_config"],
+                share_prefill_buffers=True,
             )
         runtime = {
             "mixed_api": mixed_api,
@@ -2925,7 +2983,8 @@ class Exl3MoEMethod(FusedMoEMethodBase):
         )
         logger.info_once(
             "EXL3 mixed Trellis runtime planned: tiers=%s one-grid decode=%d "
-            "one-grid prefill=%d/%d block_m=%d buffers=%.1f+%.1f MiB",
+            "one-grid prefill=%d/%d block_m=%d buffers=%.1f+%.1f MiB "
+            "prefill_reused=%s",
             tier_signature,
             max_decode_m,
             prefill_capacity,
@@ -2933,6 +2992,7 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             prefill_block_m,
             decode_bytes / (1 << 20),
             prefill_bytes / (1 << 20),
+            bool(prefill is not None and prefill["buffers_reused"]),
         )
         return runtime
 
@@ -2959,22 +3019,33 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             state: dict[str, Any],
             tiers: tuple[Any, Any],
         ) -> torch.Tensor:
-            return (
-                runtime["mixed_api"]
-                .run_mixed_trellis(
-                    slice_x,
-                    tiers[0],
-                    tiers[1],
-                    slice_weights,
-                    slice_ids,
-                    mixed["global_to_combined"],
-                    mixed["descriptor_map"],
-                    mixed["rotations"],
-                    state["launch"],
-                    state["buffers"],
-                )
-                .to(slice_x.dtype)
+            raw_output = runtime["mixed_api"].run_mixed_trellis(
+                slice_x,
+                tiers[0],
+                tiers[1],
+                slice_weights,
+                slice_ids,
+                mixed["global_to_combined"],
+                mixed["descriptor_map"],
+                mixed["rotations"],
+                state["launch"],
+                state["buffers"],
             )
+            # B12X returns a view of its persistent FP32 output buffer.  The
+            # dtype conversion is therefore also the lifetime boundary before
+            # a compatible later layer reuses the same prefill storage.
+            output = raw_output.to(slice_x.dtype)
+            persistent_output = getattr(state["buffers"], "output", None)
+            if (
+                state["buffers_reused"]
+                and persistent_output is not None
+                and raw_output.untyped_storage().data_ptr()
+                == persistent_output.untyped_storage().data_ptr()
+                and output.untyped_storage().data_ptr()
+                == persistent_output.untyped_storage().data_ptr()
+            ):
+                output = output.clone()
+            return output
 
         if m <= runtime["max_decode_m"]:
             return run_state(
@@ -3009,6 +3080,104 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             )
             output[start:stop].copy_(slice_output)
         return output
+
+    @staticmethod
+    def _rank_sliced_parity_staging(
+        runtime: dict[str, Any],
+        device: torch.device,
+    ) -> dict[str, Any]:
+        staging = runtime["parity_staging"]
+        if staging is not None:
+            return staging
+
+        ext = _load_exl3_ext()
+        required_ext = {
+            "exl3_moe",
+            "exl3_moe_max_concurrency",
+        }
+        missing_ext = sorted(name for name in required_ext if not hasattr(ext, name))
+        if missing_ext:
+            raise RuntimeError(
+                "The EXL3 extension lacks routed-expert entry points: "
+                + ", ".join(missing_ext)
+            )
+        concurrency = int(ext.exl3_moe_max_concurrency(torch.cuda.current_device()))
+        parity_rows = int(runtime["parity_rows"])
+        hidden_size = int(runtime["hidden_size"])
+        intermediate_size = int(runtime["intermediate_size"])
+        num_experts = int(runtime["num_experts"])
+        topk = int(runtime["topk"])
+        chunk = int(runtime["chunk"])
+        staging = {
+            "ext": ext,
+            "xh": torch.empty(
+                (parity_rows, hidden_size),
+                dtype=torch.float16,
+                device=device,
+            ),
+            "out32": torch.empty(
+                (parity_rows, hidden_size),
+                dtype=torch.float32,
+                device=device,
+            ),
+            "tg": torch.empty(
+                (concurrency, chunk, hidden_size),
+                dtype=torch.float16,
+                device=device,
+            ),
+            "tu": torch.empty(
+                (concurrency, chunk, hidden_size),
+                dtype=torch.float16,
+                device=device,
+            ),
+            "ig": torch.empty(
+                (concurrency, chunk, intermediate_size),
+                dtype=torch.float16,
+                device=device,
+            ),
+            "iu": torch.empty(
+                (concurrency, chunk, intermediate_size),
+                dtype=torch.float16,
+                device=device,
+            ),
+            "expert_count": torch.empty(
+                num_experts + 1,
+                dtype=torch.int64,
+                device=device,
+            ),
+            "expert_offsets": torch.empty(
+                num_experts + 1,
+                dtype=torch.int64,
+                device=device,
+            ),
+            "token_sorted": torch.empty(
+                parity_rows * topk,
+                dtype=torch.int64,
+                device=device,
+            ),
+            "weight_sorted": torch.empty(
+                parity_rows * topk,
+                dtype=torch.float16,
+                device=device,
+            ),
+            "flat_token": torch.arange(
+                chunk,
+                dtype=torch.int64,
+                device=device,
+            ).repeat_interleave(topk),
+            "ones": torch.ones(
+                chunk * topk,
+                dtype=torch.int64,
+                device=device,
+            ),
+        }
+        runtime["parity_staging"] = staging
+        logger.info_once(
+            "EXL3 eager parity staging allocated lazily: rows=%d chunk=%d",
+            parity_rows,
+            chunk,
+        )
+        return staging
 
     def _rank_sliced_runtime(
         self,
@@ -3126,31 +3295,15 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                 prefill_capacity, prefill_block_m
             )
 
-        ext = _load_exl3_ext()
-        required_ext = {
-            "exl3_moe",
-            "exl3_moe_max_concurrency",
-        }
-        missing_ext = sorted(name for name in required_ext if not hasattr(ext, name))
-        if missing_ext:
-            raise RuntimeError(
-                "The EXL3 extension lacks routed-expert entry points: "
-                + ", ".join(missing_ext)
-            )
-        concurrency = int(ext.exl3_moe_max_concurrency(torch.cuda.current_device()))
         hidden_size = int(layer.exl3_hidden_size)
         intermediate_size = int(layer.exl3_intermediate_size_per_partition)
         num_experts = int(layer.local_num_experts)
-        device = x.device
-        # With the prefill plan live, the parity path only ever serves
-        # m < min_trellis_m, so its persistent staging shrinks to one chunk.
         runtime = {
             "api": api,
             "trellis_plan": trellis_plan,
             "trellis_scratch": trellis_scratch,
             "prefill_plan": prefill_plan,
             "prefill_scratch": prefill_scratch,
-            "ext": ext,
             "min_trellis_m": min_trellis_m,
             "max_trellis_m": max_trellis_m,
             "max_batched_tokens": max_batched_tokens,
@@ -3158,66 +3311,10 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             "parity_rows": parity_rows,
             "topk": topk,
             "chunk": chunk,
-            "xh": torch.empty(
-                (parity_rows, hidden_size),
-                dtype=torch.float16,
-                device=device,
-            ),
-            "out32": torch.empty(
-                (parity_rows, hidden_size),
-                dtype=torch.float32,
-                device=device,
-            ),
-            "tg": torch.empty(
-                (concurrency, chunk, hidden_size),
-                dtype=torch.float16,
-                device=device,
-            ),
-            "tu": torch.empty(
-                (concurrency, chunk, hidden_size),
-                dtype=torch.float16,
-                device=device,
-            ),
-            "ig": torch.empty(
-                (concurrency, chunk, intermediate_size),
-                dtype=torch.float16,
-                device=device,
-            ),
-            "iu": torch.empty(
-                (concurrency, chunk, intermediate_size),
-                dtype=torch.float16,
-                device=device,
-            ),
-            "expert_count": torch.empty(
-                num_experts + 1,
-                dtype=torch.int64,
-                device=device,
-            ),
-            "expert_offsets": torch.empty(
-                num_experts + 1,
-                dtype=torch.int64,
-                device=device,
-            ),
-            "token_sorted": torch.empty(
-                parity_rows * topk,
-                dtype=torch.int64,
-                device=device,
-            ),
-            "weight_sorted": torch.empty(
-                parity_rows * topk,
-                dtype=torch.float16,
-                device=device,
-            ),
-            "flat_token": torch.arange(
-                chunk,
-                dtype=torch.int64,
-                device=device,
-            ).repeat_interleave(topk),
-            "ones": torch.ones(
-                chunk * topk,
-                dtype=torch.int64,
-                device=device,
-            ),
+            "hidden_size": hidden_size,
+            "intermediate_size": intermediate_size,
+            "num_experts": num_experts,
+            "parity_staging": None,
         }
         _RANK_SLICED_RUNTIMES[key] = runtime
         prefill_arena_mib = (
@@ -3322,10 +3419,11 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                 "EXL3 batch exceeds its planned parity capacity: "
                 f"m={m}, capacity={runtime['parity_rows']}"
             )
-        ext = runtime["ext"]
-        xh = runtime["xh"][:m]
+        staging = self._rank_sliced_parity_staging(runtime, x.device)
+        ext = staging["ext"]
+        xh = staging["xh"][:m]
         xh.copy_(x)
-        out32 = runtime["out32"][:m]
+        out32 = staging["out32"][:m]
         out32.zero_()
         chunk = int(runtime["chunk"])
         pointer_args = layer.exl3_pointer_tables
@@ -3336,14 +3434,14 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                 topk_ids,
                 topk_weights,
                 layer.exl3_expert_map,
-                runtime["expert_count"],
-                runtime["expert_offsets"],
-                runtime["token_sorted"],
-                runtime["weight_sorted"],
-                runtime["tg"],
-                runtime["tu"],
-                runtime["ig"],
-                runtime["iu"],
+                staging["expert_count"],
+                staging["expert_offsets"],
+                staging["token_sorted"],
+                staging["weight_sorted"],
+                staging["tg"],
+                staging["tu"],
+                staging["ig"],
+                staging["iu"],
                 0,
                 3,
                 3,
@@ -3368,25 +3466,25 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             flat = local_ids[start : start + current_m].reshape(-1)
             order = torch.argsort(flat)
             route_count = current_m * topk
-            token_ids = runtime["flat_token"][:route_count].index_select(0, order)
+            token_ids = staging["flat_token"][:route_count].index_select(0, order)
             route_weights = (
                 half_weights[start : start + current_m]
                 .reshape(-1)
                 .index_select(0, order)
             )
-            counts = runtime["expert_count"]
+            counts = staging["expert_count"]
             counts.zero_()
-            counts.scatter_add_(0, flat, runtime["ones"][:route_count])
+            counts.scatter_add_(0, flat, staging["ones"][:route_count])
             ext.exl3_moe(
                 xh[start : start + current_m],
                 out32[start : start + current_m],
                 counts,
                 token_ids,
                 route_weights,
-                runtime["tg"],
-                runtime["tu"],
-                runtime["ig"],
-                runtime["iu"],
+                staging["tg"],
+                staging["tu"],
+                staging["ig"],
+                staging["iu"],
                 0,
                 3,
                 3,

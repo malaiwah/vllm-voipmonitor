@@ -100,6 +100,7 @@ class _FakeMixedTrellisApi:
         self.compiled = []
         self.routed = []
         self.calls = []
+        self.allocations = []
 
     def max_packed_route_slots(self, routed_rows, block_size, experts):
         del block_size, experts
@@ -112,13 +113,35 @@ class _FakeMixedTrellisApi:
 
     def make_mixed_trellis_buffers(self, launch, **kwargs):
         del kwargs
-        return SimpleNamespace(scratch=torch.empty(launch.size_m, dtype=torch.uint8))
+        buffers = SimpleNamespace(
+            scratch=torch.empty(launch.size_m, dtype=torch.uint8),
+            output=torch.empty(
+                (launch.size_m, launch.hidden_size), dtype=torch.float32
+            ),
+        )
+        self.allocations.append(buffers)
+        return buffers
+
+    def mixed_trellis_buffer_layout(self, launch, *, sms):
+        return (
+            launch.size_m,
+            launch.hidden_size,
+            launch.intermediate_size,
+            launch.top_k,
+            launch.tier0_num_experts + launch.tier1_num_experts,
+            launch.moe_block_size,
+            launch.max_m_blocks,
+            sms,
+        )
 
     def run_mixed_trellis(self, *args):
         x, tier0, tier1, topk_weights, topk_ids = args[:5]
+        buffers = args[9]
         self.calls.append((int(x.shape[0]), tier0, tier1))
         self.routed.append((topk_weights.clone(), topk_ids.clone()))
-        return x.to(torch.float32)
+        output = buffers.output[: x.shape[0]]
+        output.copy_(x)
+        return output
 
 
 class _FakeExt:
@@ -126,9 +149,11 @@ class _FakeExt:
 
     def __init__(self):
         self.moe_calls = []
+        self.max_concurrency_calls = 0
 
     def exl3_moe_max_concurrency(self, device):
         del device
+        self.max_concurrency_calls += 1
         return 2
 
     def exl3_moe(self, xh, out32, *args):
@@ -149,13 +174,15 @@ def _make_layer():
     )
 
 
-def _make_mixed_layer():
+def _make_mixed_layer(
+    tier_ids=((0, 1, 2, 3), (4, 5, 6, 7)),
+):
     layer = _make_layer()
     layer.exl3_mixed_bitrate = True
     layer.exl3_mixed_trellis = {
         "tiers": (object(), object()),
         "prefill_tiers": (object(), object()),
-        "tier_ids": ((0, 1, 2, 3), (4, 5, 6, 7)),
+        "tier_ids": tier_ids,
         "tier_bits": (3, 4),
         "global_to_combined": object(),
         "descriptor_map": object(),
@@ -212,6 +239,7 @@ class _Harness:
         )
         exl3_module._RANK_SLICED_RUNTIMES.clear()
         exl3_module._MIXED_TRELLIS_RUNTIMES.clear()
+        exl3_module._MIXED_TRELLIS_PREFILL_BUFFERS.clear()
         return self
 
     def __exit__(self, *exc):
@@ -230,6 +258,7 @@ class _Harness:
                 os.environ[name] = value
         exl3_module._RANK_SLICED_RUNTIMES.clear()
         exl3_module._MIXED_TRELLIS_RUNTIMES.clear()
+        exl3_module._MIXED_TRELLIS_PREFILL_BUFFERS.clear()
         return False
 
     def planned_caps(self):
@@ -270,9 +299,9 @@ def test_opt_in_prefill_capacity_slices_dispatch():
 
         runtime = next(iter(exl3_module._RANK_SLICED_RUNTIMES.values()))
         assert runtime["parity_rows"] == 128
-        assert runtime["xh"].shape[0] == 128
-        assert runtime["token_sorted"].numel() == 128 * TOPK
+        assert runtime["parity_staging"] is None
         assert runtime["prefill_capacity"] == 128
+        assert h.ext.max_concurrency_calls == 0
 
         # Batches above the scheduler contract must fail before allocating a
         # replacement runtime or a larger Trellis arena during serving.
@@ -395,6 +424,76 @@ def test_mixed_runtime_forwards_shared_h_broadcast_contract():
         assert all(launch.broadcast_svh is True for launch in h.mixed_api.compiled)
 
 
+def test_mixed_prefill_buffers_are_shared_across_compatible_partitions():
+    with _Harness() as h:
+        method = _make_method()
+        first_layer = _make_mixed_layer()
+        second_layer = _make_mixed_layer(tier_ids=((0, 1, 2), (3, 4, 5, 6, 7)))
+        x = torch.zeros((16, HIDDEN), dtype=torch.bfloat16)
+        ids = torch.zeros((16, TOPK), dtype=torch.int64)
+
+        first = method._mixed_rank_sliced_runtime(first_layer, x, ids)
+        second = method._mixed_rank_sliced_runtime(second_layer, x, ids)
+
+        assert first["decode"]["buffers"] is not second["decode"]["buffers"]
+        assert first["prefill"]["buffers"] is second["prefill"]["buffers"]
+        assert first["prefill"]["buffers_reused"] is False
+        assert second["prefill"]["buffers_reused"] is True
+        assert len(h.mixed_api.allocations) == 3
+
+        weights = torch.zeros((64, TOPK), dtype=torch.float32)
+        ids = torch.zeros((64, TOPK), dtype=torch.int64)
+        out = method._apply_rank_sliced(
+            second_layer,
+            torch.zeros((64, HIDDEN), dtype=torch.bfloat16),
+            weights,
+            ids,
+        )
+        assert out.dtype == torch.bfloat16
+        assert (
+            out.untyped_storage().data_ptr()
+            != second["prefill"]["buffers"].output.untyped_storage().data_ptr()
+        )
+
+
+def test_mixed_prefill_buffers_do_not_cross_target_draft_roles():
+    with _Harness() as h:
+        method = _make_method()
+        target = _make_mixed_layer()
+        draft = _make_mixed_layer(tier_ids=((0, 1, 2), (3, 4, 5, 6, 7)))
+        draft.exl3_is_draft = True
+        x = torch.zeros((16, HIDDEN), dtype=torch.bfloat16)
+        ids = torch.zeros((16, TOPK), dtype=torch.int64)
+
+        target_runtime = method._mixed_rank_sliced_runtime(target, x, ids)
+        draft_runtime = method._mixed_rank_sliced_runtime(draft, x, ids)
+
+        assert (
+            target_runtime["prefill"]["buffers"]
+            is not draft_runtime["prefill"]["buffers"]
+        )
+        assert draft_runtime["prefill"]["buffers_reused"] is False
+        assert len(h.mixed_api.allocations) == 4
+
+
+def test_mixed_prefill_buffer_sharing_requires_backend_layout_contract():
+    with _Harness() as h:
+        h.mixed_api.mixed_trellis_buffer_layout = None
+        method = _make_method()
+        first_layer = _make_mixed_layer()
+        second_layer = _make_mixed_layer(tier_ids=((0, 1, 2), (3, 4, 5, 6, 7)))
+        x = torch.zeros((16, HIDDEN), dtype=torch.bfloat16)
+        ids = torch.zeros((16, TOPK), dtype=torch.int64)
+
+        first = method._mixed_rank_sliced_runtime(first_layer, x, ids)
+        second = method._mixed_rank_sliced_runtime(second_layer, x, ids)
+
+        assert first["prefill"]["buffers"] is not second["prefill"]["buffers"]
+        assert first["prefill"]["buffers_reused"] is False
+        assert second["prefill"]["buffers_reused"] is False
+        assert len(h.mixed_api.allocations) == 4
+
+
 def test_prefill_capacity_cannot_exceed_scheduler_bound():
     env = {"VLLM_EXL3_PREFILL_CAPACITY": str(MAX_BATCHED + 1)}
     with _Harness(env=env) as h:
@@ -420,6 +519,24 @@ def test_prefill_trellis_disabled_restores_parity():
         runtime = next(iter(exl3_module._RANK_SLICED_RUNTIMES.values()))
         assert runtime["prefill_plan"] is None
         assert runtime["parity_rows"] == MAX_BATCHED
+        assert runtime["parity_staging"] is not None
+        assert runtime["parity_staging"]["xh"].shape[0] == MAX_BATCHED
+        assert h.ext.max_concurrency_calls == 1
+
+
+def test_parity_staging_is_allocated_once_on_first_use():
+    with _Harness(env={"VLLM_EXL3_TRELLIS_MIN_M": "4"}) as h:
+        method = _make_method()
+        layer = _make_layer()
+
+        _apply(method, layer, 2)
+        runtime = next(iter(exl3_module._RANK_SLICED_RUNTIMES.values()))
+        first = runtime["parity_staging"]
+        _apply(method, layer, 3)
+
+        assert first is not None
+        assert runtime["parity_staging"] is first
+        assert h.ext.max_concurrency_calls == 1
 
 
 def test_prefill_block_m_env_override():
@@ -458,6 +575,7 @@ def test_disabled_prefill_plan_keeps_full_parity_capacity():
         _apply(_make_method(), _make_layer(), 159)
         runtime = next(iter(exl3_module._RANK_SLICED_RUNTIMES.values()))
         assert runtime["parity_rows"] == MAX_BATCHED
+        assert runtime["parity_staging"] is not None
 
 
 def test_explicit_parity_path_guarded_against_capture():
@@ -478,6 +596,8 @@ def test_explicit_parity_path_guarded_against_capture():
         # The eager parity path must refuse to be recorded.
         with pytest.raises(RuntimeError, match="capture"):
             _apply(method, layer, 2)
+        runtime = next(iter(exl3_module._RANK_SLICED_RUNTIMES.values()))
+        assert runtime["parity_staging"] is None
 
 
 if __name__ == "__main__":
