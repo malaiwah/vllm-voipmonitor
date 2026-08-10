@@ -30,7 +30,7 @@ the done-JSONs for all four Ks → the 0c variance/N_L solve gets a 4-point
   identity across Ks is the point).
 - **Compute**: ~13.3 GPU-h per K (2.5 s/expert × 19,200) → 4 Ks ≈ 53 GPU-h
   ≈ overnight on the box with serve stopped, or ~18 h wall on one quad.
-- **Segment sizes**: K2 ~173 GB, K3 ~260 GB, K4 ~347 GB, K5 ~433 GB
+- **Segment sizes**: K2 ~173 GB (encode ~4.8s/expert — DP table 16x K5's; K2 tier ≈ 26 GPU-h full model, corrected from 13), K3 ~260 GB, K4 ~347 GB, K5 ~433 GB
   (~1.21 TB total) → rolling publish-and-delete per layer keeps disk
   bounded; attestations carry `encode-of` predicate with hessian_id =
   capture manifest hash, encoder sha `e9a85a47…`, per-expert digests.
