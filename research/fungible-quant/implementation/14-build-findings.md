@@ -385,10 +385,16 @@ shard downloaded in full).
   layouts decode by the same diagonal sandwich
   `W = diag(v_out)·dequant(trellis, mcg)·diag(v_in)`, so a plain
   `per_expert_v1` loader multiplying the stored vectors decodes identical
-  weights. **Pedantic caveat, still open:** the report explicitly defers a
-  one-expert numeric decode-and-diff under both loaders. Treat "bit-exact"
-  as *algebraically exact with the size signature verified from bytes*,
-  **not yet measured end-to-end**.
+  weights. The layout report itself deferred the numeric decode-and-diff, so
+  as of that report "bit-exact" meant *algebraically exact with the size
+  signature verified from bytes*. **Closed later the same session** by
+  `tools/fq_verify.py`: every sampled expert of the 3.42 family decodes
+  **bitwise EQUAL** under the shared-h and expanded views, and all 2048
+  expanded experts of layers 3–10 were re-derived from their parent segments
+  + profiles and byte-compared in full with 0 mismatches
+  (`../runs/0c-campaign/verify/`, summarized in `docs/RECONSTRUCTION.md` of
+  the public tools repo, rows 5–6). The expansion is now a *measured* exact
+  view, not only an algebraic one.
 - Cost of the expansion: **+147,456 B/expert** → 2.67 GiB over the family
   (292.06 GiB → 294.74 GiB). Recommendation: store class (b) (the shared-H
   family) and materialize the expanded per-expert view **on demand** — it
@@ -486,12 +492,23 @@ right.
 - The M4 engine **on a live layer**: `MixedLayerState.from_exl3_mixed_trellis()`
   and the `FragmentSource`→`FragmentResolver` wiring are seams, not
   integrations. All M4 evidence is on a toy layer (E=32, H=I=128).
-- **Remote (HF) fragment fetch end-to-end** — implemented and unit-tested
-  against a fake source; no public segment repo was reachable in the run.
-- The **one-expert numeric check** for the shared-H → per-expert expansion
-  (§8).
+- **Remote (HF) fragment fetch end-to-end from the vLLM loader** —
+  implemented and unit-tested against a fake source; the loader path itself
+  saw no live segment repo in the loader-v2 run. (The *tooling* side is
+  proven: `fq_prime`/`fq_verify` range-read the pinned willfalco revisions
+  and byte-match freshly re-fetched source bytes.)
+- **The M2 dryrun** (48 h observe→decide→log on live-ish traffic).
 - Every quality number is **proxy-level**: the Fruit proxy is a 5.04B
   assistant-masked SFT model with 10 MoE layers. The 0c ε ladder, the
   solve, the mixed-boot coherence and all M3/M4 fidelity gates are on it,
   not on GLM-5.2. The GLM-5.2 leg has capture (window 1–2) and K2/K5
   encodes for layers 3–10 only.
+
+---
+
+*Snapshot boundary: this addendum reflects the reports listed in
+`../runs/README.md` as of 2026-08-10 ~20:30 UTC. Work was still landing as
+it was written — `tools/fq_verify.py` + `runs/0c-campaign/verify/` (the
+reconstruction and similarity proof table, already folded into §8) and
+`runs/m2-dryrun/` arrived after the rest. When those reports settle, check
+them against §10 and §12 before quoting either.*
