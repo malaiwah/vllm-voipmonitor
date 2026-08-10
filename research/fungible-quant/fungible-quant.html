@@ -1,0 +1,564 @@
+<title>Fungible Quant — Assessment &amp; Plan</title>
+<style>
+  :root{
+    --bg:#F6F7F6; --surface:#FFFFFF; --surface-2:#EEF1F0;
+    --ink:#131A1C; --ink-2:#3D4A4D; --muted:#6B7A7D;
+    --rule:#D9E0DF; --rule-strong:#B9C5C4;
+    --accent:#15616D; --accent-soft:#E3EEEF;
+    --go:#2F6F3E; --watch:#8A6A00; --kill:#9B2226;
+    --go-bg:#E6F0E8; --watch-bg:#F5EEDC; --kill-bg:#F6E5E5;
+    --code-bg:#EDF1F0;
+    --shadow:0 1px 2px rgba(19,26,28,.06),0 8px 24px -12px rgba(19,26,28,.18);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1315; --surface:#131B1D; --surface-2:#182225;
+      --ink:#E7EEEE; --ink-2:#BCC9C9; --muted:#8B9B9C;
+      --rule:#233033; --rule-strong:#33454A;
+      --accent:#57B6C1; --accent-soft:#152A2E;
+      --go:#79C48F; --watch:#D9B15C; --kill:#E38B8B;
+      --go-bg:#14231A; --watch-bg:#241F12; --kill-bg:#26191A;
+      --code-bg:#101A1C;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1315; --surface:#131B1D; --surface-2:#182225;
+    --ink:#E7EEEE; --ink-2:#BCC9C9; --muted:#8B9B9C;
+    --rule:#233033; --rule-strong:#33454A;
+    --accent:#57B6C1; --accent-soft:#152A2E;
+    --go:#79C48F; --watch:#D9B15C; --kill:#E38B8B;
+    --go-bg:#14231A; --watch-bg:#241F12; --kill-bg:#26191A;
+    --code-bg:#101A1C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
+    font-size:17px; line-height:1.62;
+    font-synthesis-weight:none;
+  }
+  .mono,code,kbd,.eyebrow,.chip,th,.num,.tag{
+    font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  h1,h2,h3,h4{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    text-wrap:balance; letter-spacing:-.018em; line-height:1.18; margin:0;
+  }
+
+  .wrap{max-width:78rem;margin:0 auto;padding:0 1.5rem}
+  .col{max-width:44rem}
+
+  /* ---------- masthead ---------- */
+  header.mast{border-bottom:1px solid var(--rule);background:var(--surface)}
+  .mast-in{display:flex;flex-direction:column;gap:1.25rem;padding:3.5rem 0 2.5rem}
+  .eyebrow{
+    font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;
+  }
+  h1{font-size:clamp(2rem,5vw,3.1rem);font-weight:660}
+  .standfirst{font-size:1.15rem;color:var(--ink-2);max-width:42rem;margin:0}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:.45rem 1.5rem;
+    font-size:.76rem;color:var(--muted);letter-spacing:.02em;
+    border-top:1px solid var(--rule);padding-top:1rem;
+  }
+  .meta b{color:var(--ink-2);font-weight:600}
+
+  /* ---------- verdict banner ---------- */
+  .verdict{
+    margin:2.5rem 0 0;padding:1.5rem 1.6rem;border-radius:3px;
+    background:var(--surface);border:1px solid var(--rule);
+    border-left:3px solid var(--accent);box-shadow:var(--shadow);
+  }
+  .verdict p{margin:0 0 .7rem}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:var(--ink)}
+
+  /* ---------- nav ---------- */
+  nav.toc{
+    position:sticky;top:0;z-index:20;background:var(--bg);
+    border-bottom:1px solid var(--rule);
+    backdrop-filter:saturate(1.4) blur(6px);
+  }
+  .toc-in{display:flex;gap:0;overflow-x:auto;scrollbar-width:thin}
+  .toc a{
+    flex:0 0 auto;padding:.7rem .9rem;font-size:.72rem;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);text-decoration:none;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    border-bottom:2px solid transparent;white-space:nowrap;
+  }
+  .toc a:hover,.toc a:focus-visible{color:var(--accent);border-bottom-color:var(--accent)}
+
+  /* ---------- sections ---------- */
+  main{padding:0 0 6rem}
+  section{padding:3.25rem 0 0;scroll-margin-top:3.2rem}
+  .sec-head{display:flex;gap:1rem;align-items:baseline;margin-bottom:1.4rem}
+  .num{
+    font-size:.78rem;color:var(--accent);font-weight:600;
+    padding-top:.35rem;flex:0 0 auto;letter-spacing:.04em;
+  }
+  h2{font-size:clamp(1.35rem,2.6vw,1.85rem);font-weight:640}
+  h3{font-size:1.06rem;font-weight:640;margin:2.1rem 0 .6rem;color:var(--ink)}
+  h4{font-size:.86rem;font-weight:640;margin:1.5rem 0 .4rem;
+     text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+  p{margin:0 0 1rem}
+  ul,ol{margin:0 0 1rem;padding-left:1.15rem}
+  li{margin:.34rem 0}
+  a{color:var(--accent);text-underline-offset:2px}
+  hr{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+
+  code{
+    background:var(--code-bg);padding:.09em .34em;border-radius:2px;
+    font-size:.855em;color:var(--ink-2);
+  }
+  .cite{font-size:.85em;color:var(--muted)}
+
+  /* ---------- tables ---------- */
+  .tw{overflow-x:auto;margin:1.2rem 0 1.6rem;border:1px solid var(--rule);border-radius:3px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:36rem}
+  th{
+    text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;
+    font-weight:600;color:var(--muted);padding:.7rem .85rem;
+    border-bottom:1px solid var(--rule-strong);background:var(--surface-2);white-space:nowrap;
+  }
+  td{padding:.68rem .85rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+  tr:last-child td{border-bottom:0}
+  td b,td strong{color:var(--ink)}
+  .numeric{font-variant-numeric:tabular-nums;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  th.numeric{text-align:right}
+
+  /* ---------- chips ---------- */
+  .chip{
+    display:inline-block;font-size:.63rem;letter-spacing:.09em;text-transform:uppercase;
+    padding:.16rem .45rem;border-radius:2px;font-weight:600;white-space:nowrap;
+  }
+  .c-go{background:var(--go-bg);color:var(--go)}
+  .c-watch{background:var(--watch-bg);color:var(--watch)}
+  .c-kill{background:var(--kill-bg);color:var(--kill)}
+  .c-neutral{background:var(--surface-2);color:var(--muted)}
+
+  /* ---------- callouts ---------- */
+  .note{
+    background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);
+    padding:1.1rem 1.25rem;margin:1.5rem 0;border-radius:3px;
+  }
+  .note.warn{border-left-color:var(--kill)}
+  .note.good{border-left-color:var(--go)}
+  .note p:last-child{margin-bottom:0}
+  .note h4{margin-top:0}
+  blockquote{
+    margin:1.4rem 0;padding:.2rem 0 .2rem 1.15rem;
+    border-left:2px solid var(--rule-strong);color:var(--ink-2);font-style:italic;
+  }
+  blockquote p:last-child{margin-bottom:0}
+
+  /* ---------- phase list ---------- */
+  .phase{
+    display:grid;grid-template-columns:auto 1fr;gap:0 1.1rem;
+    padding:1.1rem 0;border-top:1px solid var(--rule);
+  }
+  .phase-id{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;
+    font-weight:600;color:var(--accent);letter-spacing:.05em;padding-top:.2rem;white-space:nowrap;
+  }
+  .phase h3{margin:0 0 .3rem;font-size:1rem}
+  .phase p{margin:0 0 .5rem;font-size:.93rem}
+  .phase p:last-child{margin-bottom:0}
+
+  footer{border-top:1px solid var(--rule);margin-top:4rem;padding:2rem 0 3rem;color:var(--muted);font-size:.82rem}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media (max-width:640px){
+    body{font-size:16px}
+    .sec-head{flex-direction:column;gap:.2rem}
+    .num{padding-top:0}
+  }
+</style>
+
+<header class="mast">
+  <div class="wrap mast-in">
+    <div class="eyebrow">Technical assessment &amp; implementation plan</div>
+    <h1>Fungible Quant</h1>
+    <p class="standfirst">Periodic, workload-driven reallocation of per-expert bit-width in a live vLLM server — assessed against published prior art, the vLLM source, and the Gilded Gnosis fork.</p>
+    <div class="meta">
+      <span><b>Target</b> GLM-5.2 / EXL3 · 4× RTX PRO 6000 Blackwell · TP4+DCP4 · EP=1</span>
+      <span><b>Basis</b> 27 research agents · 5 adversarially-verified code lenses</span>
+      <span><b>Date</b> 2026-08-10</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap toc-in">
+    <a href="#verdict">1 · Verdict</a>
+    <a href="#decomp">2 · Decomposition</a>
+    <a href="#hard">3 · The hard part</a>
+    <a href="#policy">4 · Policy</a>
+    <a href="#phases">5 · Plan</a>
+    <a href="#upstream">6 · Upstreaming</a>
+    <a href="#risks">7 · Kill criteria</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="verdict">
+  <div class="sec-head"><div class="num">01</div><h2>Verdict</h2></div>
+  <div class="col">
+    <div class="verdict">
+      <p><strong>Is it novel?</strong> Mostly no. <strong>Is it feasible?</strong> Yes — but only a specific, constrained version, and the feasible version is not the proposed one.</p>
+      <p><strong>The judgment:</strong> build the offline half first, prove the value, and only then consider runtime. The rebalancer is the least valuable and most expensive component. The valuable, cheap, genuinely novel part is <em>workload-derived bit allocation applied at startup</em>, persisted and rehydrated.</p>
+      <p><strong>The go/no-go is not an engineering question.</strong> It is: does workload-specialized allocation beat generic allocation at equal bpw? Measurable offline in about a day, with tooling exllamav3 already ships — and it must be answered before a line of runtime code is written.</p>
+    </div>
+
+    <h3>Already solved elsewhere, by name</h3>
+    <p>The full runtime loop — EMA hotness from live router traces → budget-constrained top-N precision set → asynchronous promote/demote → atomic handoff — is <strong>DynaExq</strong> (arXiv:2511.15015), a one-for-one match including hysteresis and stable expert handles. Published nine months ago.</p>
+    <p>The hot-swap mechanism is <strong>MorphServe</strong> (arXiv:2506.02006): pre-staged variants in pinned host memory, written into pre-reserved GPU slots on async streams, <strong>~6 ms per layer, fully overlapped with decode</strong> — a measured rebuttal to "vLLM loads weights once at startup."</p>
+    <p>Offline "which tensor deserves the bits" is <em>not</em> an open research question: HAWQ→V3 established sensitivity-under-ILP; <strong>MC-MoE</strong> (arXiv:2410.06270, ICLR 2025) solves per-expert allocation as an LP over (frequency, routing weight, reconstruction error) in <strong>about one second</strong>.</p>
+    <div class="note warn">
+      <h4>One premise is false</h4>
+      <p>Allocation does <em>not</em> require BF16 activation measurement on rented B300s. Three cheap or calibration-free signals exist: <strong>AlphaQ</strong> (weight spectra only), <strong>router-norm allocation</strong> (arXiv:2604.06515 — "no GPU and negligible computation", and it <em>beats</em> activation-frequency baselines), and <strong>KL-lens</strong> (forward-only, no backprop, no Hessian).</p>
+    </div>
+
+    <h3>What is genuinely novel</h3>
+    <ol>
+      <li><strong>Runtime precision reallocation under tensor parallelism.</strong> Every published system is single-GPU. DynaExq names distributed integration as future work. TP4+DCP4 at EP=1 is unexplored.</li>
+      <li><strong>Bit allocation for an MTP draft head, with acceptance length as the objective.</strong> Nothing in the literature addresses this. The collector work is ahead of published research.</li>
+      <li><strong>Long-horizon allocation stability.</strong> No paper measures it — not even DynaExq, whose premise depends on it and which publishes no rank-correlation across windows. The 7.3M-token layer-78 trace is plausibly the best dataset in existence to answer this.</li>
+      <li><strong>Online re-encoding.</strong> Novel because it is a <em>bad idea</em>, not because nobody thought of it. Drop it.</li>
+    </ol>
+
+    <h3>Why the proposal as written fails</h3>
+    <ul>
+      <li>All-K4 routed experts need <strong>86.62 GiB/rank against a ~86 GiB budget</strong> at <code>util=0.90</code>. Any max-capacity arena is dead on arrival.</li>
+      <li>EXL3 trellis codes are <strong>not successively refinable</strong>, so every bit-width change is a full re-encode requiring a Hessian the pipeline computes and discards.</li>
+      <li>CUDA-graph pointer baking is enforced systemically throughout vLLM.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="decomp">
+  <div class="sec-head"><div class="num">02</div><h2>Decomposition</h2></div>
+  <div class="col"><p>Seven components, not six — the research consistently omitted the kernel one, which is the first thing a vLLM reviewer will raise.</p></div>
+  <div class="tw">
+    <table>
+      <thead><tr><th></th><th>Component</th><th>Difficulty</th><th>Independently useful?</th><th>Home</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">a</td><td>Online quantization at startup + disk cache</td><td><span class="chip c-go">Easy</span></td><td>Yes — to every vLLM user</td><td>vLLM core</td></tr>
+        <tr><td class="mono">b</td><td>Statistics collection (per-expert / per-tensor)</td><td><span class="chip c-go">Easy</span> / <span class="chip c-watch">Moderate</span></td><td>Yes</td><td>Plugin → core</td></tr>
+        <tr><td class="mono">c</td><td>Bit-allocation policy</td><td><span class="chip c-watch">Moderate</span></td><td>Yes, standalone</td><td>exllamav3 / llm-compressor</td></tr>
+        <tr><td class="mono">d</td><td>Runtime hot-swap</td><td><span class="chip c-kill">Hard</span></td><td>Only with (c)</td><td>Fork + b12x</td></tr>
+        <tr><td class="mono">e</td><td>JIT streaming of variants from HF</td><td><span class="chip c-go">Easy</span></td><td>Marginally</td><td>Plugin</td></tr>
+        <tr><td class="mono">f</td><td>Persistence / rehydration</td><td><span class="chip c-go">Easy</span></td><td>Yes</td><td>Plugin → core</td></tr>
+        <tr><td class="mono">g</td><td><b>Mixed-bit-width MoE kernel</b></td><td><span class="chip c-kill">Hard</span> — already shipped here</td><td>Yes</td><td>b12x / SparkInfer</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <h3>(a) Online quantization already exists — the cache does not</h3>
+    <p>A first-class, layer-at-a-time meta-device path ships today: <code>uses_meta_device</code> (<code>base_config.py:21-24</code>), <code>Fp8OnlineLinearMethod</code>, and <strong><code>Mxfp8OnlineMoEMethod</code></strong> (<code>mxfp8.py:224-227</code>). It is even designed to re-run at runtime — the reload path deliberately deletes the <code>_already_called_process_weights_after_loading</code> guard (<code>reload/layerwise.py:219-222</code>).</p>
+    <p><strong>What is missing is exactly the cache.</strong> Nothing under <code>vllm/model_executor/</code> writes quantized results to disk; every restart re-quantizes from scratch. This is the single best first upstream contribution.</p>
+
+    <h3>(b) Statistics — nearly free, with two traps</h3>
+    <p><code>BaseRouter.set_capture_fn</code> (<code>base_router.py:132-134</code>, invoked at <code>:239-241</code> <em>before</em> EPLB remap) is an <strong>ungated</strong> per-layer hook, independent of <code>enable_eplb</code> and of expert parallelism.</p>
+    <div class="note warn">
+      <p><strong>Trap 1.</strong> MoE ops are not CUDA-graph splitting ops (<code>compilation/config.py:1006</code>), so the router runs <em>inside</em> captured graphs. A callback containing <code>.item()</code>, host branching, or list appends <strong>silently freezes at capture time and never updates again.</strong> It must be a pure tensor op into a persistent buffer — exactly why EPLB's recorder is a single <code>scatter_add_</code>.</p>
+      <p><strong>Trap 2.</strong> The in-tree <code>RoutedExpertsCapturer</code> is unavailable: <code>enable_return_routed_experts</code> is hard-asserted off under DCP&gt;1 (<code>scheduler.py:249-253</code>), which DCP4 trips. The <em>hook</em> is not gated — only the shm return path.</p>
+    </div>
+
+    <h3>(f) The policy artifact format already exists in your fork</h3>
+    <p>The fork already loads a per-expert bitrate map from a JSON reference in the HF repo, keyed by layer, one integer per expert, <code>k_values</code> restricted to <code>{3,4,5,6}</code> (<code>exl3.py:507-556</code>). <strong>That is the policy artifact.</strong> One design question eliminated.</p>
+    <p>Two caveats: <strong>K2 is not representable</strong>, so the budget-freeing half of the proposal is capped at "don't upgrade"; and the checkpoint hard-fails when <code>checkpoint_tp != runtime tp</code> — storage is topology-baked.</p>
+
+    <h3>(g) The kernel is your differentiator</h3>
+    <p>Upstream vLLM <strong>cannot run a statically mixed-bit MoE layer</strong> — issue #41955, mixed INT4/INT8 GPTQ MoE crashes in <code>fused_marlin_moe</code>, because fused kernels assume one bit-width per layer. MxMoE (arXiv:2505.05799) shows autogenerated mixed-precision GroupGEMM is worth 29.4% over uniform at matched accuracy. The b12x two-tier <code>mixed_trellis</code> megakernel already does this. Lead the RFC with it.</p>
+  </div>
+</section>
+
+<section id="hard">
+  <div class="sec-head"><div class="num">03</div><h2>The hard part</h2></div>
+  <div class="col">
+    <h3>The constraint, stated precisely</h3>
+    <p>A captured CUDA graph bakes device pointers into launch parameters. vLLM's replay-time address check (<code>cuda_graph.py:276-279, 338-347</code>) covers <strong>only positional tensor args, never module parameters</strong>, and is gated on <code>VLLM_LOGGING_LEVEL == "DEBUG"</code> — <strong>off in production</strong>. A weight replaced at a new address yields <em>silent wrong output</em>, not an exception.</p>
+    <blockquote><p><code>reload/layerwise.py:240</code> — "Copy processed values into original tensor storage (preserves cudagraph refs)"</p></blockquote>
+    <p>Worse, at the data-structure level: <code>FusedMoE.get_expert_weights()</code> returns <code>weight.view(local_num_experts, -1)</code> with a contiguity assert. Experts are <strong>rows of one tensor with uniform stride</strong> — per-expert heterogeneous bit-width is not hard in this layout, it is <em>unrepresentable</em>.</p>
+
+    <h3>Five candidates, four rejected</h3>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Approach</th><th>Call</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><b>K_max arena, under-filled</b></td><td><span class="chip c-kill">Reject</span></td><td>All-K4 = <b>86.62 GiB/rank</b> vs ~86 GiB budget. And reserving K4 capacity costs the same as just quantizing at K4 — it buys nothing.</td></tr>
+        <tr><td><b>Nested / prefix codes</b></td><td><span class="chip c-kill">Reject</span> <span class="chip c-neutral">roadmap</span></td><td>EXL3 is not refinable, provably: each weight decodes from a <b>16-bit sliding window</b> whose stride changes with K, and the codebook is a multiply-hash with zero locality — truncation yields <b>uncorrelated noise</b>. <code>suh</code>/<code>svh</code> also change on every K change.</td></tr>
+        <tr><td><b>VMM remapping (CuMemAllocator)</b></td><td><span class="chip c-kill">Reject</span></td><td>Mechanism is real and shipped. But the K3→K4 delta is <b>1.125 MiB/rank — below the 2 MiB granule</b>, so per-expert remapping reclaims nothing. And sleep mode is <b>broken on this exact hardware</b> (#21336, open since 2025-07-21).</td></tr>
+        <tr><td><b>Double-buffer + graph re-capture</b></td><td><span class="chip c-watch">Rare path</span></td><td>Possible — elastic EP does it. But <b>5–20 s</b> for capture plus a full Inductor recompile plus prefix-cache destruction. Not a rebalance-interval operation.</td></tr>
+        <tr><td><b>Fixed-cardinality tiers + membership swap</b></td><td><span class="chip c-go">Select</span></td><td>See below.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <h3>The chosen design</h3>
+    <p>Verified directly in the fork's source. <code>api.compile_mixed_trellis(...)</code> (<code>exl3.py:1885-1901</code>) takes <code>tier0_num_experts</code>, <code>tier1_num_experts</code>, <code>tier0_bits</code>, <code>tier1_bits</code> — cardinalities are <em>baked into the compiled launch</em>. But <code>api.run_mixed_trellis(...)</code> (<code>:1955</code>) takes <code>global_to_combined</code> and <code>descriptor_map</code> as <em>runtime device-tensor arguments on every call</em>, produced by <code>build_tiered_maps()</code> purely from two lists of global expert IDs.</p>
+    <div class="note good">
+      <p><strong>Tier membership is runtime data. Tier cardinality is compiled state.</strong></p>
+      <p>So: hold per-layer cardinalities fixed at startup (|K4| = N<sub>L</sub>, |K3| = E − N<sub>L</sub>) and express every rebalance as a <em>membership permutation</em>.</p>
+    </div>
+    <p>Each stated blocker dissolves. Tier slab shapes are constant forever, so every write is a fixed-shape row <code>copy_</code> — exactly what EPLB already does safely. No parameter is ever rebound. The <code>tier_signature</code> is invariant, so the runtime cache hits forever and the <code>RuntimeError</code> at <code>:1862</code> is never reached. Fragmentation is zero because no allocation occurs on the swap path. And online re-encoding is <em>eliminated</em> — page pre-built artifacts, as every published system does.</p>
+
+    <h4>Memory arithmetic · H=6144, E=256, top-8, I=2048, 77 MoE layers, TP4</h4>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Quantity</th><th class="numeric">K3</th><th class="numeric">K4</th><th class="numeric">Δ</th></tr></thead>
+      <tbody>
+        <tr><td>One expert · one layer · one rank</td><td class="numeric">3.375 MiB</td><td class="numeric">4.500 MiB</td><td class="numeric">1.125 MiB</td></tr>
+        <tr><td>All routed experts, per rank</td><td class="numeric">64.97 GiB</td><td class="numeric">86.62 GiB</td><td class="numeric">21.66 GiB</td></tr>
+        <tr><td>One routed bpw point (+0.01)</td><td class="numeric">—</td><td class="numeric">—</td><td class="numeric">221.8 MiB</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p>At the current <strong>3.42 bpw</strong> operating point: <strong>N = 108 experts/layer at K4, 148 at K3</strong>, total <strong>74.07 GiB/rank</strong> — leaving ~12 GiB for dense/attention, the MTP draft, the ~1 GiB Trellis arena, activations, NCCL, graphs and KV. A 108-slot swappable population per layer is ample.</p>
+    <p><strong>Swap cost.</strong> One expert exchanged per layer moves 7.875 MiB/rank; a full-model pass over 77 layers moves <strong>~606 MiB/rank</strong> — 11–24 ms of H2D on PCIe, fully overlappable on a side stream. <strong>Reserved staging</strong>: 9 MiB/rank best case, allocated inside <code>profile_run</code> under an <code>is_profile</code> flag so the KV budget shrinks honestly — EPLB's exact trick. <strong>Offline storage</strong>: full K3 + K4 artifacts ≈ <strong>607 GB on NVMe</strong>. Trivial, and it buys away Viterbi cost, Hessian persistence, and the entire online-quantization subsystem.</p>
+    <div class="note">
+      <h4>The one open question, and why it doesn't block</h4>
+      <p>Whether b12x exposes a per-expert row write into a prepared tier object is not visible from the authorized repos. <strong>Best case</strong>: swap is two row copies plus map rebuild — sub-millisecond, 9 MiB reserved. <strong>Fallback</strong>: rebuild one layer's two tier slabs, ~0.96 GiB/rank (~1.92 GiB double-buffered), one layer per engine step — EPLB's exact cadence. Answering it chooses between 9 MiB and 2 GiB of reserved memory; it does not change whether the design works.</p>
+    </div>
+    <h4>Failure modes</h4>
+    <ul>
+      <li><strong>Torn update</strong> between trellis rows and <code>suh</code>/<code>svh</code>/<code>rotations</code> corrupts silently. Do the whole metadata update inside the quiesce window, or double-buffer and flip an index. vLLM ships the primitive: <code>pause_scheduler(mode="keep")</code>.</li>
+      <li><strong>Strict permutation</strong> — every upgrade costs a downgrade. Also a feature: the budget becomes a structural invariant, not a checked constraint.</li>
+      <li><strong>Two-tier ceiling</strong> — <code>len(tiers) != 2</code> raises (<code>:1591</code>); K2 unavailable.</li>
+      <li><strong>Cross-rank divergence is fatal.</strong> A per-logical-expert policy applied uniformly gives bit-identity for free.</li>
+      <li><strong><code>FusedMoEQuantConfig</code> staleness</strong> — memoized with direct tensor references; any swap must null it.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="policy">
+  <div class="sec-head"><div class="num">04</div><h2>The policy problem</h2></div>
+  <div class="col">
+    <div class="note warn">
+      <h4>Do not use raw hotness</h4>
+      <p>Two independent papers found it is the <em>weakest</em> available signal — the router-norm method explicitly beats activation-frequency baselines, and MoPEQ uses Hessian trace "instead of relying on activation frequency." vLLM's EPLB counter records literally nothing else: <code>scatter_add_</code> of <code>ones_like</code>.</p>
+    </div>
+    <h3>Three signal terms, all cheap, all topology-neutral</h3>
+    <ol>
+      <li><strong>Static error curve ε<sub>e</sub>(b)</strong> — pure weight-space, computable locally with no rented hardware. Free extra priors: AlphaQ's spectral α, router-vector L2 norm.</li>
+      <li><strong>Workload term</strong> — routing <em>mass</em> (Σ gate values), not counts, plus frequency, over the rolling window. HOBBIT's <strong>LHU</strong> ("how often was this expert needed <em>at high precision</em>") is a strictly better promotion signal than raw usage.</li>
+      <li><strong>Verification term</strong> — measured end-to-end KL against a held-out probe, by actually applying a candidate swap. <strong>This is the one thing a live server can do that an offline quantizer cannot.</strong></li>
+    </ol>
+    <div class="note">
+      <p><strong>The objective must be KL, never perplexity.</strong> TASA shows PPL-based layer sensitivity has <strong>Kendall τ ≈ 0</strong> with reasoning-task sensitivity, and that PPL-sensitive layers cluster at embeddings and the output head while reasoning-critical layers sit mid-network — PPL-guided allocation <em>systematically under-protects reasoning</em>. exllamav3's <code>measure_model.py</code> already uses KL.</p>
+    </div>
+
+    <h3>Under fixed cardinality, the LP degenerates to a sort</h3>
+    <p>With two tiers and N<sub>L</sub> fixed, rank experts by marginal utility Δ<sub>e</sub> = (ε<sub>e,3</sub> − ε<sub>e,4</sub>) · φ<sub>e</sub><sup>α</sup> · w<sub>e</sub><sup>β</sup> and take the top N<sub>L</sub>. That is <code>argsort</code>. Reserve the full LP for choosing per-layer N<sub>L</sub> <em>once at startup</em> from a global solve; the online loop only permutes membership within a layer.</p>
+
+    <h4>Two corrections the naive design gets wrong</h4>
+    <ul>
+      <li><strong>EvoPress</strong> (ICML 2025) shows per-layer error is <em>not monotone or additive</em> — "pruning a model further may even significantly recover performance." Every greedy allocator assumes the separability this refutes. Consequence: cap at 1–4 swaps per layer per interval, validate against the held-out KL probe, and roll back.</li>
+      <li><strong>TASA</strong> shows calibrating <em>purely</em> on in-domain data actively degrades quality — pure task data makes the layer-wise Hessian eigenspectrum degenerate. Optimal mixing is model-specific (50% general for LLaMA-3, 75% for Qwen2.5). So <strong>"specialize" means reweight, not replace</strong>: derive ε from a blended set, use live traffic only for the φ/w weighting.</li>
+    </ul>
+
+    <h3>Topology neutrality — two artifacts, deliberately separated</h3>
+    <ul>
+      <li><strong>Policy artifact (neutral).</strong> <code>logical expert id → bits</code>, keyed on checkpoint identity, base quant config, schema version, bit menu. <strong>Explicitly excludes</strong> rank, world_size, tp_size, device count, device name.</li>
+      <li><strong>Derived slab cache (topology-keyed, regenerable).</strong> Per-rank materialization.</li>
+    </ul>
+    <p>Both existing precedents violate this: <code>startup_plan.compute_plan_fingerprint</code> includes rank and world_size, <code>VllmConfig.compute_hash()</code> folds in <code>parallel_config</code>, and the checkpoint carries <code>rank{r}</code> in tensor names. The rank-slicing is a <em>storage</em> choice — the trellis slices cleanly at 16-column granularity because every 16×16 tile is a self-contained tail-biting codeword.</p>
+    <div class="note good">
+      <p><strong>Convenient accident:</strong> because EP is off, every TP rank routes the same tokens, so per-expert counts are <em>logical, not physical</em> — already topology-neutral. Under EP they would not be.</p>
+    </div>
+
+    <h3>Feedback loops — real, and completely unstudied</h3>
+    <p>The loop <em>precision change → output change → router logit shift → top-8 flip → different hotness → different decision</em> is real. Four groups establish that quantization shifts routing (EAQuant, MoEQuant, ExpertQuant, EAC-MoE); ExpertQuant finds errors dominated by <strong>near-neighbor rank flips around top-k</strong> — and with top-8 of 256, the 8th/9th margin is thin. No published work connects this to a runtime loop. Mitigations in cost order: keep the router in BF16 (this stack already does); <strong>rollback guard</strong> on top-8 Jaccard overlap vs BF16 ground truth (the collector captures exactly this); hysteresis; dwell time; a hard cap on swaps per interval.</p>
+    <p><strong>Cold start:</strong> never start from uniform. Ship a generic allocation as the prior and rehydrate the previous session's policy — which, given fixed cardinality, is literally "load the JSON that already exists."</p>
+
+    <h3>How this differs from EPLB</h3>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th></th><th>EPLB</th><th>Fungible quant</th></tr></thead>
+      <tbody>
+        <tr><td>Problem</td><td>Load balancing</td><td>Distortion minimization</td></tr>
+        <tr><td>Objective</td><td>Minimize max-rank load → throughput</td><td>Minimize aggregate output error → quality</td></tr>
+        <tr><td>Domain</td><td><b>Physical</b> expert slots</td><td><b>Logical</b> experts</td></tr>
+        <tr><td>Free variable</td><td>Placement + replication</td><td>Bit-width</td></tr>
+        <tr><td>Wants</td><td><b>Uniformity</b></td><td>To <b>exploit</b> non-uniformity</td></tr>
+        <tr><td>Constraint</td><td>Ranks × slots</td><td>Bytes</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col"><p><code>balanced_packing</code> and <code>replicate_experts</code> are <strong>not reusable</strong> — a perfectly balanced expert distribution is precisely the case where fungible quant has nothing to do. The only shared machinery is <strong>the cadence</strong>: rolling window, <code>step_interval</code> trigger, async worker with its own stream and events, and the <code>is_profile</code> reservation trick. Factoring that out is itself upstreamable.</p></div>
+</section>
+
+<section id="phases">
+  <div class="sec-head"><div class="num">05</div><h2>Phased plan</h2></div>
+  <div class="col">
+    <div class="note warn"><p><strong>Do not write runtime code until 0d returns.</strong></p></div>
+  </div>
+
+  <div class="col">
+    <h3>Phase 0 — this week · no vLLM changes · own hardware</h3>
+    <p>This is the go/no-go.</p>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th></th><th>Task</th><th>Effort</th><th>Proves / retires</th></tr></thead>
+      <tbody>
+        <tr><td class="mono"><b>0a</b></td><td>Stability analysis on the existing 7.3M-token trace. ~100 windows; per-expert frequency <b>and gate mass</b>; Kendall τ of the top-N set across windows, hours, days.</td><td>Hours, <b>zero GPU</b></td><td>The load-bearing empirical assumption nobody in the literature has measured.</td></tr>
+        <tr><td class="mono"><b>0b</b></td><td>Extend the collector to 3–4 more MoE layers (early/middle/late); rank-correlate against layer 78.</td><td>1 day</td><td>That the layer-78 asset generalizes — it is the MTP <i>draft</i> head, 1 of ~78.</td></tr>
+        <tr><td class="mono"><b>0c</b></td><td><code>measure_model.py -l3</code> → per-tensor dKL-vs-bpw curves. Report <b>variance of dKL across experts within a layer</b>.</td><td>2–5 h GPU</td><td>Whether there is anything to allocate at all.</td></tr>
+        <tr><td class="mono"><b>0d</b></td><td><b>The go/no-go.</b> measure→optimize→compile twice at <i>identical</i> bpw: stock calibration vs 50/50 blend with live traffic. Compare end-task quality and Kendall τ.</td><td>+1 day</td><td>Whether workload specialization is worth anything at all.</td></tr>
+        <tr><td class="mono"><b>0e</b></td><td>Router-shift measurement: one layer K3 vs K4, top-8 Jaccard vs BF16 ground truth.</td><td>Hours</td><td>The feedback-loop risk.</td></tr>
+        <tr><td class="mono"><b>0f</b></td><td>Six cheap facts: b12x per-expert row write? · benchmark <code>quantize_exl3()</code> at K3/K4 · read comments on #50281 / #38256 / #49198 / #48920 · search llm-compressor and compressed-tensors · search GitHub <b>Discussions</b> · <b>comment on RFC #49702 before 2026-08-18</b>.</td><td>1 day</td><td>Design cost, prior art, and the highest-leverage upstream action available.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <div class="phase">
+      <div class="phase-id">PHASE 1<br>2–3 wk</div>
+      <div>
+        <h3>Plugin only — startup specialization</h3>
+        <p>A <code>vllm.general_plugins</code> entry point that binds <code>set_capture_fn</code> with a single <code>scatter_add_</code>, persists per-expert (count, gate-mass) under a topology-neutral key, and feeds those into <code>measure_model.py</code>/<code>optimize_model.py</code> to emit a specialized <code>bits_per_expert</code> JSON and mixed-K checkpoint.</p>
+        <p><strong>Mandatory validation:</strong> bind the hook, run 100 decode steps <em>with CUDA graphs enabled</em>, confirm the counter scales linearly rather than freezing at its capture-time value.</p>
+        <p><strong>If VBQ's finding holds, this is the whole product</strong> — and Phases 3–5 are never built.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-id">PHASE 2<br>1–2 wk</div>
+      <div>
+        <h3>First upstream PR — quantization disk cache</h3>
+        <p>Cache online-quantized weights to <code>VLLM_CACHE_ROOT/quant_cache/{hash}</code>, keyed from a <code>compute_hash()</code> with <code>parallel_config</code> in <code>ignored_factors</code>, imitating <code>torch_compile_cache</code>. Small, uncontroversial, benefits every FP8/MXFP8 user today, needs no RFC — and builds the exact infrastructure the policy artifact needs.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-id">PHASE 3<br>2–4 wk</div>
+      <div>
+        <h3>Second upstream PR — decouple expert-load recording from EP</h3>
+        <p>Today <code>parallel.py:394-395</code> raises <em>"enable_expert_parallel must be True to use EPLB"</em>, yet the recorder needs nothing from EP. Ship a standalone load window + <code>step_interval</code> trigger usable at EP=1, plus <strong>the first Prometheus metrics for expert load</strong> (there are currently zero). Coordinate with RFC #32028.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-id">PHASE 4<br>4–8 wk</div>
+      <div>
+        <h3>Fork + b12x — fixed-cardinality membership swap</h3>
+        <p>Pre-built artifacts on NVMe → pinned host staging → side stream → row writes into fixed-shape tier slabs → <code>build_tiered_maps</code> → applied at a quiesced point. <strong>Start with the brutal version</strong>: <code>sleep(level=2)</code> → reload with the new policy → <code>wake_up</code>. It drops in-flight requests and costs seconds, but it validates the whole decide-and-apply loop before anyone builds the atomic path.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-id">PHASE 5</div>
+      <div>
+        <h3>RFC — quant-format-agnostic runtime precision reallocation</h3>
+        <p>Filed only with Phase 0's measurements as the evidence base. An RFC carrying a stability curve and a specialization-value number is a fundamentally different document from one carrying a mechanism sketch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="upstream">
+  <div class="sec-head"><div class="num">06</div><h2>Upstreaming</h2></div>
+  <div class="col">
+    <h3>Duplicate-work check</h3>
+    <p><strong>No RFC or PR in <code>vllm-project/vllm</code> proposes workload-driven runtime bit-width reallocation.</strong> Exhaustive searches for requantization (106 PR hits), adaptive quantization/precision (14), bit width/bpw (20), and per-expert + precision (116) returned nothing describing periodic re-decision of per-tensor bit-widths under a memory budget.</p>
+    <div class="note warn">
+      <p><strong>Close this before filing:</strong> GitHub <em>Discussions</em> were never searched — vLLM does design work there. Also unsearched: <code>llm-compressor</code> and <code>compressed-tensors</code>, where bit-allocation logic and any per-expert bitrate schema would actually live. If compressed-tensors already has one, both the novelty claim and the format design change.</p>
+    </div>
+    <h3>Positioning against the seven neighbours</h3>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Item</th><th>Relationship</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><b>RFC #50281</b> + PRs #50401/#51285/#51392<br><span class="cite">per-layer online quant config</span></td><td>The <b>substrate</b> — establishes layer-pattern → scheme vocabulary.</td><td>Frame this as <i>"make #50281's static map mutable at runtime and let vLLM author it from observed load."</i> Do <b>not</b> add a third racing PR.</td></tr>
+        <tr><td><b>RFC #38256</b> + PR #37190<br><span class="cite">incremental MoE expert offloading</span></td><td><b>Best potential ally.</b> Already builds per-expert LFRU hotness + async H2D + atomic swap, explicitly <i>"quant-agnostic."</i></td><td>Propose composition, CC the author. Its existence independently weakens the "vLLM loads weights once" objection.</td></tr>
+        <tr><td><b>#49198</b><br><span class="cite">progressive mixed-precision KV cache</span></td><td>Same four-step lifecycle for KV blocks.</td><td>Cite for mechanism acceptability; borrow its logical→physical indirection. No maintainer buy-in yet.</td></tr>
+        <tr><td><b>RFC #48920</b> + PR #48908<br><span class="cite">unify weight-loading lifecycle</span></td><td><b>The boundary.</b> Explicitly scopes EPLB rebalance and non-checkpoint shape changes <i>out</i>; requant runs "only within the existing model geometry."</td><td>A reviewer <i>will</i> point here. Engage now; propose this as a fourth <code>WeightLoadSession</code> source, before that phrase hardens into merged code.</td></tr>
+        <tr><td><b>RFC #49702</b><br><span class="cite">EPLB platform backend · closes 2026-08-18</span></td><td><b>Highest-leverage action available right now.</b> The only open proposal abstracting "allocation and movement operations for weight tensors" behind a replaceable interface.</td><td>Comment asking the interface <b>describe sizes</b> rather than assume <code>empty_like</code>. Cost: 30 minutes.</td></tr>
+        <tr><td><b>#51567</b><br><span class="cite">EPLB fails to transport E8M0 expert state</span></td><td>Proof the fixed-shape gap causes <b>user-visible breakage today</b>.</td><td>Cite to reframe from speculative feature to general fix for a class of live bugs.</td></tr>
+        <tr><td><b>#41955</b><br><span class="cite">mixed INT4/INT8 GPTQ MoE crashes</span></td><td><b>The likely first objection</b> — even <i>static</i> mixed-bit MoE breaks current fused kernels.</td><td>Answer ready: bucket experts by bit-width, one grouped GEMM per bucket — which is what b12x already does.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <h3>Does EXL3 not being upstream block this?</h3>
+    <p><strong>No — if the design is format-agnostic. Yes — if you bundle EXL3.</strong> Upstream has declined EXL3 four times (#19896 closed not-planned; #11416 QTIP closed; #3203, #296, #2645 closed unimplemented), and #39583/#30136 show active de-scoping of exotic formats to out-of-tree plugins.</p>
+    <p>Define the interface over a <em>capability</em>, not a format:</p>
+    <pre style="overflow-x:auto;background:var(--code-bg);padding:1rem;border-radius:3px;font-size:.82rem;line-height:1.5"><code>supports_variable_bitwidth -> bool
+available_bitwidths(tensor_name) -> tuple[int, ...]
+materialize(tensor_name, bits)  -> (opaque_bytes, length)</code></pre>
+    <p>vLLM core owns statistics, policy, budget, scheduling and the swap transaction. EXL3 ships out-of-tree via <code>register_quantization_config</code>; FP8, INT4, MXFP4 and LUT-B can all implement the same interface. This is the correct engineering boundary regardless of upstreaming.</p>
+    <div class="note good">
+      <p><strong>The strongest hook into upstream's current interests is PR #50168</strong> — a core maintainer prototyping NVIDIA Rubin <strong>LUT-B</strong> at 3.125–3.516 bpw, with a calibration-free accuracy gap of <strong>52.08% → 75.51% GSM8K</strong> depending on variant. That gap <em>is</em> the "which tensors deserve the bits" problem, in the same bpw band, from a maintainer. Natural reviewer, right venue.</p>
+    </div>
+    <h3>Sequencing</h3>
+    <ol>
+      <li>Comment on <strong>#49702</strong> now — deadline 2026-08-18.</li>
+      <li>Land <strong>Phase 2</strong> (quant disk cache) as a standalone PR. Establishes credibility.</li>
+      <li>Land <strong>Phase 3</strong> (EP-independent load recording + metrics) as a second PR.</li>
+      <li><strong>Only then</strong> file the RFC, with Phase 0's measurements as its evidence base.</li>
+    </ol>
+    <h4>AGENTS.md compliance — non-negotiable</h4>
+    <ul>
+      <li>Pure code-agent PRs are <strong>not allowed</strong>. Every changed line must be read and defensible end-to-end; state this in the PR body.</li>
+      <li>Disclose AI assistance, and state why the change is not a duplicate — cite #50281, #38256, #48920, #49702 by number.</li>
+      <li>State test commands and results: <code>pytest tests/model_executor/model_loader/test_reload.py</code>, <code>tests/v1/cudagraph/</code>, <code>tests/quantization/</code>, <code>pre-commit run --all-files</code>, <code>pre-commit run mypy-3.10 --all-files --hook-stage manual</code>.</li>
+      <li>Commit trailers: <code>Co-authored-by: Claude</code>, <code>Signed-off-by: …</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="risks">
+  <div class="sec-head"><div class="num">07</div><h2>Risks &amp; kill criteria</h2></div>
+  <div class="col"><p>Ordered by when you learn them. Each has a concrete measurement and a threshold.</p></div>
+  <div class="tw">
+    <table>
+      <thead><tr><th></th><th>Risk</th><th>Measurement</th><th>Kill threshold</th><th>Kills</th></tr></thead>
+      <tbody>
+        <tr><td class="mono"><b>K1</b></td><td><b>Specialization gain is within noise.</b> VBQ, AWQ and TASA all predict this.</td><td>0d — two quants at identical bpw, generic vs blended calibration</td><td>Delta &lt; 1σ of eval noise, <b>or</b> τ &gt; 0.9 between allocations</td><td><span class="chip c-kill">Whole project</span></td></tr>
+        <tr><td class="mono"><b>K2</b></td><td><b>Sensitivity is homogeneous</b> — nothing to allocate.</td><td>0c — variance of dKL across experts in a layer</td><td>Top-N and bottom-N differ by less than measurement error</td><td><span class="chip c-kill">Whole project</span></td></tr>
+        <tr><td class="mono"><b>K3</b></td><td><b>Allocation does not drift.</b> <i>Most likely outcome.</i></td><td>0a — Kendall τ of top-N across days/weeks</td><td>τ &gt; 0.9 across weeks</td><td><span class="chip c-watch">Phases 3–5</span></td></tr>
+        <tr><td class="mono"><b>K4</b></td><td><b>Layer 78 does not generalize</b> — it is the MTP draft head.</td><td>0b — cross-layer rank correlation</td><td>τ ≈ 0 vs early/middle layers</td><td><span class="chip c-watch">Cost model</span></td></tr>
+        <tr><td class="mono"><b>K5</b></td><td><b>Router instability</b> dominates the signal.</td><td>0e — top-8 Jaccard pre/post vs BF16</td><td>Overlap &lt; 0.95</td><td><span class="chip c-watch">Closed loop</span></td></tr>
+        <tr><td class="mono"><b>K6</b></td><td><b>No per-expert row write in b12x.</b></td><td>0f(i) — read the source</td><td>Whole-tier <code>prepare_weights</code> only</td><td><span class="chip c-neutral">9 MiB → 2 GiB</span></td></tr>
+        <tr><td class="mono"><b>K7</b></td><td><b>Two-tier / K≥3 ceiling is structural.</b></td><td>Already known (<code>exl3.py:1591</code>)</td><td>—</td><td><span class="chip c-watch">Halves value</span></td></tr>
+        <tr><td class="mono"><b>K8</b></td><td><b>Sleep mode broken on SM120</b> (#21336, open since 2025-07-21).</td><td>Run with <code>--enable-sleep-mode</code></td><td>Reproduces</td><td><span class="chip c-neutral">VMM route</span></td></tr>
+        <tr><td class="mono"><b>K9</b></td><td><b>Online re-encode impractical</b> — needs ~210 GiB of Hessians the pipeline discards.</td><td>0f(ii) — benchmark <code>quantize_exl3()</code></td><td>Any result</td><td><span class="chip c-neutral">Already designed out</span></td></tr>
+        <tr><td class="mono"><b>K10</b></td><td><b><code>bits_per_expert</code> not regenerable.</b></td><td>0f — provenance on the existing map</td><td>Hand-tuned outside any toolchain</td><td><span class="chip c-neutral">Partly retired</span></td></tr>
+        <tr><td class="mono"><b>K11</b></td><td><b>Upstream rejects the premise.</b></td><td>Maintainer comments on #48920 / #49702</td><td>Explicit rejection</td><td><span class="chip c-watch">The RFC only</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <h3>What the research could not establish</h3>
+    <ul>
+      <li><strong>b12x / SparkInfer internals</strong> — not in the authorized repos. The decisive question was resolved from the vLLM-side caller, but repack-vs-alias, per-expert row write, and &gt;2 tiers remain unread.</li>
+      <li><strong>EXL3 encode cost on SM120</strong> — K-independence of Viterbi compute is proven from the kernel source; real K3-vs-K4 timings could still differ by tens of percent.</li>
+      <li><strong>GLM-5.2 routing behaviour</strong> — every published expert-activation measurement is on Mixtral, Qwen-MoE, DeepSeek-MoE, OLMoE. Nothing measures GLM-5.2. <strong>Your own trace is better evidence than any published paper</strong> — which is exactly why Phase 0 runs first.</li>
+      <li><strong>The right objective for an MTP draft head</strong> — acceptance length vs KL vs PPL — is genuinely ahead of the literature. No external validation available.</li>
+      <li><strong>DynaExq has no code release found</strong>; its EMA α and update period are undisclosed.</li>
+      <li><strong>Maintainer sentiment is unestablished.</strong> Five minutes of reading issue comments closes this.</li>
+    </ul>
+    <div class="note">
+      <h4>The bottom line</h4>
+      <p>Two published results (VBQ, AWQ) and one measurement (MoE-Infinity's "reuse counts even out over time") all predict that <strong>K3 fires before K1</strong> — that the allocation converges and stops moving, in which case a one-time warmup specialization captures the value and the continuous machinery is wasted. Phase 1 is designed to be exactly that product, and <strong>Phase 0a will tell you within a day of pandas work.</strong></p>
+      <p style="margin-top:.7rem"><strong>Build Phase 0. Then decide.</strong></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap col">
+    <p>Assembled from 27 research agents across four prior-art sweeps and five adversarially-verified vLLM feasibility lenses, with direct source verification against <code>gg/dev/gilded-gnosis</code>. Line references are to the vLLM tree at <code>99267c23</code> and to the fork.</p>
+    <p><strong>Verify every citation before filing anything upstream.</strong> Paper titles, arXiv IDs and issue numbers were gathered by automated search and have not been independently confirmed one by one.</p>
+  </div>
+</footer>
