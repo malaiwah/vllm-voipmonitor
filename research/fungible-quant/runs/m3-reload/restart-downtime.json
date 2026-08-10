@@ -1,0 +1,6 @@
+{
+ "last_healthy_t": 1786388645.758,
+ "first_healthy_t": 1786388733.802,
+ "downtime_s": 88.0,
+ "note": "serve restart 042->042b, warm torch.compile/JIT caches, poll interval 0.5s"
+}

@@ -1,0 +1,34 @@
+{
+ "a": "042-freshboot",
+ "b": "042-liveswap",
+ "identical": true,
+ "rows": [
+  {
+   "prompt_idx": 0,
+   "n_tokens": 117,
+   "mean_a": -1.6955429959886024,
+   "mean_b": -1.6955429959886024,
+   "delta_mean": 0.0,
+   "max_abs_diff": 0.0,
+   "n_token_diffs": 0
+  },
+  {
+   "prompt_idx": 1,
+   "n_tokens": 115,
+   "mean_a": -2.5241446767708426,
+   "mean_b": -2.5241446767708426,
+   "delta_mean": 0.0,
+   "max_abs_diff": 0.0,
+   "n_token_diffs": 0
+  },
+  {
+   "prompt_idx": 2,
+   "n_tokens": 122,
+   "mean_a": -2.2046517000207295,
+   "mean_b": -2.2046517000207295,
+   "delta_mean": 0.0,
+   "max_abs_diff": 0.0,
+   "n_token_diffs": 0
+  }
+ ]
+}

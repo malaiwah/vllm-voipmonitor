@@ -1,0 +1,204 @@
+{
+ "new_model_dir": "/home/mbelleau/fq-0c/fruit-mixed-042",
+ "dry_run": false,
+ "pause_mode": "wait",
+ "timings": {
+  "pause_s": 0.039,
+  "rpc_s": 0.426,
+  "resume_s": 0.001,
+  "total_stall_s": 0.466
+ },
+ "rpc_status": 200,
+ "per_rank": {
+  "results": [
+   {
+    "dry_run": false,
+    "elapsed_s": 0.407,
+    "staged_mb": 427.3,
+    "layers": {
+     "3": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "4": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "5": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "6": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "7": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "8": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "9": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "10": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "11": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "12": {
+      "status": "swapped",
+      "moved": 16
+     }
+    }
+   },
+   {
+    "dry_run": false,
+    "elapsed_s": 0.371,
+    "staged_mb": 427.3,
+    "layers": {
+     "3": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "4": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "5": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "6": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "7": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "8": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "9": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "10": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "11": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "12": {
+      "status": "swapped",
+      "moved": 16
+     }
+    }
+   },
+   {
+    "dry_run": false,
+    "elapsed_s": 0.399,
+    "staged_mb": 427.3,
+    "layers": {
+     "3": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "4": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "5": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "6": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "7": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "8": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "9": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "10": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "11": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "12": {
+      "status": "swapped",
+      "moved": 16
+     }
+    }
+   },
+   {
+    "dry_run": false,
+    "elapsed_s": 0.375,
+    "staged_mb": 427.3,
+    "layers": {
+     "3": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "4": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "5": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "6": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "7": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "8": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "9": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "10": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "11": {
+      "status": "swapped",
+      "moved": 16
+     },
+     "12": {
+      "status": "swapped",
+      "moved": 16
+     }
+    }
+   }
+  ]
+ }
+}
