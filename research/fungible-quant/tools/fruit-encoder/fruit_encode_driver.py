@@ -107,7 +107,7 @@ def run_workers(args) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--bits", type=int, required=True, choices=(3, 4))
+    ap.add_argument("--bits", type=int, required=True, choices=(2, 3, 4, 5))
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--oracle", action="store_true")
     ap.add_argument("--encode", action="store_true")
