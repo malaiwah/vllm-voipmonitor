@@ -134,8 +134,15 @@ while true; do
         # bit-exact) so the re-captured activations are byte-identical and
         # tiers stay hessian-identical. Holding captures for the whole K2
         # pass instead filled the disk (observed: 455 -> 213 GB).
-        for L in $(seq $START $END); do rm -rf "$CAPTURE/layer_$(printf %03d $L)"; done
-        log "window $START-$END: capture pruned after publish"
+        if pgrep -f "fruit_encode_driver.*--encode" >/dev/null; then
+          # Another tier is encoding from this capture right now (e.g. an
+          # opportunistic K5 run on GPUs the campaign left idle). Deleting
+          # it underneath a live reader loses that tier's layers.
+          log "window $START-$END: prune deferred — an encode is still reading the capture"
+        else
+          for L in $(seq $START $END); do rm -rf "$CAPTURE/layer_$(printf %03d $L)"; done
+          log "window $START-$END: capture pruned after publish"
+        fi
       else
         log "publish failed (retry next pass)"
       fi
