@@ -326,8 +326,8 @@
     "12": 141
    },
    "benefit_captured": 0.13749135416028588,
-   "benefit_uniform_baseline": 0.13392129638726052,
-   "advantage_vs_uniform_pct": 2.665787943615636
+   "benefit_uniform_baseline": 0.13407734078186095,
+   "advantage_vs_uniform_pct": 2.546301529040169
   },
   {
    "budget_frac": 0.5,
