@@ -1,0 +1,218 @@
+{
+ "summary": {
+  "tag": "off-warmup",
+  "n": 40,
+  "concurrency": 4,
+  "max_tokens": 96,
+  "seed": 9,
+  "ok": 0,
+  "errors": 40,
+  "wall_s": 0.083,
+  "completion_tokens": 0,
+  "prompt_tokens": 0,
+  "decode_tok_per_s": 0.0,
+  "latency_p50_s": null
+ },
+ "records": [
+  {
+   "i": 0,
+   "status": "error:HTTPError",
+   "latency_s": 0.069
+  },
+  {
+   "i": 1,
+   "status": "error:HTTPError",
+   "latency_s": 0.068
+  },
+  {
+   "i": 2,
+   "status": "error:HTTPError",
+   "latency_s": 0.068
+  },
+  {
+   "i": 3,
+   "status": "error:HTTPError",
+   "latency_s": 0.067
+  },
+  {
+   "i": 4,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 5,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 6,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 7,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 8,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 9,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 10,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 11,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 12,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 13,
+   "status": "error:HTTPError",
+   "latency_s": 0.002
+  },
+  {
+   "i": 14,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 15,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 16,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 17,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 18,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 19,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 20,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 21,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 22,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 23,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 24,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 25,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 26,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 27,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 28,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 29,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 30,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 31,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 32,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 33,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 34,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 35,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 36,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 37,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 38,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  },
+  {
+   "i": 39,
+   "status": "error:HTTPError",
+   "latency_s": 0.001
+  }
+ ]
+}
