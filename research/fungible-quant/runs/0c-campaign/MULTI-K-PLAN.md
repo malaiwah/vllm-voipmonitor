@@ -46,3 +46,11 @@ the done-JSONs for all four Ks → the 0c variance/N_L solve gets a 4-point
 2. M1 integration + T1-on-GLM-5.2 evidence (serve quad).
 3. Stop serve → full capture half A → 4-K encode fleet on 8 GPUs → half B
    → publish rolling. Ping Michel with budget before launch.
+
+## Opportunistic execution (Michel, 2026-08-10)
+
+The full campaign is NOT all-or-nothing: segments are content-addressed
+and per-layer, so **whatever gets quantized and uploaded is immediately
+durable value; the rest backfills over time**. Execution order therefore
+goes hottest-layers-first (0c variance ranking), rolling per-layer publish
++ local delete, resumable at layer granularity across rental sessions.
