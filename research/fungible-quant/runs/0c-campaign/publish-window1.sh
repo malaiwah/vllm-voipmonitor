@@ -7,7 +7,7 @@ for K in 2 5; do
   STAGE=/home/mbelleau/glm52-segments-stage/k$K
   mkdir -p "$STAGE"
   for f in /home/mbelleau/glm52-work-k$K/tr3-layer-*.safetensors; do
-    L=$(basename "$f" | grep -oE '[0-9]+')
+    L=$(basename "$f" .safetensors | sed 's/.*layer-//')
     ln -sf "$f" "$STAGE/model-layer-$L.safetensors"
   done
   /home/mbelleau/venvs/fq/bin/python \
