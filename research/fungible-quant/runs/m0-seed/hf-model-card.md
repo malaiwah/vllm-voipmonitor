@@ -13,6 +13,13 @@ tags:
 
 # GLM-5.2 — Progressive Tensors segments (K3 base + K2/K5 window)
 
+> **Tools:** [github.com/malaiwah/progressive-tensors](https://github.com/malaiwah/progressive-tensors)
+> — verify these fragments, reassemble any recipe into a bootable
+> checkpoint, or prime segments from another community quant.
+> **Research + evidence:** [vllm-voipmonitor `research/fungible-quant`](https://github.com/malaiwah/vllm-voipmonitor/tree/claude/gg-overview-exploration-jchgd3/research/fungible-quant).
+> **Status:** experimental alpha — the schemas are versioned, the consuming
+> tools are gaining mandatory attestation verification; pin a signer.
+
 **Purpose-built research artifact** for the *Progressive Tensors / fungible
 quant* project: runtime per-expert bit-width reallocation for EXL3 MoE
 serving in the Gilded Gnosis vLLM stack. The core of this repo is the
