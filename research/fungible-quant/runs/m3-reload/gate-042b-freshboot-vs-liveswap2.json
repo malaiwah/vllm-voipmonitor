@@ -1,0 +1,34 @@
+{
+ "a": "042b-freshboot",
+ "b": "042b-liveswap2",
+ "identical": true,
+ "rows": [
+  {
+   "prompt_idx": 0,
+   "n_tokens": 117,
+   "mean_a": -1.6971587385055928,
+   "mean_b": -1.6971587385055928,
+   "delta_mean": 0.0,
+   "max_abs_diff": 0.0,
+   "n_token_diffs": 0
+  },
+  {
+   "prompt_idx": 1,
+   "n_tokens": 115,
+   "mean_a": -2.535187720108281,
+   "mean_b": -2.535187720108281,
+   "delta_mean": 0.0,
+   "max_abs_diff": 0.0,
+   "n_token_diffs": 0
+  },
+  {
+   "prompt_idx": 2,
+   "n_tokens": 122,
+   "mean_a": -2.199782502806467,
+   "mean_b": -2.199782502806467,
+   "delta_mean": 0.0,
+   "max_abs_diff": 0.0,
+   "n_token_diffs": 0
+  }
+ ]
+}
