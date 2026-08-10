@@ -11,14 +11,20 @@ tags:
 - glm
 ---
 
-# GLM-5.2 — Progressive Tensors segments (K3 base)
+# GLM-5.2 — Progressive Tensors segments (K3 base + K2/K5 window)
 
 **Purpose-built research artifact** for the *Progressive Tensors / fungible
 quant* project: runtime per-expert bit-width reallocation for EXL3 MoE
-serving in the Gilded Gnosis vLLM stack. This repo is the **shared K3 base
-tier** — the "everyone downloads this once" layer of the progressive-JPEG
-model for quants. Per-expert K4+ enhancement fragments are encoded lazily
-by deployments and published separately.
+serving in the Gilded Gnosis vLLM stack. The core of this repo is the
+**shared K3 base tier** — the "everyone downloads this once" layer of the
+progressive-JPEG model for quants — covering every MoE layer (3–78).
+
+It has since started growing the other tiers from the same family: **K2 and
+K5 segments for layers 3–10** (the first window of the multi-K encode
+campaign) are also here. K2 is the fast-load base tier; K5 is hot-expert
+headroom. Coverage is deliberately partial and backfills over time —
+segments are content-addressed and per-layer, so every published window is
+durable value on its own.
 
 **Everything here is pure, unmodified safetensors** — Progressive Tensors
 is a fetch/assembly *scheme*, not a container format. Any safetensors tool
@@ -30,7 +36,8 @@ can read these files.
   [`malaiwah/vllm-voipmonitor`](https://github.com/malaiwah/vllm-voipmonitor)
   branch
   [`claude/gg-overview-exploration-jchgd3`](https://github.com/malaiwah/vllm-voipmonitor/tree/claude/gg-overview-exploration-jchgd3/research/fungible-quant)
-  — see `research/fungible-quant/` (design docs 00–13) and
+  — see `research/fungible-quant/` (design docs 00–14, run reports under
+  `runs/`) and
   `research/fungible-quant/tools/` (`fq_repack.py` produced this repo;
   `fq_assemble.py` turns it + a policy JSON back into a bootable
   checkpoint).
@@ -45,11 +52,20 @@ can read these files.
 
 ```
 fq-manifest.json                 # fq-manifest/1: base model, revision pins, layout
-index-k3.json                    # per-layer -> per-expert [lo,hi) byte ranges
+index-k3.json                    # per-layer -> per-expert [lo,hi) byte ranges  (layers 3..78)
+index-k2.json / index-k5.json    # same, for the K2 / K5 window               (layers 3..10)
 layer-LLL.k3.safetensors         # one file per MoE layer (3..78), 256 experts,
                                  #   body per-expert contiguous -> range-readable
-attestations/layer-LLL.k3.jsonl  # one signed attestation per segment (see below)
+layer-LLL.k2.safetensors         # K2 / K5 window, layers 3..10
+layer-LLL.k5.safetensors
+attestations/layer-LLL.kK.jsonl  # one signed attestation per segment (see below)
 ```
+
+**Known issue (2026-08-10):** `fq-manifest.json` is written whole-repo by
+the repack tool, last-writer-wins, so it currently describes only the most
+recently published K rather than the whole family — read the per-K
+`index-kK.json` files and the per-segment attestations instead, which are
+correct. Being fixed by making the manifest cumulative.
 
 Each segment holds `model.layers.{L}.mlp.experts.{E}.{gate,up,down}_proj.rank{0-3}.{trellis,suh,svh,mcg}`
 (rank-sliced TP4 layout, verbatim from the source; layout tag
@@ -72,18 +88,44 @@ Every segment carries a signed `fq-attestation/1` line
 
 Predicate is `repack-of`: the trust chain terminates at the source quant,
 made explicit, pinned, and per-fragment verifiable — strictly stronger
-than the usual "download 300 GB from a named uploader and hope". Freshly
-encoded fragments (the K4 overlay path) will carry the reproducible
-`encode-of` predicate: deterministic re-encode from pinned BF16 + Hessian
-statistics + encoder version, enabling independent countersigning.
+than the usual "download 300 GB from a named uploader and hope".
+
+**Two honest caveats on provenance:**
+
+1. **The K2/K5 window segments are mislabeled right now.** They are fresh
+   encodes, but the publishing path ran them through the repack tool, so
+   their attestations say `predicate: "repack-of"` with materials pointing
+   at a *local* work directory and a null source hash — i.e. those specific
+   lines are **not third-party verifiable**. The fragment and per-expert
+   sha256 digests in them are correct and signed; the provenance block is
+   not. They will be re-attested as `encode-of` with the encoder sha,
+   capture fingerprint and full quant args.
+2. **`encode-of` is stack-scoped, and will say so.** A deterministic
+   re-encode reproduces bytes only within the same encoder sha, exllamav3
+   version, torch/CUDA build and GPU architecture. Measured, not assumed:
+   CUDA `pow()` differs from CPU by 1 ulp on 3 of 32 exponents at this
+   model's rope base — enough on its own to flip ~1.4 % of routings per
+   layer — and grouped/cuBLAS GEMMs are not row-stable across batch shape.
+   Countersigning is therefore a claim about a named stack. Across stacks
+   the honest predicate is `equivalence-of`: decode both fragments and
+   attest both reconstruction errors against the same BF16 ground truth.
 
 ## Status
 
 Active research artifact (2026-08); schema strings `fq-segment/1`,
 `fq-attestation/1`, `fq-manifest/1` are stable API. Produced and verified
-on an 8× RTX PRO 6000 (SM120) box; the all-K3 assembly of these segments
-was verified byte-identical to the source checkpoint and served under the
-GG r33 stack (TP4/DCP4).
+on an 8× RTX PRO 6000 (SM120) box. Precisely what was verified: the all-K3
+assembly of these segments is **sha256-identical to the source checkpoint's
+shards**, and that checkpoint boots and serves under the GG r33 stack
+(TP4/DCP4) — so "bootable" holds by byte-identity. A *mixed*-K assembly
+from segments has been booted and served end-to-end on a smaller
+GLM-5.2-architecture proxy, not yet on GLM-5.2 itself.
+
+Mixed recipes need a loader that understands `hybrid_tr3_tail.bits:
+"mixed"` (Gilded Gnosis r33+); `fq_assemble` emits the required
+`k_values` / `bits_per_expert` reference and the `quantization_config`
+stub automatically. An all-K3 recipe is just the source checkpoint and
+loads anywhere the source does.
 
 ## Reassemble it yourself
 
@@ -99,10 +141,14 @@ uv run tools/fq_assemble.py --segments ./segments --source <source-dir> \
 ```
 
 The all-K3 recipe reproduces the source checkpoint **sha256-identical,
-shard for shard** (verified on all 79). Mixed recipes (your own K per
-expert) assemble the same way as K4/K5/K2 segments land in this repo
-family. Every fragment is spot-checkable against its signed attestation
-with one ranged read — see the walkthrough for the 6-line verifier.
+shard for shard** (verified on all 79 quantized layer shards; the 76 MoE
+shards come from these segments, the 3 dense shards pass through from the
+source). Note you need the **source checkpoint on disk too** — non-expert
+tensors (attention, router, shared experts, norms) are copied from it
+byte-exact. Mixed recipes (your own K per expert) assemble the same way as
+more K tiers land in this repo family. Every fragment is spot-checkable
+against its signed attestation with one ranged read — see the walkthrough
+for the 6-line verifier.
 
 ## Measured: the bit-width ladder these segments implement
 
