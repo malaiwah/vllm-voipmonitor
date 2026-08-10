@@ -54,3 +54,16 @@ and per-layer, so **whatever gets quantized and uploaded is immediately
 durable value; the rest backfills over time**. Execution order therefore
 goes hottest-layers-first (0c variance ranking), rolling per-layer publish
 + local delete, resumable at layer granularity across rental sessions.
+
+## Disk expansion (Michel's offer, 2026-08-10) — recommend /home ≈ 5 TB
+
+Storage-driven compromises removed if /home grows from 3 TB:
+- HF cache 1.8 TB + full 1M-token capture 0.92 TB + 4-K segments 1.21 TB
+  + workdirs/rootfs ≈ **4.2 TB working set** → 5 TB gives margin.
+- **Single-pass capture** (no half-campaign split): saves a serve-stop/
+  restart cycle and keeps the capture contiguous.
+- **Capture is preserved** after the encodes (~13 GPU-h of product):
+  future K6/K7 encodes, re-encodes, and Hessian-blend experiments reuse it
+  free — otherwise it must be regenerated on GPUs each time.
+- Segments stay local post-publish as primed cache for mixed-boot gates
+  and 0d ladders (no re-download, no upload coupling in the critical path).
