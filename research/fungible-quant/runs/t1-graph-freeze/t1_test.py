@@ -77,7 +77,10 @@ def run_mode(eager: bool) -> dict:
     kwargs = dict(model=str(MODEL), dtype="bfloat16",
                   enforce_eager=eager, gpu_memory_utilization=0.45,
                   max_model_len=512, max_num_seqs=4, trust_remote_code=True,
-                  disable_log_stats=True)
+                  disable_log_stats=True,
+                  # The capturer binding site (gpu_worker.py:796) is gated on
+                  # this flag — without it set_capture_fn is never reached.
+                  enable_return_routed_experts=True)
     llm = LLM(**kwargs)  # auto MoE backend: hooks require the MoERunner family
     for buf in COUNT_BUFS.values():
         buf.zero_()  # discard profiling/warmup/capture traffic
