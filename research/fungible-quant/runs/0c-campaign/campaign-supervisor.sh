@@ -76,8 +76,9 @@ if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
 fi
 echo $$ > "$LOCK"
 trap 'rm -f "$LOCK"' EXIT
-while pgrep -f "fruit_encode_driver.*--encode" >/dev/null; do
-  log "waiting for a pre-existing encode to finish before taking ownership"
+FIRST_TIER=$(echo $TIERS | awk '{print $1}')
+while pgrep -f "fruit_encode_driver.*--bits $FIRST_TIER " >/dev/null; do
+  log "a K$FIRST_TIER encode is already running — waiting to take ownership"
   sleep 120
 done
 
@@ -111,8 +112,11 @@ while true; do
       fi
 
       # -- encode on whatever is idle right now
-      if pgrep -f "fruit_encode_driver.*--encode" >/dev/null; then
-        log "another encode is active — waiting"; sleep 120; continue
+      # Only a SAME-TIER encode can collide (same work dir, same done-JSONs).
+      # A different tier running on other GPUs is fine — and is how the idle
+      # GPUs during another tier's run get used at all.
+      if pgrep -f "fruit_encode_driver.*--bits $T " >/dev/null; then
+        log "K$T already encoding — waiting"; sleep 120; continue
       fi
       G=$(free_gpus); [ -z "$G" ] && { log "no idle GPU — waiting"; sleep 180; continue; }
       W=$(echo "$G" | tr ',' '\n' | wc -l)
