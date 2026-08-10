@@ -74,11 +74,10 @@ layer-LLL.k5.safetensors
 attestations/layer-LLL.kK.jsonl  # one signed attestation per segment (see below)
 ```
 
-**Known issue (2026-08-10):** `fq-manifest.json` is written whole-repo by
-the repack tool, last-writer-wins, so it currently describes only the most
-recently published K rather than the whole family — read the per-K
-`index-kK.json` files and the per-segment attestations instead, which are
-correct. Being fixed by making the manifest cumulative.
+`fq-manifest.json` is cumulative: `k_variants` lists every K present and
+`per_k[K]` carries that K's index, layer coverage, segment count and
+provenance. (An earlier last-writer-wins bug that described only the most
+recent K was fixed 2026-08-10 — tool and published manifest both corrected.)
 
 Each segment holds `model.layers.{L}.mlp.experts.{E}.{gate,up,down}_proj.rank{0-3}.{trellis,suh,svh,mcg}`
 (rank-sliced TP4 layout, verbatim from the source; layout tag
@@ -103,17 +102,16 @@ Predicate is `repack-of`: the trust chain terminates at the source quant,
 made explicit, pinned, and per-fragment verifiable — strictly stronger
 than the usual "download 300 GB from a named uploader and hope".
 
-**Two honest caveats on provenance:**
+The K2/K5 window segments carry **`encode-of`** attestations pinning the
+base model + revision, the capture fingerprint, the encoder sha, the full
+quant args and an explicit `determinism_scope` block. (They were briefly
+published with a `repack-of` label inherited from the publishing path; all
+16 were re-emitted correctly on 2026-08-10, each carrying a `supersedes`
+note recording the correction.)
 
-1. **The K2/K5 window segments are mislabeled right now.** They are fresh
-   encodes, but the publishing path ran them through the repack tool, so
-   their attestations say `predicate: "repack-of"` with materials pointing
-   at a *local* work directory and a null source hash — i.e. those specific
-   lines are **not third-party verifiable**. The fragment and per-expert
-   sha256 digests in them are correct and signed; the provenance block is
-   not. They will be re-attested as `encode-of` with the encoder sha,
-   capture fingerprint and full quant args.
-2. **`encode-of` is stack-scoped, and will say so.** A deterministic
+**One honest caveat on provenance:**
+
+1. **`encode-of` is stack-scoped, and will say so.** A deterministic
    re-encode reproduces bytes only within the same encoder sha, exllamav3
    version, torch/CUDA build and GPU architecture. Measured, not assumed:
    CUDA `pow()` differs from CPU by 1 ulp on 3 of 32 exponents at this
@@ -150,7 +148,8 @@ git clone https://github.com/malaiwah/progressive-tensors && cd progressive-tens
 uv venv && uv pip install pynacl numpy huggingface_hub
 hf download malaiwah/GLM-5.2-EXL3-FQ-segments --local-dir ./segments
 uv run tools/fq_assemble.py --segments ./segments --source <source-dir> \
-  --policy <your-recipe.json> --out ./my-checkpoint
+  --policy recipes/glm52-3.0bpw-all-k3.json --out ./my-checkpoint \
+  --trust-signer a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525
 ```
 
 The all-K3 recipe reproduces the source checkpoint **sha256-identical,
@@ -162,6 +161,33 @@ byte-exact. Mixed recipes (your own K per expert) assemble the same way as
 more K tiers land in this repo family. Every fragment is spot-checkable
 against its signed attestation with one ranged read — see the walkthrough
 for the 6-line verifier.
+
+
+## Recipes — the exact configs we validated
+
+`recipes/` holds ready-to-use `fq-policy/2` documents, each one a
+reconstruction we actually verified:
+
+| Recipe | What it rebuilds | Proof |
+|---|---|---|
+| `glm52-3.0bpw-all-k3.json` | brandonmusic 3.0bpw, byte-for-byte | **sha256-identical, 76/76 MoE shards** |
+| `glm52-r28-partition-primed-k4.json` | the willfalco 3.42bpw r28 partition (L3 206/50, L4+ 148/108) from primed K4 fragments over the K3 base | fragment byte-identity vs fresh ranged reads; expanded family re-derived 2048/2048 |
+| `glm52-fastload-k2-window1.json` | K2 fast-load tier where published (layers 3-10), K3 elsewhere | our encodes, `encode-of` |
+| `glm52-hot-k5-window1.json` | K5 hot tier where published (layers 3-10), K3 elsewhere | our encodes, `encode-of` |
+
+```bash
+uv run tools/fq_assemble.py \
+  --segments ./segments --source <source-checkpoint-dir> \
+  --policy recipes/glm52-3.0bpw-all-k3.json \
+  --trust-signer a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525 \
+  --out ./my-checkpoint
+sha256sum -c MANIFEST.sha256   # in the output dir
+```
+
+Assembly **fails closed** without a pinned signer: every fragment's
+signature, predicate, fragment digest and per-expert digests are checked
+against that key before a byte is written. `--insecure` exists for local
+development and says so loudly.
 
 ## Measured: the bit-width ladder these segments implement
 
