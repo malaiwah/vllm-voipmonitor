@@ -17,13 +17,16 @@ PROJS = ["gate_proj", "up_proj", "down_proj"]
 COMPS = ["trellis", "suh", "svh", "mcg"]
 
 
-def tensor_bytes(layer, e, proj, rank, comp) -> bytes:
-    seed = f"{layer}.{e}.{proj}.{rank}.{comp}".encode()
+def tensor_bytes(layer, e, proj, rank, comp, k=3) -> bytes:
+    """Synthetic tensor payload; trellis size scales with K (16*K bytes, the
+    same 4/3 K3->K4 ratio as real [in/16, out/16, 16*K] i16 tensors) and all
+    expert tensor CONTENT depends on K (independent encodes per K)."""
+    seed = f"{layer}.{e}.{proj}.{rank}.{comp}.k{k}".encode()
     h = hashlib.sha256(seed).digest()
-    return (h * 3)[: 64 if comp == "trellis" else 16]
+    return (h * 3)[: 16 * k if comp == "trellis" else 16]
 
 
-def write_shard(path: Path, layer: int, scramble: bool) -> None:
+def write_shard(path: Path, layer: int, scramble: bool, k: int = 3) -> None:
     """Synthetic shard; scramble=True stores tensors in non-logical order."""
     entries = []
     for e in range(E):
@@ -31,14 +34,14 @@ def write_shard(path: Path, layer: int, scramble: bool) -> None:
             for rank in range(RANKS):
                 for comp in COMPS:
                     name = f"model.layers.{layer}.mlp.experts.{e}.{proj}.rank{rank}.{comp}"
-                    entries.append((name, tensor_bytes(layer, e, proj, rank, comp)))
+                    entries.append((name, tensor_bytes(layer, e, proj, rank, comp, k)))
     entries.append((f"model.layers.{layer}.self_attn.o_proj.weight", b"\x01" * 32))
     if scramble:
         entries.sort(key=lambda kv: hashlib.md5(kv[0].encode()).hexdigest())
     hdr, off, blobs = {}, 0, []
     for name, data in entries:
         hdr[name] = {
-            "dtype": "I16" if len(data) == 64 else "F16",
+            "dtype": "I16" if name.endswith(".trellis") else "F16",
             "shape": [len(data) // 2],
             "data_offsets": [off, off + len(data)],
         }
