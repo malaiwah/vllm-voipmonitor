@@ -749,6 +749,7 @@ def make_llm(args):
         tensor_parallel_size=CAPTURE_TP,
         dtype="bfloat16",
         enforce_eager=True,
+        moe_backend="triton",
         enable_prefix_caching=False,
         max_model_len=MAX_MODEL_LEN,
         max_num_batched_tokens=MAX_NUM_BATCHED_TOKENS,
