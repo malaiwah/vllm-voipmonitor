@@ -1,0 +1,5098 @@
+{
+ "aggregates": {
+  "336-k4 vs bf16": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9972499990044744,
+    "cosine_min": 0.9968616937553911,
+    "max_abs_max": 0.01279449462890625,
+    "n": 24,
+    "rel_frob_max": 0.07918317314008096,
+    "rel_frob_mean": 0.07405382985589597
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9966405779534012,
+    "cosine_min": 0.9962639358817904,
+    "max_abs_max": 0.01177978515625,
+    "n": 24,
+    "rel_frob_max": 0.0864453875250964,
+    "rel_frob_mean": 0.08183528848065681
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9966398969065642,
+    "cosine_min": 0.9962645427665657,
+    "max_abs_max": 0.01424407958984375,
+    "n": 24,
+    "rel_frob_max": 0.08643782932921157,
+    "rel_frob_mean": 0.08184414572967715
+   }
+  },
+  "342-k4 vs 336-k4": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9945172256433904,
+    "cosine_min": 0.9937435202239987,
+    "max_abs_max": 0.016641616821289062,
+    "n": 24,
+    "rel_frob_max": 0.11185476826242431,
+    "rel_frob_mean": 0.10462217854755451
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9933005242529186,
+    "cosine_min": 0.9925510362551916,
+    "max_abs_max": 0.0196380615234375,
+    "n": 24,
+    "rel_frob_max": 0.12205267363336965,
+    "rel_frob_mean": 0.11559914913570722
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9932965279596179,
+    "cosine_min": 0.9925469134271505,
+    "max_abs_max": 0.018169403076171875,
+    "n": 24,
+    "rel_frob_max": 0.12209561595352633,
+    "rel_frob_mean": 0.11563582368055554
+   }
+  },
+  "342-k4 vs 342-sh": {
+   "down_proj": {
+    "bitwise_equal_all": true,
+    "cosine_mean": 1.0,
+    "cosine_min": 0.9999999999999997,
+    "max_abs_max": 0.0,
+    "n": 24,
+    "rel_frob_max": 0.0,
+    "rel_frob_mean": 0.0
+   },
+   "gate_proj": {
+    "bitwise_equal_all": true,
+    "cosine_mean": 1.0,
+    "cosine_min": 0.9999999999999998,
+    "max_abs_max": 0.0,
+    "n": 24,
+    "rel_frob_max": 0.0,
+    "rel_frob_mean": 0.0
+   },
+   "up_proj": {
+    "bitwise_equal_all": true,
+    "cosine_mean": 1.0,
+    "cosine_min": 0.9999999999999999,
+    "max_abs_max": 0.0,
+    "n": 24,
+    "rel_frob_max": 0.0,
+    "rel_frob_mean": 0.0
+   }
+  },
+  "342-k4 vs bf16": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9972528903350524,
+    "cosine_min": 0.9968630811893864,
+    "max_abs_max": 0.011322021484375,
+    "n": 24,
+    "rel_frob_max": 0.07916308184123567,
+    "rel_frob_mean": 0.07401262646268507
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9966369034717503,
+    "cosine_min": 0.996254502921972,
+    "max_abs_max": 0.01271820068359375,
+    "n": 24,
+    "rel_frob_max": 0.0865512740385067,
+    "rel_frob_mean": 0.08188488635317033
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9966341978384509,
+    "cosine_min": 0.9962548057185323,
+    "max_abs_max": 0.01289987564086914,
+    "n": 24,
+    "rel_frob_max": 0.08655388557014673,
+    "rel_frob_mean": 0.08192340232884433
+   }
+  },
+  "342-sh vs 336-k4": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9945172256433904,
+    "cosine_min": 0.9937435202239987,
+    "max_abs_max": 0.016641616821289062,
+    "n": 24,
+    "rel_frob_max": 0.11185476826242431,
+    "rel_frob_mean": 0.10462217854755451
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9933005242529186,
+    "cosine_min": 0.9925510362551916,
+    "max_abs_max": 0.0196380615234375,
+    "n": 24,
+    "rel_frob_max": 0.12205267363336965,
+    "rel_frob_mean": 0.11559914913570722
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9932965279596179,
+    "cosine_min": 0.9925469134271505,
+    "max_abs_max": 0.018169403076171875,
+    "n": 24,
+    "rel_frob_max": 0.12209561595352633,
+    "rel_frob_mean": 0.11563582368055554
+   }
+  },
+  "342-sh vs bf16": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9972528903350524,
+    "cosine_min": 0.9968630811893864,
+    "max_abs_max": 0.011322021484375,
+    "n": 24,
+    "rel_frob_max": 0.07916308184123567,
+    "rel_frob_mean": 0.07401262646268507
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9966369034717503,
+    "cosine_min": 0.996254502921972,
+    "max_abs_max": 0.01271820068359375,
+    "n": 24,
+    "rel_frob_max": 0.0865512740385067,
+    "rel_frob_mean": 0.08188488635317033
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9966341978384509,
+    "cosine_min": 0.9962548057185323,
+    "max_abs_max": 0.01289987564086914,
+    "n": 24,
+    "rel_frob_max": 0.08655388557014673,
+    "rel_frob_mean": 0.08192340232884433
+   }
+  },
+  "bm-k3 vs 336-k4": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9868353157269659,
+    "cosine_min": 0.9851546350327782,
+    "max_abs_max": 0.03050994873046875,
+    "n": 24,
+    "rel_frob_max": 0.17198264757503773,
+    "rel_frob_mean": 0.1617726625209813
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9835720580180888,
+    "cosine_min": 0.9824460812324611,
+    "max_abs_max": 0.02899169921875,
+    "n": 24,
+    "rel_frob_max": 0.1873001070978028,
+    "rel_frob_mean": 0.18107308850766168
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9835658249321001,
+    "cosine_min": 0.9824527098809528,
+    "max_abs_max": 0.030426025390625,
+    "n": 24,
+    "rel_frob_max": 0.18724778287846638,
+    "rel_frob_mean": 0.18110274493906098
+   }
+  },
+  "bm-k3 vs 342-k4": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.986720310173674,
+    "cosine_min": 0.9850345604833093,
+    "max_abs_max": 0.034015655517578125,
+    "n": 24,
+    "rel_frob_max": 0.17268352812187454,
+    "rel_frob_mean": 0.16247472765327528
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9834282912768568,
+    "cosine_min": 0.9822878187808746,
+    "max_abs_max": 0.03137969970703125,
+    "n": 24,
+    "rel_frob_max": 0.18814003310593388,
+    "rel_frob_mean": 0.18185657601341965
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.983420505413351,
+    "cosine_min": 0.982302182681105,
+    "max_abs_max": 0.027618408203125,
+    "n": 24,
+    "rel_frob_max": 0.1880576848678666,
+    "rel_frob_mean": 0.1818976049991277
+   }
+  },
+  "bm-k3 vs 342-sh": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.986720310173674,
+    "cosine_min": 0.9850345604833093,
+    "max_abs_max": 0.034015655517578125,
+    "n": 24,
+    "rel_frob_max": 0.17268352812187454,
+    "rel_frob_mean": 0.16247472765327528
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9834282912768568,
+    "cosine_min": 0.9822878187808746,
+    "max_abs_max": 0.03137969970703125,
+    "n": 24,
+    "rel_frob_max": 0.18814003310593388,
+    "rel_frob_mean": 0.18185657601341965
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.983420505413351,
+    "cosine_min": 0.982302182681105,
+    "max_abs_max": 0.027618408203125,
+    "n": 24,
+    "rel_frob_max": 0.1880576848678666,
+    "rel_frob_mean": 0.1818976049991277
+   }
+  },
+  "bm-k3 vs bf16": {
+   "down_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9894160522561147,
+    "cosine_min": 0.9880984303999543,
+    "max_abs_max": 0.0284271240234375,
+    "n": 24,
+    "rel_frob_max": 0.1539435549844384,
+    "rel_frob_mean": 0.14499065911392142
+   },
+   "gate_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9867052570584044,
+    "cosine_min": 0.9856607047160314,
+    "max_abs_max": 0.0250244140625,
+    "n": 24,
+    "rel_frob_max": 0.1692362367936524,
+    "rel_frob_mean": 0.16287296139322535
+   },
+   "up_proj": {
+    "bitwise_equal_all": false,
+    "cosine_mean": 0.9867014105145335,
+    "cosine_min": 0.9856661179455821,
+    "max_abs_max": 0.02410888671875,
+    "n": 24,
+    "rel_frob_max": 0.16919511262955741,
+    "rel_frob_mean": 0.16289547093291218
+   }
+  }
+ },
+ "bf16": "/home/mbelleau/.cache/huggingface/hub/models--zai-org--GLM-5.2/snapshots/b4734de4facf877f85769a911abafc5283eab3d9",
+ "created_utc": "2026-08-10T20:47:50Z",
+ "decode": "exllamav3 LinearEXL3.get_weight_tensor (ext.reconstruct + H128 + diag(suh/svh)), fp16, oriented to HF layout",
+ "experts_sampled": 24,
+ "families": [
+  {
+   "ks": [
+    3
+   ],
+   "label": "bm-k3",
+   "layout": "rank_sliced_tp4",
+   "path": "/home/mbelleau/fq-segments/GLM-5.2-EXL3-FQ"
+  },
+  {
+   "ks": [
+    4
+   ],
+   "label": "342-k4",
+   "layout": "rank_sliced_tp4",
+   "path": "/home/mbelleau/fq-primed/segments-342/expanded"
+  },
+  {
+   "ks": [
+    4
+   ],
+   "label": "342-sh",
+   "layout": "shared_h_v1",
+   "path": "/home/mbelleau/fq-primed/segments-342/shared-h"
+  },
+  {
+   "ks": [
+    4
+   ],
+   "label": "336-k4",
+   "layout": "rank_sliced_tp4",
+   "path": "/home/mbelleau/fq-primed/segments-336"
+  }
+ ],
+ "layers": [
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10
+ ],
+ "mode": "similarity",
+ "samples": [
+  {
+   "expert": 2,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 3,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9978020239430225,
+      "max_abs": 0.005451202392578125,
+      "rel_frob": 0.06626605284336386
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.995644006889311,
+      "max_abs": 0.00732421875,
+      "rel_frob": 0.0933348537477383
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9978328536691901,
+      "max_abs": 0.005130767822265625,
+      "rel_frob": 0.06579986880788466
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.995644006889311,
+      "max_abs": 0.00732421875,
+      "rel_frob": 0.0933348537477383
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9978328536691901,
+      "max_abs": 0.005130767822265625,
+      "rel_frob": 0.06579986880788466
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9903966381065399,
+      "max_abs": 0.01016998291015625,
+      "rel_frob": 0.13832837229776254
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.990326653003346,
+      "max_abs": 0.0105743408203125,
+      "rel_frob": 0.13883306840347254
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.990326653003346,
+      "max_abs": 0.0105743408203125,
+      "rel_frob": 0.13883306840347254
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9924667612410862,
+      "max_abs": 0.01020050048828125,
+      "rel_frob": 0.12251522611428417
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9976462820008736,
+      "max_abs": 0.0099639892578125,
+      "rel_frob": 0.06857561258610606
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9952417438768557,
+      "max_abs": 0.013567924499511719,
+      "rel_frob": 0.09760093038296681
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975850345291906,
+      "max_abs": 0.008026123046875,
+      "rel_frob": 0.06947937645011108
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9952417438768557,
+      "max_abs": 0.013567924499511719,
+      "rel_frob": 0.09760093038296681
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975850345291906,
+      "max_abs": 0.008026123046875,
+      "rel_frob": 0.06947937645011108
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9854661337167714,
+      "max_abs": 0.027679443359375,
+      "rel_frob": 0.17059545903121562
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9852970733759843,
+      "max_abs": 0.02734375,
+      "rel_frob": 0.17150343629616963
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9852970733759843,
+      "max_abs": 0.02734375,
+      "rel_frob": 0.17150343629616963
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9876723118607647,
+      "max_abs": 0.0250244140625,
+      "rel_frob": 0.15699342042626696
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9976502118375098,
+      "max_abs": 0.012359976768493652,
+      "rel_frob": 0.06852045379485502
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951735415904793,
+      "max_abs": 0.0127410888671875,
+      "rel_frob": 0.09831164247756555
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.997517921192585,
+      "max_abs": 0.008270263671875,
+      "rel_frob": 0.07044950180524953
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951735415904793,
+      "max_abs": 0.0127410888671875,
+      "rel_frob": 0.09831164247756555
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.997517921192585,
+      "max_abs": 0.008270263671875,
+      "rel_frob": 0.07044950180524953
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9854959399617789,
+      "max_abs": 0.0239715576171875,
+      "rel_frob": 0.17041037397677575
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9852446581679203,
+      "max_abs": 0.02352142333984375,
+      "rel_frob": 0.17177937837616747
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9852446581679203,
+      "max_abs": 0.02352142333984375,
+      "rel_frob": 0.17177937837616747
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9876998079585251,
+      "max_abs": 0.0223541259765625,
+      "rel_frob": 0.15682171197533568
+     }
+    }
+   }
+  },
+  {
+   "expert": 38,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 3,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973436699393464,
+      "max_abs": 0.01279449462890625,
+      "rel_frob": 0.07285551907002098
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9947139586461244,
+      "max_abs": 0.015045166015625,
+      "rel_frob": 0.10282488405899971
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999997,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973526271305212,
+      "max_abs": 0.01047515869140625,
+      "rel_frob": 0.0727343631925539
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9947139586461244,
+      "max_abs": 0.015045166015625,
+      "rel_frob": 0.10282488405899971
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973526271305212,
+      "max_abs": 0.01047515869140625,
+      "rel_frob": 0.0727343631925539
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9885610295352933,
+      "max_abs": 0.02032470703125,
+      "rel_frob": 0.15105557266229044
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9884684143031146,
+      "max_abs": 0.023757457733154297,
+      "rel_frob": 0.1516610408231671
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9884684143031146,
+      "max_abs": 0.023757457733154297,
+      "rel_frob": 0.1516610408231671
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9910579936536437,
+      "max_abs": 0.0204925537109375,
+      "rel_frob": 0.13351749925130682
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.997548207019552,
+      "max_abs": 0.008524894714355469,
+      "rel_frob": 0.06998828007264968
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951288000306632,
+      "max_abs": 0.012237548828125,
+      "rel_frob": 0.09869848648080828
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975702259446506,
+      "max_abs": 0.0088653564453125,
+      "rel_frob": 0.06967223872052977
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951288000306632,
+      "max_abs": 0.012237548828125,
+      "rel_frob": 0.09869848648080828
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975702259446506,
+      "max_abs": 0.0088653564453125,
+      "rel_frob": 0.06967223872052977
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9869913319041244,
+      "max_abs": 0.0251007080078125,
+      "rel_frob": 0.16113645389858453
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9869022042292879,
+      "max_abs": 0.021484375,
+      "rel_frob": 0.1616944884610527
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9869022042292879,
+      "max_abs": 0.021484375,
+      "rel_frob": 0.1616944884610527
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9892942851820425,
+      "max_abs": 0.018096923828125,
+      "rel_frob": 0.14609940844291733
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975479680603638,
+      "max_abs": 0.009429931640625,
+      "rel_frob": 0.06999001446170443
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951310960458757,
+      "max_abs": 0.0129547119140625,
+      "rel_frob": 0.09868850692953543
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975723159499237,
+      "max_abs": 0.009220123291015625,
+      "rel_frob": 0.06964373350392748
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951310960458757,
+      "max_abs": 0.0129547119140625,
+      "rel_frob": 0.09868850692953543
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975723159499237,
+      "max_abs": 0.009220123291015625,
+      "rel_frob": 0.06964373350392748
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9869816765378416,
+      "max_abs": 0.02265167236328125,
+      "rel_frob": 0.16118788791378977
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9869019747317958,
+      "max_abs": 0.019683837890625,
+      "rel_frob": 0.16166970015938512
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9869019747317958,
+      "max_abs": 0.019683837890625,
+      "rel_frob": 0.16166970015938512
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9892800766007606,
+      "max_abs": 0.02001190185546875,
+      "rel_frob": 0.14618373171074978
+     }
+    }
+   }
+  },
+  {
+   "expert": 192,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 3,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975624769272305,
+      "max_abs": 0.00695037841796875,
+      "rel_frob": 0.06978671505892606
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951384480922906,
+      "max_abs": 0.010772705078125,
+      "rel_frob": 0.09861238676722596
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975628869655322,
+      "max_abs": 0.00696563720703125,
+      "rel_frob": 0.06978293197810367
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9951384480922906,
+      "max_abs": 0.010772705078125,
+      "rel_frob": 0.09861238676722596
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9975628869655322,
+      "max_abs": 0.00696563720703125,
+      "rel_frob": 0.06978293197810367
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9871577977494868,
+      "max_abs": 0.016152381896972656,
+      "rel_frob": 0.16003029247413234
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9870675223929726,
+      "max_abs": 0.015354156494140625,
+      "rel_frob": 0.16058374681068877
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9870675223929726,
+      "max_abs": 0.015354156494140625,
+      "rel_frob": 0.16058374681068877
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9894580144149275,
+      "max_abs": 0.01393890380859375,
+      "rel_frob": 0.14493630177484726
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966750582497644,
+      "max_abs": 0.0115966796875,
+      "rel_frob": 0.081528127090543
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933564648721159,
+      "max_abs": 0.0196380615234375,
+      "rel_frob": 0.11527409520094942
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966626615286028,
+      "max_abs": 0.010036468505859375,
+      "rel_frob": 0.0816827262126226
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933564648721159,
+      "max_abs": 0.0196380615234375,
+      "rel_frob": 0.11527409520094942
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966626615286028,
+      "max_abs": 0.010036468505859375,
+      "rel_frob": 0.0816827262126226
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9839988897292241,
+      "max_abs": 0.021688461303710938,
+      "rel_frob": 0.1787309075734206
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9838631986168717,
+      "max_abs": 0.021436691284179688,
+      "rel_frob": 0.17948087154559442
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9838631986168717,
+      "max_abs": 0.021436691284179688,
+      "rel_frob": 0.17948087154559442
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9871337734200649,
+      "max_abs": 0.0198211669921875,
+      "rel_frob": 0.16023844816562424
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.99667863062771,
+      "max_abs": 0.0097808837890625,
+      "rel_frob": 0.08149122151763934
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933699144667241,
+      "max_abs": 0.013889312744140625,
+      "rel_frob": 0.11514510698618816
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966676854398553,
+      "max_abs": 0.009256362915039062,
+      "rel_frob": 0.08162047448728908
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933699144667241,
+      "max_abs": 0.013889312744140625,
+      "rel_frob": 0.11514510698618816
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966676854398553,
+      "max_abs": 0.009256362915039062,
+      "rel_frob": 0.08162047448728908
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9839917976930199,
+      "max_abs": 0.019775390625,
+      "rel_frob": 0.17874120676991095
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.983872676514775,
+      "max_abs": 0.019849777221679688,
+      "rel_frob": 0.17941535919721785
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.983872676514775,
+      "max_abs": 0.019849777221679688,
+      "rel_frob": 0.17941535919721785
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9871320749453752,
+      "max_abs": 0.01763916015625,
+      "rel_frob": 0.1602370913243685
+     }
+    }
+   }
+  },
+  {
+   "expert": 77,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 4,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9968616937553911,
+      "max_abs": 0.012603759765625,
+      "rel_frob": 0.07918317314008096
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9937435202239987,
+      "max_abs": 0.016641616821289062,
+      "rel_frob": 0.11185476826242431
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9968630811893864,
+      "max_abs": 0.011322021484375,
+      "rel_frob": 0.07916308184123567
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9937435202239987,
+      "max_abs": 0.016641616821289062,
+      "rel_frob": 0.11185476826242431
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9968630811893864,
+      "max_abs": 0.011322021484375,
+      "rel_frob": 0.07916308184123567
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9851546350327782,
+      "max_abs": 0.022284507751464844,
+      "rel_frob": 0.17198264757503773
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9850345604833093,
+      "max_abs": 0.0281219482421875,
+      "rel_frob": 0.17268352812187454
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9850345604833093,
+      "max_abs": 0.0281219482421875,
+      "rel_frob": 0.17268352812187454
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9880984303999543,
+      "max_abs": 0.0207061767578125,
+      "rel_frob": 0.1539435549844384
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9962639358817904,
+      "max_abs": 0.011444091796875,
+      "rel_frob": 0.0864453875250964
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9925510362551916,
+      "max_abs": 0.016777455806732178,
+      "rel_frob": 0.12205267363336965
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.996254502921972,
+      "max_abs": 0.012054443359375,
+      "rel_frob": 0.0865512740385067
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9925510362551916,
+      "max_abs": 0.016777455806732178,
+      "rel_frob": 0.12205267363336965
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.996254502921972,
+      "max_abs": 0.012054443359375,
+      "rel_frob": 0.0865512740385067
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9826557673711807,
+      "max_abs": 0.02349853515625,
+      "rel_frob": 0.1862072382650584
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982497412301917,
+      "max_abs": 0.023929595947265625,
+      "rel_frob": 0.18706195610152057
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.982497412301917,
+      "max_abs": 0.023929595947265625,
+      "rel_frob": 0.18706195610152057
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9861340839198017,
+      "max_abs": 0.021564483642578125,
+      "rel_frob": 0.16649932688614877
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9962645427665657,
+      "max_abs": 0.01236724853515625,
+      "rel_frob": 0.08643782932921157
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9925469134271505,
+      "max_abs": 0.018169403076171875,
+      "rel_frob": 0.12209561595352633
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9962548057185323,
+      "max_abs": 0.0111236572265625,
+      "rel_frob": 0.08655388557014673
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9925469134271505,
+      "max_abs": 0.018169403076171875,
+      "rel_frob": 0.12209561595352633
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9962548057185323,
+      "max_abs": 0.0111236572265625,
+      "rel_frob": 0.08655388557014673
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9826474186802596,
+      "max_abs": 0.028064727783203125,
+      "rel_frob": 0.1862356419552582
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982482412215852,
+      "max_abs": 0.024196624755859375,
+      "rel_frob": 0.18711199441063936
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.982482412215852,
+      "max_abs": 0.024196624755859375,
+      "rel_frob": 0.18711199441063936
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9861302907657845,
+      "max_abs": 0.022027969360351562,
+      "rel_frob": 0.1665064792179563
+     }
+    }
+   }
+  },
+  {
+   "expert": 98,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 4,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974360434397731,
+      "max_abs": 0.008144378662109375,
+      "rel_frob": 0.07158113389572097
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9948985314915348,
+      "max_abs": 0.013660430908203125,
+      "rel_frob": 0.10100718473247809
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974449427494971,
+      "max_abs": 0.0074310302734375,
+      "rel_frob": 0.07145578322833061
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9948985314915348,
+      "max_abs": 0.013660430908203125,
+      "rel_frob": 0.10100718473247809
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974449427494971,
+      "max_abs": 0.0074310302734375,
+      "rel_frob": 0.07145578322833061
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9887057254145819,
+      "max_abs": 0.016405105590820312,
+      "rel_frob": 0.15009425892835082
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9886143026752165,
+      "max_abs": 0.01548004150390625,
+      "rel_frob": 0.15070288701791512
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9886143026752165,
+      "max_abs": 0.01548004150390625,
+      "rel_frob": 0.15070288701791512
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9911084627088438,
+      "max_abs": 0.013824462890625,
+      "rel_frob": 0.13314396917155094
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971339968353357,
+      "max_abs": 0.0103912353515625,
+      "rel_frob": 0.07568754479500266
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9942961701321894,
+      "max_abs": 0.01812744140625,
+      "rel_frob": 0.1068038969813453
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971437652970321,
+      "max_abs": 0.01068115234375,
+      "rel_frob": 0.07555698229796305
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9942961701321894,
+      "max_abs": 0.01812744140625,
+      "rel_frob": 0.1068038969813453
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971437652970321,
+      "max_abs": 0.01068115234375,
+      "rel_frob": 0.07555698229796305
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9848474699760142,
+      "max_abs": 0.02899169921875,
+      "rel_frob": 0.17410926792388376
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9847476619011925,
+      "max_abs": 0.025634765625,
+      "rel_frob": 0.17468635654062836
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9847476619011925,
+      "max_abs": 0.025634765625,
+      "rel_frob": 0.17468635654062836
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9875313118347376,
+      "max_abs": 0.022136688232421875,
+      "rel_frob": 0.15788623945067137
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971303330477101,
+      "max_abs": 0.01131439208984375,
+      "rel_frob": 0.07573441974361292
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9942967213537828,
+      "max_abs": 0.017608642578125,
+      "rel_frob": 0.10680128555300754
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971468573588381,
+      "max_abs": 0.01275634765625,
+      "rel_frob": 0.07551596999385202
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9942967213537828,
+      "max_abs": 0.017608642578125,
+      "rel_frob": 0.10680128555300754
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971468573588381,
+      "max_abs": 0.01275634765625,
+      "rel_frob": 0.07551596999385202
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9848428589777296,
+      "max_abs": 0.030426025390625,
+      "rel_frob": 0.17414378920542675
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9847340053645844,
+      "max_abs": 0.027618408203125,
+      "rel_frob": 0.1747683247187106
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9847340053645844,
+      "max_abs": 0.027618408203125,
+      "rel_frob": 0.1747683247187106
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.98751484899624,
+      "max_abs": 0.02410888671875,
+      "rel_frob": 0.15799338534044577
+     }
+    }
+   }
+  },
+  {
+   "expert": 249,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 4,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9972139975325708,
+      "max_abs": 0.01113128662109375,
+      "rel_frob": 0.07460676823659959
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9944481409394723,
+      "max_abs": 0.01415252685546875,
+      "rel_frob": 0.1053717394885468
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9972193077838616,
+      "max_abs": 0.010650634765625,
+      "rel_frob": 0.0745348095477172
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9944481409394723,
+      "max_abs": 0.01415252685546875,
+      "rel_frob": 0.1053717394885468
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9972193077838616,
+      "max_abs": 0.010650634765625,
+      "rel_frob": 0.0745348095477172
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9862445464304114,
+      "max_abs": 0.03050994873046875,
+      "rel_frob": 0.1655883321695541
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9861304117464633,
+      "max_abs": 0.034015655517578125,
+      "rel_frob": 0.1662763134686707
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9861304117464633,
+      "max_abs": 0.034015655517578125,
+      "rel_frob": 0.1662763134686707
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.988858068487037,
+      "max_abs": 0.0284271240234375,
+      "rel_frob": 0.1489776316520583
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966105100762448,
+      "max_abs": 0.011027336120605469,
+      "rel_frob": 0.08232038593303657
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932431767764129,
+      "max_abs": 0.014678955078125,
+      "rel_frob": 0.11625626072290826
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966143259602838,
+      "max_abs": 0.011322021484375,
+      "rel_frob": 0.08227918395988032
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932431767764129,
+      "max_abs": 0.014678955078125,
+      "rel_frob": 0.11625626072290826
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966143259602838,
+      "max_abs": 0.011322021484375,
+      "rel_frob": 0.08227918395988032
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9830931932884888,
+      "max_abs": 0.0244903564453125,
+      "rel_frob": 0.18381087424666054
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9829505212578853,
+      "max_abs": 0.0246124267578125,
+      "rel_frob": 0.18457280403866927
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9829505212578853,
+      "max_abs": 0.0246124267578125,
+      "rel_frob": 0.18457280403866927
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9862581817409943,
+      "max_abs": 0.020965576171875,
+      "rel_frob": 0.16568770455602094
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966103901728447,
+      "max_abs": 0.0097808837890625,
+      "rel_frob": 0.08232430120834215
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932438099626214,
+      "max_abs": 0.01309967041015625,
+      "rel_frob": 0.11624089170298905
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966106218051312,
+      "max_abs": 0.010533332824707031,
+      "rel_frob": 0.08232028258477997
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932438099626214,
+      "max_abs": 0.01309967041015625,
+      "rel_frob": 0.11624089170298905
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966106218051312,
+      "max_abs": 0.010533332824707031,
+      "rel_frob": 0.08232028258477997
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9830909026477246,
+      "max_abs": 0.0211029052734375,
+      "rel_frob": 0.18384074593765276
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9829546829748494,
+      "max_abs": 0.0250396728515625,
+      "rel_frob": 0.1845826352218366
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9829546829748494,
+      "max_abs": 0.0250396728515625,
+      "rel_frob": 0.1845826352218366
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9862575753041711,
+      "max_abs": 0.019775390625,
+      "rel_frob": 0.1657115695787405
+     }
+    }
+   }
+  },
+  {
+   "expert": 42,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 5,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.996938010809566,
+      "max_abs": 0.0093231201171875,
+      "rel_frob": 0.07822132903121447
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9938940213143275,
+      "max_abs": 0.01276397705078125,
+      "rel_frob": 0.110508757968421
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969367628171208,
+      "max_abs": 0.010467529296875,
+      "rel_frob": 0.07823774242457487
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9938940213143275,
+      "max_abs": 0.01276397705078125,
+      "rel_frob": 0.110508757968421
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969367628171208,
+      "max_abs": 0.010467529296875,
+      "rel_frob": 0.07823774242457487
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9854099727389989,
+      "max_abs": 0.02191925048828125,
+      "rel_frob": 0.17056118709272897
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9852847977260121,
+      "max_abs": 0.020582199096679688,
+      "rel_frob": 0.17128976811923058
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9852847977260121,
+      "max_abs": 0.020582199096679688,
+      "rel_frob": 0.17128976811923058
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9882720875172419,
+      "max_abs": 0.01935577392578125,
+      "rel_frob": 0.1528731520280488
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963432358461201,
+      "max_abs": 0.0116424560546875,
+      "rel_frob": 0.08551872705157727
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9927132237547709,
+      "max_abs": 0.017059326171875,
+      "rel_frob": 0.12071941014727779
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963448313159405,
+      "max_abs": 0.01169586181640625,
+      "rel_frob": 0.08549896947306347
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9927132237547709,
+      "max_abs": 0.017059326171875,
+      "rel_frob": 0.12071941014727779
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963448313159405,
+      "max_abs": 0.01169586181640625,
+      "rel_frob": 0.08549896947306347
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9827897976467966,
+      "max_abs": 0.0231170654296875,
+      "rel_frob": 0.18548647963666934
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9826530204844789,
+      "max_abs": 0.02445220947265625,
+      "rel_frob": 0.18622443822696916
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9826530204844789,
+      "max_abs": 0.02445220947265625,
+      "rel_frob": 0.18622443822696916
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.986204884321309,
+      "max_abs": 0.022674560546875,
+      "rel_frob": 0.1660657534180385
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963416687448821,
+      "max_abs": 0.01424407958984375,
+      "rel_frob": 0.08553992012534713
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9927138994529409,
+      "max_abs": 0.0179443359375,
+      "rel_frob": 0.12071380650603337
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963435831850407,
+      "max_abs": 0.01123046875,
+      "rel_frob": 0.08551641091774932
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9927138994529409,
+      "max_abs": 0.0179443359375,
+      "rel_frob": 0.12071380650603337
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963435831850407,
+      "max_abs": 0.01123046875,
+      "rel_frob": 0.08551641091774932
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982776461024028,
+      "max_abs": 0.023321151733398438,
+      "rel_frob": 0.185554320911849
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9826290329610512,
+      "max_abs": 0.02465057373046875,
+      "rel_frob": 0.18634912114897434
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9826290329610512,
+      "max_abs": 0.02465057373046875,
+      "rel_frob": 0.18634912114897434
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.986195863652094,
+      "max_abs": 0.023931503295898438,
+      "rel_frob": 0.1661218263012987
+     }
+    }
+   }
+  },
+  {
+   "expert": 67,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 5,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9976150088405835,
+      "max_abs": 0.0095672607421875,
+      "rel_frob": 0.06903697593399385
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9952482285133344,
+      "max_abs": 0.012035369873046875,
+      "rel_frob": 0.09748619416918035
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9976199531512566,
+      "max_abs": 0.0094146728515625,
+      "rel_frob": 0.06896542580761239
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9952482285133344,
+      "max_abs": 0.012035369873046875,
+      "rel_frob": 0.09748619416918035
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9976199531512566,
+      "max_abs": 0.0094146728515625,
+      "rel_frob": 0.06896542580761239
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9881640925746089,
+      "max_abs": 0.02616119384765625,
+      "rel_frob": 0.1536400326084922
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9880703968634797,
+      "max_abs": 0.0254364013671875,
+      "rel_frob": 0.15424659669666446
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9880703968634797,
+      "max_abs": 0.0254364013671875,
+      "rel_frob": 0.15424659669666446
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9903931935401358,
+      "max_abs": 0.0235443115234375,
+      "rel_frob": 0.13838177658769094
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.996605360458374,
+      "max_abs": 0.0105133056640625,
+      "rel_frob": 0.08239374285870785
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932392790331239,
+      "max_abs": 0.01666259765625,
+      "rel_frob": 0.11627784407952269
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966072275435423,
+      "max_abs": 0.010440826416015625,
+      "rel_frob": 0.082368405388647
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932392790331239,
+      "max_abs": 0.01666259765625,
+      "rel_frob": 0.11627784407952269
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966072275435423,
+      "max_abs": 0.010440826416015625,
+      "rel_frob": 0.082368405388647
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834365806333079,
+      "max_abs": 0.02483367919921875,
+      "rel_frob": 0.18196899827374238
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832940719603175,
+      "max_abs": 0.03137969970703125,
+      "rel_frob": 0.18275613100677054
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9832940719603175,
+      "max_abs": 0.03137969970703125,
+      "rel_frob": 0.18275613100677054
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9865892459352514,
+      "max_abs": 0.02313232421875,
+      "rel_frob": 0.1637314494123189
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.996603854917615,
+      "max_abs": 0.01094818115234375,
+      "rel_frob": 0.08241189133923582
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.993231189502702,
+      "max_abs": 0.01782989501953125,
+      "rel_frob": 0.11635347659358743
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966023259246424,
+      "max_abs": 0.01019287109375,
+      "rel_frob": 0.08243196048009276
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.993231189502702,
+      "max_abs": 0.01782989501953125,
+      "rel_frob": 0.11635347659358743
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966023259246424,
+      "max_abs": 0.01019287109375,
+      "rel_frob": 0.08243196048009276
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834276144731016,
+      "max_abs": 0.023380279541015625,
+      "rel_frob": 0.1820498771512159
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832821907768607,
+      "max_abs": 0.026655197143554688,
+      "rel_frob": 0.18284346385504296
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9832821907768607,
+      "max_abs": 0.026655197143554688,
+      "rel_frob": 0.18284346385504296
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9865880227662913,
+      "max_abs": 0.022064208984375,
+      "rel_frob": 0.16376684858525065
+     }
+    }
+   }
+  },
+  {
+   "expert": 251,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 5,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970829637554809,
+      "max_abs": 0.009853363037109375,
+      "rel_frob": 0.07633690692608587
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9941811601818258,
+      "max_abs": 0.01482391357421875,
+      "rel_frob": 0.10787617511740169
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970821318139504,
+      "max_abs": 0.011259078979492188,
+      "rel_frob": 0.07634718111129998
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9941811601818258,
+      "max_abs": 0.01482391357421875,
+      "rel_frob": 0.10787617511740169
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970821318139504,
+      "max_abs": 0.011259078979492188,
+      "rel_frob": 0.07634718111129998
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9854521664555016,
+      "max_abs": 0.024688720703125,
+      "rel_frob": 0.17026961215420966
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9853272428698516,
+      "max_abs": 0.023899078369140625,
+      "rel_frob": 0.17100084113364397
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9853272428698516,
+      "max_abs": 0.023899078369140625,
+      "rel_frob": 0.17100084113364397
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9881928150928843,
+      "max_abs": 0.021087646484375,
+      "rel_frob": 0.15333496699171972
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964735935357747,
+      "max_abs": 0.0115509033203125,
+      "rel_frob": 0.08396852642067854
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929643862074851,
+      "max_abs": 0.01718902587890625,
+      "rel_frob": 0.11863059023948447
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964646728274176,
+      "max_abs": 0.01271820068359375,
+      "rel_frob": 0.08408014738755425
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929643862074851,
+      "max_abs": 0.01718902587890625,
+      "rel_frob": 0.11863059023948447
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964646728274176,
+      "max_abs": 0.01271820068359375,
+      "rel_frob": 0.08408014738755425
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9835962801124662,
+      "max_abs": 0.02877044677734375,
+      "rel_frob": 0.18098111228351185
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834563222065045,
+      "max_abs": 0.02471923828125,
+      "rel_frob": 0.18174012873974774
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9834563222065045,
+      "max_abs": 0.02471923828125,
+      "rel_frob": 0.18174012873974774
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9869010764523674,
+      "max_abs": 0.023956298828125,
+      "rel_frob": 0.16170625335977332
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964685371843092,
+      "max_abs": 0.0109710693359375,
+      "rel_frob": 0.08403202697265685
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929595262841735,
+      "max_abs": 0.0169677734375,
+      "rel_frob": 0.11866165991506952
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964665906827235,
+      "max_abs": 0.0120849609375,
+      "rel_frob": 0.0840541844551711
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929595262841735,
+      "max_abs": 0.0169677734375,
+      "rel_frob": 0.11866165991506952
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964665906827235,
+      "max_abs": 0.0120849609375,
+      "rel_frob": 0.0840541844551711
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9835864739792353,
+      "max_abs": 0.02655792236328125,
+      "rel_frob": 0.18102983110640092
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834469423726813,
+      "max_abs": 0.026195526123046875,
+      "rel_frob": 0.18179966453685775
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9834469423726813,
+      "max_abs": 0.026195526123046875,
+      "rel_frob": 0.18179966453685775
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9868945939270954,
+      "max_abs": 0.023260116577148438,
+      "rel_frob": 0.16174757650336458
+     }
+    }
+   }
+  },
+  {
+   "expert": 44,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 6,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971970200757524,
+      "max_abs": 0.009845733642578125,
+      "rel_frob": 0.07482847210723279
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9944087395886142,
+      "max_abs": 0.013668060302734375,
+      "rel_frob": 0.10574451055157458
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971994706257189,
+      "max_abs": 0.009370803833007812,
+      "rel_frob": 0.07479498169199371
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9944087395886142,
+      "max_abs": 0.013668060302734375,
+      "rel_frob": 0.10574451055157458
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971994706257189,
+      "max_abs": 0.009370803833007812,
+      "rel_frob": 0.07479498169199371
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9866870147749031,
+      "max_abs": 0.01885223388671875,
+      "rel_frob": 0.1628352497955694
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9865571417546495,
+      "max_abs": 0.0201568603515625,
+      "rel_frob": 0.1636296039279205
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9865571417546495,
+      "max_abs": 0.0201568603515625,
+      "rel_frob": 0.1636296039279205
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9893134272946511,
+      "max_abs": 0.0174407958984375,
+      "rel_frob": 0.14585485119540945
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963423365795436,
+      "max_abs": 0.01107025146484375,
+      "rel_frob": 0.08553027323257921
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9927038277845744,
+      "max_abs": 0.0132293701171875,
+      "rel_frob": 0.12079730243136848
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963338811548196,
+      "max_abs": 0.0108795166015625,
+      "rel_frob": 0.08562802920409121
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9927038277845744,
+      "max_abs": 0.0132293701171875,
+      "rel_frob": 0.12079730243136848
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963338811548196,
+      "max_abs": 0.0108795166015625,
+      "rel_frob": 0.08562802920409121
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9825729457314372,
+      "max_abs": 0.02271270751953125,
+      "rel_frob": 0.18664812215316473
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9824110497487548,
+      "max_abs": 0.021549701690673828,
+      "rel_frob": 0.18751531633565488
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9824110497487548,
+      "max_abs": 0.021549701690673828,
+      "rel_frob": 0.18751531633565488
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9859782589683598,
+      "max_abs": 0.020654678344726562,
+      "rel_frob": 0.16742327833612236
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963387186547079,
+      "max_abs": 0.010411739349365234,
+      "rel_frob": 0.08556860060424866
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9926974922283555,
+      "max_abs": 0.0142822265625,
+      "rel_frob": 0.1208480054363162
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963351984359053,
+      "max_abs": 0.01289987564086914,
+      "rel_frob": 0.08560751263549662
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9926974922283555,
+      "max_abs": 0.0142822265625,
+      "rel_frob": 0.1208480054363162
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963351984359053,
+      "max_abs": 0.01289987564086914,
+      "rel_frob": 0.08560751263549662
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982566024532791,
+      "max_abs": 0.0225830078125,
+      "rel_frob": 0.18669997627590584
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9823942151729753,
+      "max_abs": 0.02222442626953125,
+      "rel_frob": 0.18762258279430563
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9823942151729753,
+      "max_abs": 0.02222442626953125,
+      "rel_frob": 0.18762258279430563
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9859639731628007,
+      "max_abs": 0.021148681640625,
+      "rel_frob": 0.16751412514505176
+     }
+    }
+   }
+  },
+  {
+   "expert": 50,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 6,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970045126214724,
+      "max_abs": 0.011165618896484375,
+      "rel_frob": 0.07735549450338797
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9940239908154594,
+      "max_abs": 0.014492034912109375,
+      "rel_frob": 0.1093368439515328
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970035555628933,
+      "max_abs": 0.01055908203125,
+      "rel_frob": 0.07737179424496365
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9940239908154594,
+      "max_abs": 0.014492034912109375,
+      "rel_frob": 0.1093368439515328
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970035555628933,
+      "max_abs": 0.01055908203125,
+      "rel_frob": 0.07737179424496365
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9858465281021229,
+      "max_abs": 0.02410888671875,
+      "rel_frob": 0.1679358327467332
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9857190930104849,
+      "max_abs": 0.021671295166015625,
+      "rel_frob": 0.16867762655631513
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9857190930104849,
+      "max_abs": 0.021671295166015625,
+      "rel_frob": 0.16867762655631513
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9886523458377949,
+      "max_abs": 0.020067214965820312,
+      "rel_frob": 0.15031731080903246
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.996319268802053,
+      "max_abs": 0.01091766357421875,
+      "rel_frob": 0.0858007555720162
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9926672267887027,
+      "max_abs": 0.0150299072265625,
+      "rel_frob": 0.12109862283211445
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963172668663642,
+      "max_abs": 0.0106353759765625,
+      "rel_frob": 0.08582210928818672
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9926672267887027,
+      "max_abs": 0.0150299072265625,
+      "rel_frob": 0.12109862283211445
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963172668663642,
+      "max_abs": 0.0106353759765625,
+      "rel_frob": 0.08582210928818672
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9825274361597867,
+      "max_abs": 0.025951385498046875,
+      "rel_frob": 0.18689902563619318
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982375646122391,
+      "max_abs": 0.023781776428222656,
+      "rel_frob": 0.18771330237383937
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.982375646122391,
+      "max_abs": 0.023781776428222656,
+      "rel_frob": 0.18771330237383937
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9859594236428102,
+      "max_abs": 0.0216522216796875,
+      "rel_frob": 0.16754450949125826
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963243646435875,
+      "max_abs": 0.010974884033203125,
+      "rel_frob": 0.08573625309046329
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.992670739570726,
+      "max_abs": 0.01478433609008789,
+      "rel_frob": 0.12107330553188206
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963161337518534,
+      "max_abs": 0.01044464111328125,
+      "rel_frob": 0.08583283836683499
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.992670739570726,
+      "max_abs": 0.01478433609008789,
+      "rel_frob": 0.12107330553188206
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9963161337518534,
+      "max_abs": 0.01044464111328125,
+      "rel_frob": 0.08583283836683499
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9825601570434247,
+      "max_abs": 0.02271556854248047,
+      "rel_frob": 0.1867214664676387
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9823952976112805,
+      "max_abs": 0.024318695068359375,
+      "rel_frob": 0.1876005289726104
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9823952976112805,
+      "max_abs": 0.024318695068359375,
+      "rel_frob": 0.1876005289726104
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9859716021085304,
+      "max_abs": 0.020965576171875,
+      "rel_frob": 0.16745995011740988
+     }
+    }
+   }
+  },
+  {
+   "expert": 251,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 6,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9970118226860032,
+      "max_abs": 0.0106658935546875,
+      "rel_frob": 0.07726066366262921
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9940394430341754,
+      "max_abs": 0.013675689697265625,
+      "rel_frob": 0.1091899868746392
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999997,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.99701020044505,
+      "max_abs": 0.01019287109375,
+      "rel_frob": 0.07728362626483491
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9940394430341754,
+      "max_abs": 0.013675689697265625,
+      "rel_frob": 0.1091899868746392
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.99701020044505,
+      "max_abs": 0.01019287109375,
+      "rel_frob": 0.07728362626483491
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9856561980226273,
+      "max_abs": 0.02301025390625,
+      "rel_frob": 0.1690666707218676
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9855308843379496,
+      "max_abs": 0.023998260498046875,
+      "rel_frob": 0.16979649097852959
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9855308843379496,
+      "max_abs": 0.023998260498046875,
+      "rel_frob": 0.16979649097852959
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9884596773608287,
+      "max_abs": 0.0203094482421875,
+      "rel_frob": 0.15158898052401382
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964180916923614,
+      "max_abs": 0.01177978515625,
+      "rel_frob": 0.08462729548578464
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928567708175713,
+      "max_abs": 0.01587677001953125,
+      "rel_frob": 0.11953098739754858
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964134659268684,
+      "max_abs": 0.011810302734375,
+      "rel_frob": 0.08468520251048162
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928567708175713,
+      "max_abs": 0.01587677001953125,
+      "rel_frob": 0.11953098739754858
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964134659268684,
+      "max_abs": 0.011810302734375,
+      "rel_frob": 0.08468520251048162
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982830673700569,
+      "max_abs": 0.022581100463867188,
+      "rel_frob": 0.18521784358520582
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9826687763211782,
+      "max_abs": 0.022705078125,
+      "rel_frob": 0.1860817231328771
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9826687763211782,
+      "max_abs": 0.022705078125,
+      "rel_frob": 0.1860817231328771
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9861548195051539,
+      "max_abs": 0.02138519287109375,
+      "rel_frob": 0.16630214731871276
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964160377467768,
+      "max_abs": 0.01161956787109375,
+      "rel_frob": 0.08465429069101398
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928588336113138,
+      "max_abs": 0.015039443969726562,
+      "rel_frob": 0.11950647648458636
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964165846209078,
+      "max_abs": 0.0104522705078125,
+      "rel_frob": 0.08464635165694537
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928588336113138,
+      "max_abs": 0.015039443969726562,
+      "rel_frob": 0.11950647648458636
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964165846209078,
+      "max_abs": 0.0104522705078125,
+      "rel_frob": 0.08464635165694537
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9828161870434433,
+      "max_abs": 0.022613525390625,
+      "rel_frob": 0.1852873168646651
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9826598819949603,
+      "max_abs": 0.02336883544921875,
+      "rel_frob": 0.1861313514905973
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9826598819949603,
+      "max_abs": 0.02336883544921875,
+      "rel_frob": 0.1861313514905973
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9861474573085133,
+      "max_abs": 0.021514892578125,
+      "rel_frob": 0.1663441220890269
+     }
+    }
+   }
+  },
+  {
+   "expert": 20,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 7,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971661925514369,
+      "max_abs": 0.009685516357421875,
+      "rel_frob": 0.0752368068475712
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9943480759260551,
+      "max_abs": 0.014064788818359375,
+      "rel_frob": 0.10632412658502899
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.997165024569064,
+      "max_abs": 0.009372711181640625,
+      "rel_frob": 0.07525347788804432
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9943480759260551,
+      "max_abs": 0.014064788818359375,
+      "rel_frob": 0.10632412658502899
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.997165024569064,
+      "max_abs": 0.009372711181640625,
+      "rel_frob": 0.07525347788804432
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9865069920080729,
+      "max_abs": 0.0202178955078125,
+      "rel_frob": 0.16393176129792886
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9863759073904967,
+      "max_abs": 0.021051406860351562,
+      "rel_frob": 0.1647210080245248
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9863759073904967,
+      "max_abs": 0.021051406860351562,
+      "rel_frob": 0.1647210080245248
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9891626186658105,
+      "max_abs": 0.0172271728515625,
+      "rel_frob": 0.1468749029366407
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964169778121215,
+      "max_abs": 0.0110321044921875,
+      "rel_frob": 0.08463144802055717
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928619573572327,
+      "max_abs": 0.01422882080078125,
+      "rel_frob": 0.11949382680014975
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964170723966868,
+      "max_abs": 0.0097808837890625,
+      "rel_frob": 0.08463722315609536
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928619573572327,
+      "max_abs": 0.01422882080078125,
+      "rel_frob": 0.11949382680014975
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964170723966868,
+      "max_abs": 0.0097808837890625,
+      "rel_frob": 0.08463722315609536
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9830414895778883,
+      "max_abs": 0.0236358642578125,
+      "rel_frob": 0.18403704114567193
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9828721611688168,
+      "max_abs": 0.0226593017578125,
+      "rel_frob": 0.18493785923170386
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9828721611688168,
+      "max_abs": 0.0226593017578125,
+      "rel_frob": 0.18493785923170386
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9863569348794881,
+      "max_abs": 0.021484375,
+      "rel_frob": 0.16503222542626925
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964168640024483,
+      "max_abs": 0.0099945068359375,
+      "rel_frob": 0.0846370851492065
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928542326629266,
+      "max_abs": 0.014732718467712402,
+      "rel_frob": 0.11954894745753876
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964155779610054,
+      "max_abs": 0.00952911376953125,
+      "rel_frob": 0.0846533628888765
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9928542326629266,
+      "max_abs": 0.014732718467712402,
+      "rel_frob": 0.11954894745753876
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964155779610054,
+      "max_abs": 0.00952911376953125,
+      "rel_frob": 0.0846533628888765
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9830178801633528,
+      "max_abs": 0.02153778076171875,
+      "rel_frob": 0.18418063972200088
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9828733402338476,
+      "max_abs": 0.023347854614257812,
+      "rel_frob": 0.18496026511660005
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9828733402338476,
+      "max_abs": 0.023347854614257812,
+      "rel_frob": 0.18496026511660005
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9863553402958907,
+      "max_abs": 0.019775390625,
+      "rel_frob": 0.1650633232285556
+     }
+    }
+   }
+  },
+  {
+   "expert": 177,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 7,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971327417983544,
+      "max_abs": 0.00921630859375,
+      "rel_frob": 0.07568192787524235
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9942784225695998,
+      "max_abs": 0.01287078857421875,
+      "rel_frob": 0.10696978416487686
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000002,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971327038346125,
+      "max_abs": 0.0093536376953125,
+      "rel_frob": 0.0756815805533319
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9942784225695998,
+      "max_abs": 0.01287078857421875,
+      "rel_frob": 0.10696978416487686
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971327038346125,
+      "max_abs": 0.0093536376953125,
+      "rel_frob": 0.0756815805533319
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9865250039631677,
+      "max_abs": 0.020923614501953125,
+      "rel_frob": 0.1638189211386795
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.986401694086734,
+      "max_abs": 0.019878387451171875,
+      "rel_frob": 0.16456878087671276
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.986401694086734,
+      "max_abs": 0.019878387451171875,
+      "rel_frob": 0.16456878087671276
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9892166106689178,
+      "max_abs": 0.01910400390625,
+      "rel_frob": 0.14651226168724057
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964960249501466,
+      "max_abs": 0.01052093505859375,
+      "rel_frob": 0.08369555285550012
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9930109000805487,
+      "max_abs": 0.01522064208984375,
+      "rel_frob": 0.11823296649269331
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964865124119681,
+      "max_abs": 0.011016845703125,
+      "rel_frob": 0.08381126703540494
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9930109000805487,
+      "max_abs": 0.01522064208984375,
+      "rel_frob": 0.11823296649269331
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964865124119681,
+      "max_abs": 0.011016845703125,
+      "rel_frob": 0.08381126703540494
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832558096965837,
+      "max_abs": 0.0214691162109375,
+      "rel_frob": 0.18285041356046697
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9830941197603086,
+      "max_abs": 0.02384185791015625,
+      "rel_frob": 0.18372616080740667
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9830941197603086,
+      "max_abs": 0.02384185791015625,
+      "rel_frob": 0.18372616080740667
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9865146491926782,
+      "max_abs": 0.01910400390625,
+      "rel_frob": 0.1640643350140081
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964860401902246,
+      "max_abs": 0.010107040405273438,
+      "rel_frob": 0.08381050878415083
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929994560679749,
+      "max_abs": 0.013671875,
+      "rel_frob": 0.11833260291776532
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964869814062705,
+      "max_abs": 0.0107421875,
+      "rel_frob": 0.08380311905770355
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929994560679749,
+      "max_abs": 0.013671875,
+      "rel_frob": 0.11833260291776532
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964869814062705,
+      "max_abs": 0.0107421875,
+      "rel_frob": 0.08380311905770355
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832437981412423,
+      "max_abs": 0.022584915161132812,
+      "rel_frob": 0.18293921899943083
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9830897484334049,
+      "max_abs": 0.02524566650390625,
+      "rel_frob": 0.18376916208773209
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9830897484334049,
+      "max_abs": 0.02524566650390625,
+      "rel_frob": 0.18376916208773209
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9865127803888665,
+      "max_abs": 0.021484375,
+      "rel_frob": 0.16408698182650464
+     }
+    }
+   }
+  },
+  {
+   "expert": 243,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 7,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969918703082623,
+      "max_abs": 0.0112457275390625,
+      "rel_frob": 0.07752347069342178
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9940015324789081,
+      "max_abs": 0.01508331298828125,
+      "rel_frob": 0.10952756611957341
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969945692210587,
+      "max_abs": 0.010955810546875,
+      "rel_frob": 0.07748757422429321
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9940015324789081,
+      "max_abs": 0.01508331298828125,
+      "rel_frob": 0.10952756611957341
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969945692210587,
+      "max_abs": 0.010955810546875,
+      "rel_frob": 0.07748757422429321
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9855020749247706,
+      "max_abs": 0.021610260009765625,
+      "rel_frob": 0.1699687881394742
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9853726523671744,
+      "max_abs": 0.023193359375,
+      "rel_frob": 0.17072853838892033
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9853726523671744,
+      "max_abs": 0.023193359375,
+      "rel_frob": 0.17072853838892033
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9883212164319584,
+      "max_abs": 0.0188446044921875,
+      "rel_frob": 0.15250301962102294
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964862559559852,
+      "max_abs": 0.011444091796875,
+      "rel_frob": 0.083819407968057
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929946685452151,
+      "max_abs": 0.014179229736328125,
+      "rel_frob": 0.11836549432830173
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964817389712587,
+      "max_abs": 0.0105133056640625,
+      "rel_frob": 0.08387251250584883
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929946685452151,
+      "max_abs": 0.014179229736328125,
+      "rel_frob": 0.11836549432830173
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964817389712587,
+      "max_abs": 0.0105133056640625,
+      "rel_frob": 0.08387251250584883
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9829926560361002,
+      "max_abs": 0.022197723388671875,
+      "rel_frob": 0.18434481991993223
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9828516255611452,
+      "max_abs": 0.02203369140625,
+      "rel_frob": 0.1851092491590314
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9828516255611452,
+      "max_abs": 0.02203369140625,
+      "rel_frob": 0.1851092491590314
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9862723511042778,
+      "max_abs": 0.018661022186279297,
+      "rel_frob": 0.16559953361622032
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9964774684779505,
+      "max_abs": 0.0106201171875,
+      "rel_frob": 0.0839232160978118
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929758912623272,
+      "max_abs": 0.014330387115478516,
+      "rel_frob": 0.11852803576162146
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.99647688092159,
+      "max_abs": 0.00970458984375,
+      "rel_frob": 0.08393208050509673
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9929758912623272,
+      "max_abs": 0.014330387115478516,
+      "rel_frob": 0.11852803576162146
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.99647688092159,
+      "max_abs": 0.00970458984375,
+      "rel_frob": 0.08393208050509673
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9829727702654032,
+      "max_abs": 0.020888328552246094,
+      "rel_frob": 0.1844593547775895
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9828297867241406,
+      "max_abs": 0.02153635025024414,
+      "rel_frob": 0.18522798421263545
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9828297867241406,
+      "max_abs": 0.02153635025024414,
+      "rel_frob": 0.18522798421263545
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.986262136624583,
+      "max_abs": 0.01947784423828125,
+      "rel_frob": 0.16566518669903232
+     }
+    }
+   }
+  },
+  {
+   "expert": 14,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 8,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969717835922127,
+      "max_abs": 0.009552001953125,
+      "rel_frob": 0.0777785366220946
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9939635056794955,
+      "max_abs": 0.013519287109375,
+      "rel_frob": 0.1098759625519306
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969738438119691,
+      "max_abs": 0.00946807861328125,
+      "rel_frob": 0.07775167116521658
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9939635056794955,
+      "max_abs": 0.013519287109375,
+      "rel_frob": 0.1098759625519306
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9969738438119691,
+      "max_abs": 0.00946807861328125,
+      "rel_frob": 0.07775167116521658
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9856924920096308,
+      "max_abs": 0.01998138427734375,
+      "rel_frob": 0.16882642674539636
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9855659101027072,
+      "max_abs": 0.0203857421875,
+      "rel_frob": 0.16957226577494855
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9855659101027072,
+      "max_abs": 0.0203857421875,
+      "rel_frob": 0.16957226577494855
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9885332742626103,
+      "max_abs": 0.0179901123046875,
+      "rel_frob": 0.1510936912000731
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966847605918394,
+      "max_abs": 0.010955810546875,
+      "rel_frob": 0.08139907441103367
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933879358730742,
+      "max_abs": 0.014141082763671875,
+      "rel_frob": 0.1150036029889007
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000004,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966835138005486,
+      "max_abs": 0.01123809814453125,
+      "rel_frob": 0.0814184089874719
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933879358730742,
+      "max_abs": 0.014141082763671875,
+      "rel_frob": 0.1150036029889007
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966835138005486,
+      "max_abs": 0.01123809814453125,
+      "rel_frob": 0.0814184089874719
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.984173250729727,
+      "max_abs": 0.0210723876953125,
+      "rel_frob": 0.17774882288522717
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9840325467794797,
+      "max_abs": 0.0233154296875,
+      "rel_frob": 0.17852718402789747
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9840325467794797,
+      "max_abs": 0.0233154296875,
+      "rel_frob": 0.17852718402789747
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9872607865971614,
+      "max_abs": 0.02004241943359375,
+      "rel_frob": 0.15942165452384383
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966831190997315,
+      "max_abs": 0.01025390625,
+      "rel_frob": 0.08142480511173698
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933903409512435,
+      "max_abs": 0.0150604248046875,
+      "rel_frob": 0.11497135895701018
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966840887778169,
+      "max_abs": 0.01041412353515625,
+      "rel_frob": 0.0814106604910679
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933903409512435,
+      "max_abs": 0.0150604248046875,
+      "rel_frob": 0.11497135895701018
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966840887778169,
+      "max_abs": 0.01041412353515625,
+      "rel_frob": 0.0814106604910679
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9841474494983228,
+      "max_abs": 0.0234375,
+      "rel_frob": 0.17786952654368854
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9840183878399963,
+      "max_abs": 0.02388286590576172,
+      "rel_frob": 0.1785972636418839
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9840183878399963,
+      "max_abs": 0.02388286590576172,
+      "rel_frob": 0.1785972636418839
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9872508127064636,
+      "max_abs": 0.0186004638671875,
+      "rel_frob": 0.1594754542083035
+     }
+    }
+   }
+  },
+  {
+   "expert": 34,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 8,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974649968602323,
+      "max_abs": 0.007633209228515625,
+      "rel_frob": 0.07116115780434369
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9949400305825872,
+      "max_abs": 0.010467529296875,
+      "rel_frob": 0.10059798632121306
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974641065986519,
+      "max_abs": 0.0076141357421875,
+      "rel_frob": 0.07117365547554858
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9949400305825872,
+      "max_abs": 0.010467529296875,
+      "rel_frob": 0.10059798632121306
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974641065986519,
+      "max_abs": 0.0076141357421875,
+      "rel_frob": 0.07117365547554858
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9878445839904959,
+      "max_abs": 0.017120361328125,
+      "rel_frob": 0.155573699969171
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9877292182485389,
+      "max_abs": 0.016160964965820312,
+      "rel_frob": 0.1563091288073973
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9877292182485389,
+      "max_abs": 0.016160964965820312,
+      "rel_frob": 0.1563091288073973
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9902339692561135,
+      "max_abs": 0.01397705078125,
+      "rel_frob": 0.1394297764245855
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965517621348965,
+      "max_abs": 0.009799957275390625,
+      "rel_frob": 0.08302168148648041
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931241395884798,
+      "max_abs": 0.014148712158203125,
+      "rel_frob": 0.11727313726900275
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965470324396898,
+      "max_abs": 0.009037971496582031,
+      "rel_frob": 0.08308177080696867
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931241395884798,
+      "max_abs": 0.014148712158203125,
+      "rel_frob": 0.11727313726900275
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965470324396898,
+      "max_abs": 0.009037971496582031,
+      "rel_frob": 0.08308177080696867
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834402539504353,
+      "max_abs": 0.022130966186523438,
+      "rel_frob": 0.18184689561354797
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832895869866787,
+      "max_abs": 0.021923065185546875,
+      "rel_frob": 0.1826646856902793
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9832895869866787,
+      "max_abs": 0.021923065185546875,
+      "rel_frob": 0.1826646856902793
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9866555820104357,
+      "max_abs": 0.019634246826171875,
+      "rel_frob": 0.16319934698171562
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965515498642865,
+      "max_abs": 0.009490966796875,
+      "rel_frob": 0.08302793530700103
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931260735885183,
+      "max_abs": 0.013725757598876953,
+      "rel_frob": 0.11724553494549365
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965539559203067,
+      "max_abs": 0.0100860595703125,
+      "rel_frob": 0.08299556079520636
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931260735885183,
+      "max_abs": 0.013725757598876953,
+      "rel_frob": 0.11724553494549365
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965539559203067,
+      "max_abs": 0.0100860595703125,
+      "rel_frob": 0.08299556079520636
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834149231175218,
+      "max_abs": 0.01964569091796875,
+      "rel_frob": 0.18198602419036894
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.983293050137332,
+      "max_abs": 0.02021026611328125,
+      "rel_frob": 0.18266149994330833
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.983293050137332,
+      "max_abs": 0.02021026611328125,
+      "rel_frob": 0.18266149994330833
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9866432309737951,
+      "max_abs": 0.01800537109375,
+      "rel_frob": 0.16328220302454086
+     }
+    }
+   }
+  },
+  {
+   "expert": 78,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 8,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9972681739142285,
+      "max_abs": 0.0089569091796875,
+      "rel_frob": 0.07387031422652314
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9945556690919688,
+      "max_abs": 0.011684417724609375,
+      "rel_frob": 0.10435762717102387
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9972725210190104,
+      "max_abs": 0.008106231689453125,
+      "rel_frob": 0.07381354058425332
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9945556690919688,
+      "max_abs": 0.011684417724609375,
+      "rel_frob": 0.10435762717102387
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9972725210190104,
+      "max_abs": 0.008106231689453125,
+      "rel_frob": 0.07381354058425332
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9865405291599956,
+      "max_abs": 0.0191802978515625,
+      "rel_frob": 0.16374381513284172
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.986417711714577,
+      "max_abs": 0.01966094970703125,
+      "rel_frob": 0.1644797740076175
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.986417711714577,
+      "max_abs": 0.01966094970703125,
+      "rel_frob": 0.1644797740076175
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9891028178135155,
+      "max_abs": 0.019464492797851562,
+      "rel_frob": 0.14728428438438798
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965460599462826,
+      "max_abs": 0.01043701171875,
+      "rel_frob": 0.08309057653637322
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931145806814223,
+      "max_abs": 0.014434814453125,
+      "rel_frob": 0.11735084800029358
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999998,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965427193307668,
+      "max_abs": 0.0091552734375,
+      "rel_frob": 0.08313170161126357
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931145806814223,
+      "max_abs": 0.014434814453125,
+      "rel_frob": 0.11735084800029358
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965427193307668,
+      "max_abs": 0.0091552734375,
+      "rel_frob": 0.08313170161126357
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9824460812324611,
+      "max_abs": 0.02297210693359375,
+      "rel_frob": 0.1873001070978028
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9822878187808746,
+      "max_abs": 0.022144317626953125,
+      "rel_frob": 0.18814003310593388
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9822878187808746,
+      "max_abs": 0.022144317626953125,
+      "rel_frob": 0.18814003310593388
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9856607047160314,
+      "max_abs": 0.019682884216308594,
+      "rel_frob": 0.1692362367936524
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965473120956352,
+      "max_abs": 0.00927734375,
+      "rel_frob": 0.08307793543158913
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.993110211357912,
+      "max_abs": 0.0122528076171875,
+      "rel_frob": 0.11738088947450397
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965415046155254,
+      "max_abs": 0.0091094970703125,
+      "rel_frob": 0.08314448279326152
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.993110211357912,
+      "max_abs": 0.0122528076171875,
+      "rel_frob": 0.11738088947450397
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965415046155254,
+      "max_abs": 0.0091094970703125,
+      "rel_frob": 0.08314448279326152
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9824527098809528,
+      "max_abs": 0.019641876220703125,
+      "rel_frob": 0.18724778287846638
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.982302182681105,
+      "max_abs": 0.020263671875,
+      "rel_frob": 0.1880576848678666
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.982302182681105,
+      "max_abs": 0.020263671875,
+      "rel_frob": 0.1880576848678666
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9856661179455821,
+      "max_abs": 0.01885223388671875,
+      "rel_frob": 0.16919511262955741
+     }
+    }
+   }
+  },
+  {
+   "expert": 16,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 9,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973386522049608,
+      "max_abs": 0.0081634521484375,
+      "rel_frob": 0.07291196666602981
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9946914122758296,
+      "max_abs": 0.011508941650390625,
+      "rel_frob": 0.10304492617251551
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973417823407136,
+      "max_abs": 0.0077362060546875,
+      "rel_frob": 0.07287018903239274
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9946914122758296,
+      "max_abs": 0.011508941650390625,
+      "rel_frob": 0.10304492617251551
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973417823407136,
+      "max_abs": 0.0077362060546875,
+      "rel_frob": 0.07287018903239274
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9871858292146807,
+      "max_abs": 0.016998291015625,
+      "rel_frob": 0.1597465342248062
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9870670806686381,
+      "max_abs": 0.018768310546875,
+      "rel_frob": 0.1604794935574117
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9870670806686381,
+      "max_abs": 0.018768310546875,
+      "rel_frob": 0.1604794935574117
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9896847189377059,
+      "max_abs": 0.0171356201171875,
+      "rel_frob": 0.14329374971619938
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966630614247131,
+      "max_abs": 0.009002685546875,
+      "rel_frob": 0.08166448236031333
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933527508773715,
+      "max_abs": 0.01458740234375,
+      "rel_frob": 0.11530820625566168
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966675545090273,
+      "max_abs": 0.0093994140625,
+      "rel_frob": 0.08161297356651408
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933527508773715,
+      "max_abs": 0.01458740234375,
+      "rel_frob": 0.11530820625566168
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966675545090273,
+      "max_abs": 0.0093994140625,
+      "rel_frob": 0.08161297356651408
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9838278896471926,
+      "max_abs": 0.02142333984375,
+      "rel_frob": 0.17969865398394624
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9836913035451823,
+      "max_abs": 0.01924896240234375,
+      "rel_frob": 0.18044693509805954
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9836913035451823,
+      "max_abs": 0.01924896240234375,
+      "rel_frob": 0.18044693509805954
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9869388730075137,
+      "max_abs": 0.0196380615234375,
+      "rel_frob": 0.1614387577099447
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966656832953366,
+      "max_abs": 0.0097198486328125,
+      "rel_frob": 0.08163537531644488
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933574290787843,
+      "max_abs": 0.013469696044921875,
+      "rel_frob": 0.11525970837724042
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966686108177016,
+      "max_abs": 0.0092010498046875,
+      "rel_frob": 0.08159871387636872
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9933574290787843,
+      "max_abs": 0.013469696044921875,
+      "rel_frob": 0.11525970837724042
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966686108177016,
+      "max_abs": 0.0092010498046875,
+      "rel_frob": 0.08159871387636872
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9838324839621033,
+      "max_abs": 0.022928237915039062,
+      "rel_frob": 0.17964887440886296
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9836920975506643,
+      "max_abs": 0.022924184799194336,
+      "rel_frob": 0.18042909390216
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9836920975506643,
+      "max_abs": 0.022924184799194336,
+      "rel_frob": 0.18042909390216
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9869368784816428,
+      "max_abs": 0.019124746322631836,
+      "rel_frob": 0.16143752819408064
+     }
+    }
+   }
+  },
+  {
+   "expert": 97,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 9,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974158288168979,
+      "max_abs": 0.00836944580078125,
+      "rel_frob": 0.07184699095697246
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9948434384869833,
+      "max_abs": 0.010933876037597656,
+      "rel_frob": 0.10155940999964105
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974157578071321,
+      "max_abs": 0.0076904296875,
+      "rel_frob": 0.07184897300859848
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9948434384869833,
+      "max_abs": 0.010933876037597656,
+      "rel_frob": 0.10155940999964105
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974157578071321,
+      "max_abs": 0.0076904296875,
+      "rel_frob": 0.07184897300859848
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9874320466435057,
+      "max_abs": 0.0184783935546875,
+      "rel_frob": 0.15820468702430662
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9873111744791572,
+      "max_abs": 0.01670074462890625,
+      "rel_frob": 0.15895760048343918
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9873111744791572,
+      "max_abs": 0.01670074462890625,
+      "rel_frob": 0.15895760048343918
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9898576364410605,
+      "max_abs": 0.01599884033203125,
+      "rel_frob": 0.14208847358011428
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965604901556173,
+      "max_abs": 0.01061248779296875,
+      "rel_frob": 0.08291519701204988
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.993143550029806,
+      "max_abs": 0.01372528076171875,
+      "rel_frob": 0.11710885647400184
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965597170445485,
+      "max_abs": 0.00943756103515625,
+      "rel_frob": 0.08292843613255937
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.993143550029806,
+      "max_abs": 0.01372528076171875,
+      "rel_frob": 0.11710885647400184
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965597170445485,
+      "max_abs": 0.00943756103515625,
+      "rel_frob": 0.08292843613255937
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9831088441841964,
+      "max_abs": 0.021265029907226562,
+      "rel_frob": 0.18368925261998242
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9829650667952804,
+      "max_abs": 0.01984405517578125,
+      "rel_frob": 0.18445958323446618
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9829650667952804,
+      "max_abs": 0.01984405517578125,
+      "rel_frob": 0.18445958323446618
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9863174295584538,
+      "max_abs": 0.019639968872070312,
+      "rel_frob": 0.1652775698713088
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965604499315648,
+      "max_abs": 0.0101776123046875,
+      "rel_frob": 0.0829156105821504
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.99314439774146,
+      "max_abs": 0.0140380859375,
+      "rel_frob": 0.11709604888772628
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965591735868732,
+      "max_abs": 0.01080322265625,
+      "rel_frob": 0.08293167859017854
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.99314439774146,
+      "max_abs": 0.0140380859375,
+      "rel_frob": 0.11709604888772628
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965591735868732,
+      "max_abs": 0.01080322265625,
+      "rel_frob": 0.08293167859017854
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9831109930191695,
+      "max_abs": 0.023042678833007812,
+      "rel_frob": 0.18365773004598843
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9829667317775608,
+      "max_abs": 0.022174835205078125,
+      "rel_frob": 0.18443867166866465
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9829667317775608,
+      "max_abs": 0.022174835205078125,
+      "rel_frob": 0.18443867166866465
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9863133258850927,
+      "max_abs": 0.02051544189453125,
+      "rel_frob": 0.16528564784064495
+     }
+    }
+   }
+  },
+  {
+   "expert": 225,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 9,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971896642967204,
+      "max_abs": 0.008582115173339844,
+      "rel_frob": 0.07492518035593783
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9943910735674499,
+      "max_abs": 0.01222991943359375,
+      "rel_frob": 0.10591910520054658
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999998,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971884694917794,
+      "max_abs": 0.009124755859375,
+      "rel_frob": 0.07494233850967107
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9943910735674499,
+      "max_abs": 0.01222991943359375,
+      "rel_frob": 0.10591910520054658
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971884694917794,
+      "max_abs": 0.009124755859375,
+      "rel_frob": 0.07494233850967107
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9862337263720885,
+      "max_abs": 0.020313262939453125,
+      "rel_frob": 0.16560089097722336
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9861014654141635,
+      "max_abs": 0.019702911376953125,
+      "rel_frob": 0.16638902687670937
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9861014654141635,
+      "max_abs": 0.019702911376953125,
+      "rel_frob": 0.16638902687670937
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9888633274686938,
+      "max_abs": 0.0203704833984375,
+      "rel_frob": 0.1488960743498024
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965470961488783,
+      "max_abs": 0.010420083999633789,
+      "rel_frob": 0.08307545982397532
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931185780561476,
+      "max_abs": 0.014189004898071289,
+      "rel_frob": 0.11731151104486523
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000004,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965487699673892,
+      "max_abs": 0.010162353515625,
+      "rel_frob": 0.08305327546729811
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931185780561476,
+      "max_abs": 0.014189004898071289,
+      "rel_frob": 0.11731151104486523
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965487699673892,
+      "max_abs": 0.010162353515625,
+      "rel_frob": 0.08305327546729811
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832926309639117,
+      "max_abs": 0.021059513092041016,
+      "rel_frob": 0.1826216810113331
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9831510514785113,
+      "max_abs": 0.02239227294921875,
+      "rel_frob": 0.18339875608525635
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9831510514785113,
+      "max_abs": 0.02239227294921875,
+      "rel_frob": 0.18339875608525635
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9865070519801408,
+      "max_abs": 0.0196990966796875,
+      "rel_frob": 0.16407229703419826
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965437352962734,
+      "max_abs": 0.010498046875,
+      "rel_frob": 0.08311720627196086
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931111019892325,
+      "max_abs": 0.013427734375,
+      "rel_frob": 0.11738092493713502
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0000000000000004,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965445439870233,
+      "max_abs": 0.00975799560546875,
+      "rel_frob": 0.08310867651432309
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9931111019892325,
+      "max_abs": 0.013427734375,
+      "rel_frob": 0.11738092493713502
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9965445439870233,
+      "max_abs": 0.00975799560546875,
+      "rel_frob": 0.08310867651432309
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9832833448176088,
+      "max_abs": 0.0211181640625,
+      "rel_frob": 0.18266857045993673
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9831271648426384,
+      "max_abs": 0.02281951904296875,
+      "rel_frob": 0.1835169692537562
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9831271648426384,
+      "max_abs": 0.02281951904296875,
+      "rel_frob": 0.1835169692537562
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9865007334856482,
+      "max_abs": 0.019342422485351562,
+      "rel_frob": 0.16411014463309945
+     }
+    }
+   }
+  },
+  {
+   "expert": 82,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 10,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971988823175465,
+      "max_abs": 0.009965896606445312,
+      "rel_frob": 0.07480420757984961
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9944095540764182,
+      "max_abs": 0.0123138427734375,
+      "rel_frob": 0.10573323143978067
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999998,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971972414438109,
+      "max_abs": 0.0085296630859375,
+      "rel_frob": 0.07482432536234176
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9944095540764182,
+      "max_abs": 0.0123138427734375,
+      "rel_frob": 0.10573323143978067
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9971972414438109,
+      "max_abs": 0.0085296630859375,
+      "rel_frob": 0.07482432536234176
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.986338448165651,
+      "max_abs": 0.0203857421875,
+      "rel_frob": 0.16497842064201987
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9862277817007226,
+      "max_abs": 0.019771575927734375,
+      "rel_frob": 0.165651632561261
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9862277817007226,
+      "max_abs": 0.019771575927734375,
+      "rel_frob": 0.165651632561261
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9889730964444987,
+      "max_abs": 0.01739501953125,
+      "rel_frob": 0.14817069190042842
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966255121371106,
+      "max_abs": 0.0100250244140625,
+      "rel_frob": 0.08212461448767713
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932696082978337,
+      "max_abs": 0.012819290161132812,
+      "rel_frob": 0.11602280832974249
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966250157242911,
+      "max_abs": 0.010162353515625,
+      "rel_frob": 0.08213186428758887
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932696082978337,
+      "max_abs": 0.012819290161132812,
+      "rel_frob": 0.11602280832974249
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966250157242911,
+      "max_abs": 0.010162353515625,
+      "rel_frob": 0.08213186428758887
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9835535701385414,
+      "max_abs": 0.022701263427734375,
+      "rel_frob": 0.18121261134946887
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9834223202847521,
+      "max_abs": 0.02338409423828125,
+      "rel_frob": 0.18193112590636262
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9834223202847521,
+      "max_abs": 0.02338409423828125,
+      "rel_frob": 0.18193112590636262
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9867097878220878,
+      "max_abs": 0.020843505859375,
+      "rel_frob": 0.1628493051436164
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966282896273437,
+      "max_abs": 0.0096588134765625,
+      "rel_frob": 0.08208925947461149
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932727830266124,
+      "max_abs": 0.014251708984375,
+      "rel_frob": 0.1159952807700794
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966237506682624,
+      "max_abs": 0.009429931640625,
+      "rel_frob": 0.08214558989929356
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9932727830266124,
+      "max_abs": 0.014251708984375,
+      "rel_frob": 0.1159952807700794
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966237506682624,
+      "max_abs": 0.009429931640625,
+      "rel_frob": 0.08214558989929356
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9835543997086534,
+      "max_abs": 0.020948410034179688,
+      "rel_frob": 0.18118823680110427
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.983408597931439,
+      "max_abs": 0.021726608276367188,
+      "rel_frob": 0.1819867564617139
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.983408597931439,
+      "max_abs": 0.021726608276367188,
+      "rel_frob": 0.1819867564617139
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9866995670719025,
+      "max_abs": 0.019073486328125,
+      "rel_frob": 0.1628926105284921
+     }
+    }
+   }
+  },
+  {
+   "expert": 231,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 10,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974621152136196,
+      "max_abs": 0.00760650634765625,
+      "rel_frob": 0.0712002255404383
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9949351617259076,
+      "max_abs": 0.011100292205810547,
+      "rel_frob": 0.10065373227560187
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974633707860916,
+      "max_abs": 0.008056640625,
+      "rel_frob": 0.07118354649770955
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9949351617259076,
+      "max_abs": 0.011100292205810547,
+      "rel_frob": 0.10065373227560187
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9974633707860916,
+      "max_abs": 0.008056640625,
+      "rel_frob": 0.07118354649770955
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9876987477811896,
+      "max_abs": 0.017475128173828125,
+      "rel_frob": 0.15652953567939376
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9875860211672798,
+      "max_abs": 0.018036842346191406,
+      "rel_frob": 0.15723773985682535
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9875860211672798,
+      "max_abs": 0.018036842346191406,
+      "rel_frob": 0.15723773985682535
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9900850013464708,
+      "max_abs": 0.016284942626953125,
+      "rel_frob": 0.14049283963131984
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966942775260752,
+      "max_abs": 0.0090179443359375,
+      "rel_frob": 0.0812814782412023
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934070375792223,
+      "max_abs": 0.01276397705078125,
+      "rel_frob": 0.11483932883824298
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966939271881635,
+      "max_abs": 0.008544921875,
+      "rel_frob": 0.08129085152426076
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934070375792223,
+      "max_abs": 0.01276397705078125,
+      "rel_frob": 0.11483932883824298
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966939271881635,
+      "max_abs": 0.008544921875,
+      "rel_frob": 0.08129085152426076
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.983731956650049,
+      "max_abs": 0.019908905029296875,
+      "rel_frob": 0.18023173995205594
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9835927865123917,
+      "max_abs": 0.019992828369140625,
+      "rel_frob": 0.18098798642743977
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9835927865123917,
+      "max_abs": 0.019992828369140625,
+      "rel_frob": 0.18098798642743977
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9868088997956926,
+      "max_abs": 0.0200347900390625,
+      "rel_frob": 0.16224021649027232
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966984286474113,
+      "max_abs": 0.0096588134765625,
+      "rel_frob": 0.08123591368683016
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934155773909574,
+      "max_abs": 0.01300048828125,
+      "rel_frob": 0.11475409701783054
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966934169084348,
+      "max_abs": 0.00958251953125,
+      "rel_frob": 0.08129669713132913
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934155773909574,
+      "max_abs": 0.01300048828125,
+      "rel_frob": 0.11475409701783054
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9966934169084348,
+      "max_abs": 0.00958251953125,
+      "rel_frob": 0.08129669713132913
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9837147218884648,
+      "max_abs": 0.02105712890625,
+      "rel_frob": 0.1802994382885388
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9835767751744039,
+      "max_abs": 0.02005767822265625,
+      "rel_frob": 0.181063420574039
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9835767751744039,
+      "max_abs": 0.02005767822265625,
+      "rel_frob": 0.181063420574039
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9868031369558165,
+      "max_abs": 0.018768310546875,
+      "rel_frob": 0.16226431559869584
+     }
+    }
+   }
+  },
+  {
+   "expert": 234,
+   "k": {
+    "336-k4": 4,
+    "342-k4": 4,
+    "342-sh": 4,
+    "bm-k3": 3
+   },
+   "layer": 10,
+   "projections": {
+    "down_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973298299067259,
+      "max_abs": 0.0080108642578125,
+      "rel_frob": 0.07303192696382209
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.994673349249692,
+      "max_abs": 0.010921478271484375,
+      "rel_frob": 0.10322054144941369
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973322032133894,
+      "max_abs": 0.00775909423828125,
+      "rel_frob": 0.07300057266193472
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.994673349249692,
+      "max_abs": 0.010921478271484375,
+      "rel_frob": 0.10322054144941369
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9973322032133894,
+      "max_abs": 0.00775909423828125,
+      "rel_frob": 0.07300057266193472
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9871107582760799,
+      "max_abs": 0.01812744140625,
+      "rel_frob": 0.16023235830558025
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9869994056611369,
+      "max_abs": 0.01720428466796875,
+      "rel_frob": 0.16091696240474646
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9869994056611369,
+      "max_abs": 0.01720428466796875,
+      "rel_frob": 0.16091696240474646
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9896196888603699,
+      "max_abs": 0.0164947509765625,
+      "rel_frob": 0.14375083221789836
+     }
+    },
+    "gate_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9967217151201797,
+      "max_abs": 0.0096893310546875,
+      "rel_frob": 0.08094329170876612
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934647687740411,
+      "max_abs": 0.01390838623046875,
+      "rel_frob": 0.11432789190545337
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 1.0,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9967202477209782,
+      "max_abs": 0.009429931640625,
+      "rel_frob": 0.08096234246317612
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934647687740411,
+      "max_abs": 0.01390838623046875,
+      "rel_frob": 0.11432789190545337
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9967202477209782,
+      "max_abs": 0.009429931640625,
+      "rel_frob": 0.08096234246317612
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9840584596568799,
+      "max_abs": 0.02044677734375,
+      "rel_frob": 0.17838030253713416
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9839116444643781,
+      "max_abs": 0.021793365478515625,
+      "rel_frob": 0.17919731274874107
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9839116444643781,
+      "max_abs": 0.021793365478515625,
+      "rel_frob": 0.17919731274874107
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9871114619540866,
+      "max_abs": 0.018817007541656494,
+      "rel_frob": 0.1603416555684848
+     }
+    },
+    "up_proj": {
+     "336-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9967233268247505,
+      "max_abs": 0.009033203125,
+      "rel_frob": 0.08092342342042619
+     },
+     "342-k4 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934654984160323,
+      "max_abs": 0.012786865234375,
+      "rel_frob": 0.11432655875910029
+     },
+     "342-k4 vs 342-sh": {
+      "bitwise_equal": true,
+      "cosine": 0.9999999999999999,
+      "max_abs": 0.0,
+      "rel_frob": 0.0
+     },
+     "342-k4 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9967216384860699,
+      "max_abs": 0.009105682373046875,
+      "rel_frob": 0.08094792689202326
+     },
+     "342-sh vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9934654984160323,
+      "max_abs": 0.012786865234375,
+      "rel_frob": 0.11432655875910029
+     },
+     "342-sh vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.9967216384860699,
+      "max_abs": 0.009105682373046875,
+      "rel_frob": 0.08094792689202326
+     },
+     "bm-k3 vs 336-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9840508113132325,
+      "max_abs": 0.02008056640625,
+      "rel_frob": 0.17841804688499766
+     },
+     "bm-k3 vs 342-k4": {
+      "bitwise_equal": false,
+      "cosine": 0.9839162957343018,
+      "max_abs": 0.01934051513671875,
+      "rel_frob": 0.17915964336635942
+     },
+     "bm-k3 vs 342-sh": {
+      "bitwise_equal": false,
+      "cosine": 0.9839162957343018,
+      "max_abs": 0.01934051513671875,
+      "rel_frob": 0.17915964336635942
+     },
+     "bm-k3 vs bf16": {
+      "bitwise_equal": false,
+      "cosine": 0.98711360403734,
+      "max_abs": 0.01839447021484375,
+      "rel_frob": 0.16032437608938566
+     }
+    }
+   }
+  }
+ ],
+ "seed": 42
+}
