@@ -138,7 +138,7 @@ def main() -> None:
 
     if args.worker_rank is not None:
         src = m.SourceModel(args.src)
-        logfile = open(Path(args.work) / f"worker-{args.worker_rank}.log", "a")
+        logfile = str(Path(args.work) / f"worker-{args.worker_rank}.log")
         lockstep = m.resolve_lockstep(args.lockstep)
         todo = m.parse_layers(args.layers)[args.worker_rank::args.workers]
         for L in todo:
