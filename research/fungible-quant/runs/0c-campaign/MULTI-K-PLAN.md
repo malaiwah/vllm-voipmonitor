@@ -88,3 +88,21 @@ Fixed 3 TB. The campaign becomes a rolling pipeline, layer-window at a time
 4. The kept asset under 3 TB: the per-layer Hessian statistics (small) and
    published segments on HF; raw capture windows are transient by design
    (regenerable deterministically from plan+seed if ever needed).
+
+## Complement-encode matrix (Michel, 2026-08-10)
+
+With the segment format nailed, idle GPUs encode ONLY what community
+salvage won't prime. Per layer (256 experts):
+
+| Tier | Primed by community | We encode (idle GPUs) |
+|---|---|---|
+| K3 | ALL (brandonmusic seed, published) | none — encode-of reproducibility samples only |
+| K4 | 3.42bpw expansion: 108/layer (L4-77), 50 (L3); 3.36 secondary | the ~148/layer complement (policy headroom beyond primed hot set) |
+| K2 | none exists | all 256 (progressive fast-load base) |
+| K5 | none exists | all 256 (hot-tier headroom; or top-N by 0c benefit if trimming) |
+
+≈660 expert-encodes/layer instead of 1024 — the ring's window step drops
+to ~27 GPU-min/layer-window-K-mix at 2.5 s/expert. Ring launches per
+window as stream-capture seals it; K4-complement priority ordered by the
+window's routing mass (hot-adjacent first — cheapest future-promotion
+insurance).
