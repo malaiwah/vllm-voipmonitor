@@ -37,6 +37,46 @@ and not verifiable from the abstract/page) · **REFUTED** (wrong or mismatched).
 arXiv itself. Any specific number quoted from a paper body (6 ms, 1 s, 50%/75%,
 INF PPL) must be checked against the PDF before appearing in an upstream RFC.
 
-## vLLM issues / PRs / RFCs
+## vLLM issues / PRs / RFCs (24/24 resolve; 0 refuted; corrections applied to PLAN.md)
 
-(see table below — filled by the GitHub verification pass)
+Checked via rendered github.com pages (the REST API returned 403 through the proxy).
+
+| Ref | Verdict | Actual title | State |
+|---|---|---|---|
+| RFC #49702 | CONFIRMED | [RFC]: Add an EPLB Platform Backend for out-of-tree accelerators (freyfwt) | open |
+| RFC #48920 | CONFIRMED | [RFC]: Unify the Weight Loading Lifecycle Across Initial Load and Reload (aoshen02) | open |
+| PR #48908 | CONFIRMED | [Refactor][Model Loader] Unify the weight loading lifecycle | **closed, unmerged** |
+| RFC #50281 | CONFIRMED | [RFC]: Per-layer online quantization configuration (fxmarty-amd) | open |
+| PR #50401 | CONFIRMED | Add per-layer online quantization configuration (**Ganeshkusalkar**, not fxmarty-amd) | open |
+| PR #51285 | CONFIRMED | Targeted online quantization configuration based on user patterns (fxmarty-amd) | open |
+| PR #51392 | CONFIRMED | Online quantization with partially pre-quantized checkpoints (fxmarty-amd) | open |
+| RFC #38256 | CONFIRMED | [RFC]: Incremental MoE Expert Offloading — GPU Cache + Async Pipeline (e1n00r) | open |
+| PR #37190 | CONFIRMED | Run MoE models exceeding VRAM via expert CPU offloading with GPU cache (~1479 additions after rebase) | open |
+| #49198 | CONFIRMED | Recency-based progressive mixed-precision KV cache — lifecycle quote verified verbatim | open |
+| #51567 | CONFIRMED | EPLB fails to transport E8M0 expert state; fix = storage-preserving `tensor.view(torch.uint8)` | open |
+| #41955 | CONFIRMED | Mixed INT4/INT8 GPTQ MoE models crash on initialization (AssertionError in fused_marlin_moe) | open |
+| #21336 | CONFIRMED | vLLM crashes with --enable-sleep-mode on Blackwell PRO 6000 — created 2025-07-21 | open |
+| #48680 | CONFIRMED | sleep-mode OOM, ~4.85 GiB cumem private MemPool on SM120/NVFP4 | open |
+| PR #50168 | PARTIAL | LUT-B quantization accuracy prototype (mgoin, draft). **bpw range 3.125–3.522** (not 3.516); 52.08% = baseline variant, 75.51% = best | open (draft) |
+| #46611 | CONFIRMED* | 60 s shared-memory broadcast timeout. *Quantization named in vLLM's generic error message as a possible cause, not a confirmed diagnosis | open |
+| RFC #32028 | CONFIRMED | [RFC]: EPLB Implementation Refactoring (ilmarkov) | open |
+| #19896 / #11416 / #3203 / #296 / #2645 | CONFIRMED | EXL3 / QTIP / exl2 / ExLlama / ExLlamaV2-kernel requests — all closed as not planned (several stale-closed) | closed |
+| Discussion #5802 | CONFIRMED* | RFC: FP8 Quantization Schema in vLLM update. *Real, but GitHub Discussions was **deprecated Mar 2025** in favor of discuss.vllm.ai — not an active design venue | — |
+
+### The deadline claim
+
+**CONFIRMED verbatim.** RFC #49702's body states the feedback window as:
+**"Two weeks, through August 18, 2026."** The 2026-08-18 deadline in PLAN.md §6
+is directly established by the issue text.
+
+### Corrections applied to PLAN.md (commit history has details)
+
+1. #48920 does **not** contain the phrase "existing model geometry" — replaced
+   with its actual scope sentence ("…do not replace the base checkpoint…").
+2. PR #48908 described as closed-unmerged; engagement belongs on the RFC.
+3. LUT-B bpw upper bound 3.522; GSM8K figures attributed to baseline/best variants.
+4. PR #50401 authorship corrected.
+5. #46611 attribution softened to error-message wording.
+6. #38256 "atomic swap" softened to "async H2D pipeline" (not evidenced verbatim).
+7. Duplicate-check venue corrected: GitHub Discussions is deprecated; the
+   unsearched venue is the **discuss.vllm.ai forum**.
