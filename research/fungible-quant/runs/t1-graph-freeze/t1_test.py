@@ -28,7 +28,7 @@ WORK = Path(sys.argv[2])
 
 PROMPTS = ["The capital of France is", "def fibonacci(n):",
            "Once upon a time", "import torch"]
-DECODE_TOKENS = 32
+DECODE_TOKENS = 64
 TOP_K = json.load(open(MODEL / "config.json"))["num_experts_per_tok"]
 
 # FQ prototype state: layer_id -> int32 count buffer [E]
