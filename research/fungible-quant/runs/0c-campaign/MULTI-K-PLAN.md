@@ -67,3 +67,24 @@ Storage-driven compromises removed if /home grows from 3 TB:
   free — otherwise it must be regenerated on GPUs each time.
 - Segments stay local post-publish as primed cache for mixed-boot gates
   and 0d ladders (no re-download, no upload coupling in the critical path).
+
+## REVISED: no disk expansion (Michel, 2026-08-10) — fully streaming campaign
+
+Fixed 3 TB. The campaign becomes a rolling pipeline, layer-window at a time
+(which is the fungible/progressive philosophy applied to its own build):
+
+1. **Prime, don't re-encode, wherever the community already paid**: K3 base
+   = brandonmusic seed (published); K4 hot fragments range-read from
+   willfalco 3.36bpw (~130 GB, repack-of) — task #22. 3.42bpw per the
+   layout inspection's verdict.
+2. **Opportunistic encode ring** (per window of ~8 layers): stream-capture
+   window (~100 GB) → encode K2..K5 for those layers (~35 GB segments)
+   → publish + attest → delete window capture + local segments → next
+   window. Peak transient footprint ~150 GB — fits free space with wide
+   margin, forever.
+3. Priority order: hottest layers first (routing mass from the capture);
+   the tail follows "over time" across rental sessions — segments are
+   content-addressed and idempotent, every window is durable value.
+4. The kept asset under 3 TB: the per-layer Hessian statistics (small) and
+   published segments on HF; raw capture windows are transient by design
+   (regenerable deterministically from plan+seed if ever needed).
