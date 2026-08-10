@@ -1,4 +1,11 @@
-# 10 — Shareable encode segments on HF + provenance
+# 10 — Progressive Tensors: shareable encode segments on HF + provenance
+
+**Progressive Tensors** is the name of this segment scheme (naming rationale
++ due diligence: `00-overview.md` §Naming): a shared K3 base plus per-expert
+K4+ enhancement fragments, fetched progressively. It is a scheme/loader
+name, **not a new container format** — every file below is pure safetensors.
+Identifiers keep the `fq-` prefix deliberately (`fq-manifest.json`,
+`VLLM_FQ_*`, `fq_encode`).
 
 ## 1. Storage format (T2 remote K-cache)
 
