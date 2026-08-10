@@ -45,4 +45,5 @@ exec env \
   NCCL_LOCAL_INFERENCE_PATH="$NCCL" \
   CUDA_CACHE_PATH="${CUDA_CACHE_PATH:-/home/mbelleau/cache/jit/cuda}" \
   TRITON_CACHE_DIR="${TRITON_CACHE_DIR:-/home/mbelleau/cache/jit/triton}" \
+  TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-/home/mbelleau/cache/jit/inductor}" \
   "$target" "$@"
