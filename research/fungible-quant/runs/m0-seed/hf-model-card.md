@@ -103,3 +103,13 @@ shard for shard** (verified on all 79). Mixed recipes (your own K per
 expert) assemble the same way as K4/K5/K2 segments land in this repo
 family. Every fragment is spot-checkable against its signed attestation
 with one ranged read — see the walkthrough for the 6-line verifier.
+
+## Measured: the bit-width ladder these segments implement
+
+![Per-expert encode error vs bit-width — ~3.8x lower error per +1 bit](assets/eps-ladder-light.svg)
+
+![Upgrade benefit concentrates in few experts — top 16 of 256 carry ~a third](assets/benefit-concentration-light.svg)
+
+One sealed calibration capture, four hessian-identical encodes — the
+measurement campaign behind the K tiers this repo serves. Methodology and
+raw data: the research branch linked above.
