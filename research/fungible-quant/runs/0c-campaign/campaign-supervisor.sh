@@ -129,10 +129,13 @@ while true; do
       write_state "$T" "$START-$END" publish
       if $PY "$CAMP/publish_window.py" >> "$CAMP/publish-auto.log" 2>&1; then
         log "K$T window $START-$END: published"
-        if [ "$T" = "$(echo $TIERS | awk '{print $NF}')" ]; then
-          for L in $(seq $START $END); do rm -rf "$CAPTURE/layer_$(printf %03d $L)"; done
-          log "window $START-$END: capture pruned (last tier done)"
-        fi
+        # Prune this window's capture as soon as its segments are published.
+        # A later tier re-captures it; capture is deterministic (validated
+        # bit-exact) so the re-captured activations are byte-identical and
+        # tiers stay hessian-identical. Holding captures for the whole K2
+        # pass instead filled the disk (observed: 455 -> 213 GB).
+        for L in $(seq $START $END); do rm -rf "$CAPTURE/layer_$(printf %03d $L)"; done
+        log "window $START-$END: capture pruned after publish"
       else
         log "publish failed (retry next pass)"
       fi
