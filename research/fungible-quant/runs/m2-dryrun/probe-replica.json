@@ -1,0 +1,102 @@
+{
+ "summary": {
+  "tag": "replica-probe",
+  "n": 12,
+  "concurrency": 4,
+  "max_tokens": 48,
+  "seed": 3,
+  "ok": 12,
+  "errors": 0,
+  "wall_s": 0.606,
+  "completion_tokens": 576,
+  "prompt_tokens": 252,
+  "decode_tok_per_s": 950.35,
+  "latency_p50_s": 0.196
+ },
+ "records": [
+  {
+   "i": 0,
+   "status": 200,
+   "latency_s": 0.217,
+   "prompt_tokens": 22,
+   "completion_tokens": 48
+  },
+  {
+   "i": 1,
+   "status": 200,
+   "latency_s": 0.216,
+   "prompt_tokens": 21,
+   "completion_tokens": 48
+  },
+  {
+   "i": 2,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 22,
+   "completion_tokens": 48
+  },
+  {
+   "i": 3,
+   "status": 200,
+   "latency_s": 0.217,
+   "prompt_tokens": 23,
+   "completion_tokens": 48
+  },
+  {
+   "i": 4,
+   "status": 200,
+   "latency_s": 0.189,
+   "prompt_tokens": 22,
+   "completion_tokens": 48
+  },
+  {
+   "i": 5,
+   "status": 200,
+   "latency_s": 0.189,
+   "prompt_tokens": 21,
+   "completion_tokens": 48
+  },
+  {
+   "i": 6,
+   "status": 200,
+   "latency_s": 0.191,
+   "prompt_tokens": 19,
+   "completion_tokens": 48
+  },
+  {
+   "i": 7,
+   "status": 200,
+   "latency_s": 0.191,
+   "prompt_tokens": 21,
+   "completion_tokens": 48
+  },
+  {
+   "i": 8,
+   "status": 200,
+   "latency_s": 0.196,
+   "prompt_tokens": 20,
+   "completion_tokens": 48
+  },
+  {
+   "i": 9,
+   "status": 200,
+   "latency_s": 0.196,
+   "prompt_tokens": 20,
+   "completion_tokens": 48
+  },
+  {
+   "i": 10,
+   "status": 200,
+   "latency_s": 0.196,
+   "prompt_tokens": 22,
+   "completion_tokens": 48
+  },
+  {
+   "i": 11,
+   "status": 200,
+   "latency_s": 0.195,
+   "prompt_tokens": 19,
+   "completion_tokens": 48
+  }
+ ]
+}

@@ -1,0 +1,228 @@
+{
+ "summary": {
+  "tag": "on-c1-r1",
+  "n": 30,
+  "concurrency": 1,
+  "max_tokens": 96,
+  "seed": 5,
+  "ok": 30,
+  "errors": 0,
+  "wall_s": 6.577,
+  "completion_tokens": 2880,
+  "prompt_tokens": 489,
+  "decode_tok_per_s": 437.91,
+  "latency_p50_s": 0.218
+ },
+ "records": [
+  {
+   "i": 0,
+   "status": 200,
+   "latency_s": 0.222,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 1,
+   "status": 200,
+   "latency_s": 0.221,
+   "prompt_tokens": 18,
+   "completion_tokens": 96
+  },
+  {
+   "i": 2,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 3,
+   "status": 200,
+   "latency_s": 0.217,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 4,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 14,
+   "completion_tokens": 96
+  },
+  {
+   "i": 5,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 6,
+   "status": 200,
+   "latency_s": 0.217,
+   "prompt_tokens": 15,
+   "completion_tokens": 96
+  },
+  {
+   "i": 7,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 15,
+   "completion_tokens": 96
+  },
+  {
+   "i": 8,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 9,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 14,
+   "completion_tokens": 96
+  },
+  {
+   "i": 10,
+   "status": 200,
+   "latency_s": 0.217,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 11,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 15,
+   "completion_tokens": 96
+  },
+  {
+   "i": 12,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 13,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 14,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 15,
+   "status": 200,
+   "latency_s": 0.226,
+   "prompt_tokens": 15,
+   "completion_tokens": 96
+  },
+  {
+   "i": 16,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 17,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 15,
+   "completion_tokens": 96
+  },
+  {
+   "i": 18,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 18,
+   "completion_tokens": 96
+  },
+  {
+   "i": 19,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 20,
+   "status": 200,
+   "latency_s": 0.233,
+   "prompt_tokens": 20,
+   "completion_tokens": 96
+  },
+  {
+   "i": 21,
+   "status": 200,
+   "latency_s": 0.223,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 22,
+   "status": 200,
+   "latency_s": 0.221,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 23,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 24,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 25,
+   "status": 200,
+   "latency_s": 0.219,
+   "prompt_tokens": 18,
+   "completion_tokens": 96
+  },
+  {
+   "i": 26,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 17,
+   "completion_tokens": 96
+  },
+  {
+   "i": 27,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  },
+  {
+   "i": 28,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 14,
+   "completion_tokens": 96
+  },
+  {
+   "i": 29,
+   "status": 200,
+   "latency_s": 0.218,
+   "prompt_tokens": 16,
+   "completion_tokens": 96
+  }
+ ]
+}
