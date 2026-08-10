@@ -77,10 +77,14 @@ Policy cache is authoritative and tiny; slab cache is a boot-time optimization
 
 ## 2. Stats collector (`exl3_fungible/stats.py`)
 
-Hook: `BaseRouter.set_capture_fn` — ungated, per-layer, invoked before EPLB
-remap (upstream `base_router.py:132-134`, `:239-241`; GG-side confirmation in
-`gg-integration-surface.md`). One capture fn bound per MoE layer at model-load
-time by walking the model's MoE modules.
+Hook: `BaseRouter.set_capture_fn` — ungated, per-layer, fires on **logical**
+ids after `_compute_routing`, before EPLB remap (GG branch:
+`base_router.py:185`, `:296-300`; bound per-MoERunner at
+`gpu_model_runner.py:7906-7919` — see `gg-integration-surface.md`).
+**The slot is single-occupancy: the FQ collector must chain any previously
+bound capture fn (call it after recording), not overwrite it** — the
+mtp78-collector plugin family uses the same hook. GLM-5.2 routes through
+`GroupedTopKRouter` (`use_grouped_topk=True`), which inherits the hook.
 
 **Graph-safety contract (hard rules, tested in 03):** the callback runs INSIDE
 captured CUDA graphs (MoE ops are not splitting ops). Therefore it must be:
