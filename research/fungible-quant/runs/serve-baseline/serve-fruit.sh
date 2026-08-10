@@ -1,8 +1,11 @@
 #!/bin/bash
 # serve-fruit.sh — boot a Fruit proxy checkpoint TP4 on GPUs 0-3 (fq M0 mixed gate).
 # Usage: serve-fruit.sh <model_dir> <served_name> [extra vllm args...]
+# FRUIT_QUANT=none serves an unquantized (BF16) checkpoint.
 set -u
 MODEL=$1; NAME=$2; shift 2
+QUANT_ARGS=(--quantization exl3)
+[ "${FRUIT_QUANT:-exl3}" = none ] && QUANT_ARGS=()
 GG=/home/mbelleau/protensors-work/vllm-voipmonitor/research/fungible-quant/runs/gg-env/gg-run.sh
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
@@ -16,7 +19,7 @@ exec "$GG" python -m vllm.entrypoints.openai.api_server \
   --port 8801 \
   --trust-remote-code \
   --tensor-parallel-size 4 \
-  --quantization exl3 \
+  ${QUANT_ARGS[@]+"${QUANT_ARGS[@]}"} \
   --attention-backend B12X_MLA_SPARSE \
   --moe-backend b12x \
   --max-model-len 4096 \
