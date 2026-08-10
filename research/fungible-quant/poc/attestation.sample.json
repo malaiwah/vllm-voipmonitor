@@ -1,0 +1,28 @@
+{
+ "schema": "fq-attestation/1",
+ "predicate": "repack-of",
+ "fragment_sha256": "d34f7d66077d321223dbf0331ecb8dbbd8c144c60f06fbf023c03c6e9cbf79e4",
+ "materials": {
+  "repo": "brandonmusic/GLM-5.2-EXL3-TR3-3.0bpw",
+  "revision": "9297b9f1d53af5c67cffa01e30cc071a1ff7144b",
+  "file": "model-layer-030.safetensors",
+  "file_sha256": "a52473451a97970627f752da41dc40fd5bb24c5ff863db9bf185e3591da0a6f4",
+  "tensors": {
+   "model.layers.30.mlp.experts.137.down_proj.rank0.mcg": {
+    "offsets": [
+     1043026448,
+     1043026452
+    ],
+    "sha256": "ade4fb124dda0f3537386cdd4a3cdcea3a223d386e506a4be89394bb33ee13fe"
+   },
+   "model.layers.30.mlp.experts.137.down_proj.rank0.suh": {
+    "offsets": [
+     1043026452,
+     1043027476
+    ],
+    "sha256": "4c1eeab692b1dff9b04e453ac7979799bccb3a2b80a5d04a711327491873618d"
+   }
+  }
+ },
+ "note": "per-tensor digests truncated to 2 entries for the committed sample"
+}
