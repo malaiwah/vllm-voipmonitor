@@ -18,6 +18,14 @@ from test_fq_prime import build_repo, prime, served  # noqa: E402,F401
 from test_fq_repack import LAYERS, E, write_shard  # noqa: E402
 
 
+def _supports_trust() -> bool:
+    """True when this fq_assemble build takes --trust-signer (fail-closed
+    signature checking).  The two repos that carry these tools can be at
+    different sync points, so probe instead of assuming."""
+    import inspect
+    return "--trust-signer" in inspect.getsource(fq_assemble)
+
+
 # ---------------------------------------------------------------- metrics
 
 def test_metrics_identical():
@@ -108,13 +116,14 @@ def test_identity_local_stream_matches_fq_assemble(tmp_path):
         "schema": "fq-policy/2",
         "bits_per_expert": {str(L): [3] * E for L in LAYERS}}))
     out = tmp_path / "assembled"
-    # fq_assemble verifies segments against a pinned signer (fail-closed):
-    # pin the family's own key, published in its manifest
-    pubkey = json.loads((seg / "fq-manifest.json").read_text())["signer_pubkey"]
-    assert fq_assemble.main([
-        "--segments", str(seg), "--source", str(snap),
-        "--policy", str(policy), "--out", str(out),
-        "--trust-signer", pubkey]) == 0
+    argv = ["--segments", str(seg), "--source", str(snap),
+            "--policy", str(policy), "--out", str(out)]
+    if "--trust-signer" in (fq_assemble.main.__doc__ or "") or _supports_trust():
+        # fq_assemble verifies segments against a pinned signer (fail-closed):
+        # pin the family's own key, published in its manifest
+        argv += ["--trust-signer",
+                 json.loads((seg / "fq-manifest.json").read_text())["signer_pubkey"]]
+    assert fq_assemble.main(argv) == 0
     idx = json.loads((seg / "index-k3.json").read_text())
     for layer in LAYERS:
         reader = fq_assemble.SegmentReader(
