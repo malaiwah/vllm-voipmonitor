@@ -62,3 +62,16 @@ library path + custom NCCL preload (`ncclCommResume` symbol) + cutlass-DSL
 `.pth` path materialized. Validated: torch 2.12.0+cu132, vllm r33, b12x
 1.1.0, cutlass DSL 4.6.0, 8× SM120 visible, bf16 matmul on GPU 4 OK
 (phantom-util cosmetic, per operator).
+
+## GPU phase — occupancy < capacity — COMPLETE (2026-08-10)
+
+`test_occupancy_under_capacity.py` on GPU 4 (SM120): C=16 (12 K3 + 4 K4),
+N=10 with 6 combined slots retired via `global_to_combined=-1` +
+descriptor `-1`; full-range random int32 scribbled into retired w13/w2
+rows, NaN into their global scales and rotation/suh/svh rows. All 7 cases
+**bitwise-equal** to the clean reference (which matches the fresh full-map
+layer and the serial per-tier oracle at 4.7e-08). Control case: with
+routing referencing scribbled slots, 1024/1024 outputs NaN — the harness
+detects leakage, so the equalities are not vacuous. Full detail:
+`occupancy-gpu-report.md`. **Pre-M4 checklist: 4/4 checks + occupancy
+CLOSED.**
