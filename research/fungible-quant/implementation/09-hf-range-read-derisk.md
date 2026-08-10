@@ -54,7 +54,7 @@ Test script: reproduced in-session (curl + 40-line python); worth landing as
 as part of onboarding.
 
 **Build note (2026-08-10) — ranged reads went from de-risk to production
-path.** They are now the mechanism behind `tools/fq_prime.py`
+path.** They are now the mechanism behind `../tools/fq_prime.py`
 (community-quant priming) and behind loader-v2's `FragmentResolver`
 (`index-kK.json` → header range → per-expert body range, sha-verified and
 content-addressed into `VLLM_FQ_CACHE`). They also carried the entire

@@ -90,7 +90,7 @@ code — `exl3_fungible/policy.py` (SwapPlan diff/inverse algebra) and
 `store.PolicyStore` (write-temp + atomic rename on commit) are exercised by
 the M4 swap engine's contract tests (`../runs/m4-swap/report.md`). Two of the
 "out of scope" items got real inputs during the build: ε is no longer a stub
-— `tools/fq_eps.py` turns encoder-emitted per-expert rel-RT-MSE into the
+— `../tools/fq_eps.py` turns encoder-emitted per-expert rel-RT-MSE into the
 4-point curves and the global budget solve
 (`../runs/0c-campaign/report.md`), and the solve's output
 (`policy-fruit-mixed-042.json`, `n_k4_per_layer` 42…152) was minted, booted

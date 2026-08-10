@@ -388,7 +388,7 @@ shard downloaded in full).
   weights. The layout report itself deferred the numeric decode-and-diff, so
   as of that report "bit-exact" meant *algebraically exact with the size
   signature verified from bytes*. **Closed later the same session** by
-  `tools/fq_verify.py`: every sampled expert of the 3.42 family decodes
+  `../tools/fq_verify.py`: every sampled expert of the 3.42 family decodes
   **bitwise EQUAL** under the shared-h and expanded views, and all 2048
   expanded experts of layers 3–10 were re-derived from their parent segments
   + profiles and byte-compared in full with 0 mismatches
@@ -508,7 +508,7 @@ right.
 
 *Snapshot boundary: this addendum reflects the reports listed in
 `../runs/README.md` as of 2026-08-10 ~20:30 UTC. Work was still landing as
-it was written — `tools/fq_verify.py` + `runs/0c-campaign/verify/` (the
+it was written — `../tools/fq_verify.py` + `runs/0c-campaign/verify/` (the
 reconstruction and similarity proof table, already folded into §8) and
-`runs/m2-dryrun/` arrived after the rest. When those reports settle, check
+`../runs/m2-dryrun/` arrived after the rest. When those reports settle, check
 them against §10 and §12 before quoting either.*

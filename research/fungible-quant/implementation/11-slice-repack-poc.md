@@ -50,7 +50,7 @@ carrying provenance?** Yes, measured end to end:
    risk retired.
 
 **Build note (2026-08-10) — scaled up, plus a second layout family.** The
-PoC became `tools/fq_repack.py`: 76 layers of `brandonmusic@9297b9f1`
+PoC became `../tools/fq_repack.py`: 76 layers of `brandonmusic@9297b9f1`
 repacked and published, and the all-K3 reassembly is **79/79 shards
 sha256-identical** at full-model scale (`../runs/m0-assemble/`). The
 48-tensors-per-expert / 14.3 MB figure above is the **`per_expert_v1`**
@@ -66,5 +66,9 @@ units are mechanically mixable with the brandonmusic base — same
 trellis/mcg geometry, same mcg multiplier, same calibration corpus. The
 reverse (deduplicating per-expert artifacts into shared-H form) and
 re-basing a shared-H trellis onto different H rows are both **impossible
-without re-encode**. One-expert numeric decode check still pending.
-(`../runs/0c-campaign/quant-342-layout-report.md`.)
+without re-encode**. The expansion's numeric check has since been done —
+sampled experts decode **bitwise equal** under the shared-h and expanded
+views, and 2048/2048 expanded experts (layers 3–10) were re-derived and
+byte-compared with 0 mismatches
+(`../runs/0c-campaign/quant-342-layout-report.md`,
+`../runs/0c-campaign/verify/`).
