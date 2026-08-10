@@ -43,11 +43,26 @@ with the stored general-corpus statistic; reweight, never replace.)
    promotions whose encodes have landed. Demotions never pend (K3 base
    always available). Pending promotions don't count against swap caps
    until applied.
-2. **Candidate Hessian accumulation**: for pending candidates only (a few
-   dozen at a time, not 256×77), accumulate H1 (input, fp32) and H2
-   (intermediate) on device or host; blend with the stored campaign
-   statistic per TASA. Memory: ~150 MB/expert-input fp32 → a few GB for the
-   candidate set, freed after encode.
+2. **Candidate Hessian accumulation — host-resident (DRAM), by design.**
+   VRAM cannot host it: ~20 candidates × (151 MB H1 + 16.8 MB H2) ≈ 3.4 GB
+   would come out of KV capacity. Architecture = the mtp78-collector v3
+   pattern verbatim: device ring for candidate-expert activations (tens of
+   MB VRAM total, the only GPU footprint) → zero host-blocking forward path
+   → background drain over CUDA events → drain thread accumulates
+   `H += xᵀx` into host fp32 buffers (batched as GEMM per drained block;
+   fp32 with per-block partials or fp64 targets — DRAM is cheap). D2H
+   bandwidth ~36 MB/s worst case (candidates receive ~T/32 of tokens each).
+   Blend with the stored campaign statistic per TASA.
+   - **Encode-time only**: upload the finished H once per encode
+     (151 MB H2D ≈ 6 ms vs ~7.5 s Viterbi), encode, free. The Hessian
+     visits the GPU; it never lives there.
+   - **w2 subtlety**: H2 needs the expert's post-activation intermediate,
+     which the fused MoE kernel never materializes. Selected approach:
+     **side-stream recompute** from captured x
+     (`act(x@w1ᵀ) ⊙ (x@w3ᵀ)`, three small GEMMs per drained block, on the
+     encode executor's budget). Kernel modification to emit intermediates
+     rejected as invasive. Minor bias from using currently-quantized w1/w3
+     instead of BF16 — diluted by the campaign-Hessian blend.
 3. **Encode executor**: background low-priority CUDA stream (or optional
    sidecar GPU), rate-limited (`VLLM_FQ_ENCODE_BUDGET_PCT`), one expert at
    a time, ~7.5 s each. Encode once globally (rank 0 or sidecar), write to
