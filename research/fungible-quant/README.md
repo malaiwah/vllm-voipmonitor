@@ -29,6 +29,7 @@ verification pass over the arXiv IDs and vLLM issue numbers is recorded in
 | `gg-fork-ep-dcp-deltas.md` | Foundational report: what the `dev/gilded-gnosis` fork changed re: EP/EPLB/MoE/DCP (163 GG-authored commits vs upstream drift); EXL3/b12x EP gates. |
 | `verification.md` | Post-hoc verification of arXiv IDs and vLLM issue/PR numbers cited in PLAN.md. |
 | `drafts/` | Draft upstream comments (RFC #49702, RFC #48920) prepared for human review — **not posted**; to be reviewed, edited, and posted by the human contributor per AGENTS.md accountability rules. |
+| `implementation/` | **Implementation-ready spec targeting GG** (decision: build the full dynamic loop in the fork). `00-overview` (architecture, decision log D1–D9), `01-artifacts-policy-stats` (formats, collector, policy engine, knobs), `02-swap-engine` (row-write design, commit protocol — finalized against the K6 audit), `03-testing-validation` (T1–T9), `04-milestones` (M0–M6 build order), `gg-integration-surface.md` + `k6-sparkinfer-mixed-trellis.md` (agent-audited code maps with file:line cites). |
 
 ## Key line references
 
