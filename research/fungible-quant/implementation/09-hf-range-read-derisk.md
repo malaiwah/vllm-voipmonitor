@@ -52,3 +52,18 @@ Method: `curl -sL -r <range>` against
 Test script: reproduced in-session (curl + 40-line python); worth landing as
 `tools/fq_range_probe.py` in M0 so the check runs against any new model repo
 as part of onboarding.
+
+**Build note (2026-08-10) — ranged reads went from de-risk to production
+path.** They are now the mechanism behind `tools/fq_prime.py`
+(community-quant priming) and behind loader-v2's `FragmentResolver`
+(`index-kK.json` → header range → per-expert body range, sha-verified and
+content-addressed into `VLLM_FQ_CACHE`). They also carried the entire
+`willfalco/GLM-5.2-EXL3-TR3-3.42bpw` layout audit — 351.6 GB of repo
+inspected read-only, **no shard downloaded in full**
+(`../runs/0c-campaign/quant-342-layout-report.md`). Measured quant-side unit
+sizes to put beside the 75.5 MB BF16 expert above: one **quantized** expert
+is a single contiguous range of **14,168,112 B** (K3) or **18,886,704 B**
+(K4) in the shared-H layout, **14,315,568 B** in `per_expert_v1`. Residual
+risk still open: the remote fetch path is unit-tested against a fake source
+but has **not** been exercised end-to-end against a live segment repo
+(`../runs/loader-v2/report.md` §8).

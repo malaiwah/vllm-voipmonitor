@@ -48,3 +48,23 @@ carrying provenance?** Yes, measured end to end:
    segment schema and swap-engine row inventory updated to carry it.
 4. Xet-backed repo (`xet: true`) served ranged reads fine — 09's residual
    risk retired.
+
+**Build note (2026-08-10) — scaled up, plus a second layout family.** The
+PoC became `tools/fq_repack.py`: 76 layers of `brandonmusic@9297b9f1`
+repacked and published, and the all-K3 reassembly is **79/79 shards
+sha256-identical** at full-model scale (`../runs/m0-assemble/`). The
+48-tensors-per-expert / 14.3 MB figure above is the **`per_expert_v1`**
+layout. A second family exists in the wild: **`shared_h_v1`** (e.g.
+`willfalco/GLM-5.2-EXL3-TR3-3.42bpw`) keeps only **36 tensors per expert**
+plus **12 shared H-side rows per layer** — expert unit 14,168,112 B (K3) /
+18,886,704 B (K4), shared profile 147,456 B/layer. The two are convertible
+in exactly one direction: replicating the shared rows into each expert
+yields a byte-size-exact `per_expert_v1` unit
+(14,168,112 + 147,456 = 14,315,568 B, matching item 2 above), predicate
+**`derived-from`** (bytes are added, so not `repack-of`), and the expanded
+units are mechanically mixable with the brandonmusic base — same
+trellis/mcg geometry, same mcg multiplier, same calibration corpus. The
+reverse (deduplicating per-expert artifacts into shared-H form) and
+re-basing a shared-H trellis onto different H rows are both **impossible
+without re-encode**. One-expert numeric decode check still pending.
+(`../runs/0c-campaign/quant-342-layout-report.md`.)

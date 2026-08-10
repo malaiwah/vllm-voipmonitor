@@ -15,6 +15,16 @@ calibration Hessians, produced by the existing exllamav3 convert pipeline:
   fq-manifest.json    # schema below
 ```
 
+**Build note (2026-08-10):** the shipped artifact form is **not** two
+directories but per-layer-per-K segments (`layer-LLL.kK.safetensors` +
+`index-kK.json` + `attestations/`, doc 10 §1), produced by `fq_repack`. The
+emitted `fq-manifest/1` also carries `predicate`, `layout`, `sources` and
+`signer_pubkey`. Two numbers below are wrong against the real checkpoint:
+`moe_layers` is **`[3, 78]`** (76 MoE layers incl. the MTP layer → **19,456**
+routed experts, header-verified in
+`../runs/0c-campaign/quant-342-layout-report.md`), and the K3 base measures
+**278.6 GB**, not ~260 GB. See `14-build-findings.md` §5.2.
+
 Layout requirement: per-expert tensors must be individually addressable —
 one file (or one safetensors shard entry) per
 `(layer, expert, proj ∈ {w1,w2,w3})` at each K, so the swap engine can read
@@ -85,6 +95,19 @@ ids after `_compute_routing`, before EPLB remap (GG branch:
 bound capture fn (call it after recording), not overwrite it** — the
 mtp78-collector plugin family uses the same hook. GLM-5.2 routes through
 `GroupedTopKRouter` (`use_grouped_topk=True`), which inherits the hook.
+
+**Build note (2026-08-10) — "ungated" is wrong about the binding.** The hook
+itself is ungated, but the production binding site
+(`_bind_routed_experts_capturer`, the `gpu_model_runner.py:7906-7919` call)
+only runs when **`enable_return_routed_experts=True`**, which is off by
+default. Three T1 attempts silently measured nothing before this was found
+(`../runs/t1-graph-freeze/report.md`). **M1 therefore binds via its own
+env-gated call** (`VLLM_FQ_ENABLE`) in `exl3_fungible/integration.py`, not by
+depending on that flag — and any liveness test must assert an **absolute**
+count, since a hollow bind yields a plausible zero. With the binding real,
+the graph-safety claim holds: counts grow monotonically inside replay, all
+10 layers agree exactly, and the offset to `tokens × top_k` is a constant
+16 routings (2 tokens × 8) at two run lengths.
 
 **Graph-safety contract (hard rules, tested in 03):** the callback runs INSIDE
 captured CUDA graphs (MoE ops are not splitting ops). Therefore it must be:
@@ -180,6 +203,18 @@ agreement; assert via a cheap hash all-reduce in debug mode only.
 (observe + decide + log, apply nothing) and permanently useful as a shadow
 evaluator.
 
+**Build note (2026-08-10):** the knob surface grew well past this table
+during the build — the Progressive Loader v2 / fragment plane added
+`VLLM_FQ_MANIFEST_DIR`, `VLLM_FQ_POLICY`, `VLLM_FQ_DENSE_SOURCE`,
+`VLLM_FQ_LOCAL_SEGMENTS`, `VLLM_FQ_CACHE`, `VLLM_FQ_VERIFY`,
+`VLLM_FQ_SOURCES[_MODE]`, `VLLM_FQ_TRUST_SIGNERS`,
+`VLLM_FQ_TRUST_PREDICATES`, `VLLM_FQ_K_FALLBACK`, `VLLM_FQ_ENCODE_QUEUE`,
+`VLLM_FQ_BF16_DIR`, `VLLM_FQ_CAPTURE_DIR`, `VLLM_FQ_ENCODER_CMD`; and the
+capacity/occupancy split gained `VLLM_FQ_CAPACITY_UTILIZATION` (default 1.0,
+the `gpu-memory-utilization` analog for tier headroom). Full inventory and
+semantics: `14-build-findings.md` §7. Note the shipped trust surface is
+**not** doc 10 §4's `VLLM_FQ_TRUST=local|signed|any`.
+
 ## 5. Multi-model note (MTP-78)
 
 The draft layer is one more MoE layer to the collector and policy engine
@@ -197,3 +232,13 @@ and only *records* its stats; a later milestone gives it its own probe
 | 0d generic vs blended gap | whether ε gets a workload-blend refresh cycle |
 | 0e Jaccard distribution | `JACCARD_FLOOR` |
 | 0f(ii) encode benchmark | documentation only (D3 removed re-encode) |
+
+**Build note (2026-08-10) — results in.** 0a: `12-phase0a-routing-stability.md`
+(τ crosses 0.9 at ~150k tokens ⇒ the stats window must aggregate several
+hundred k tokens before acting). 0c: `../runs/0c-campaign/report.md` — ε is
+sourced from **encoder-emitted per-expert rel-RT-MSE**, not `measure_model`
+dKL (stock exllamav3 cannot load `GlmMoeDsaForCausalLM`); the global solve
+yields `n_k4_per_layer` 42…152 at the 0.42 budget, +1.3–2.8 % over uniform.
+0f(ii): `../runs/encode-bench/report.md` — 2.5 s/expert, `BUDGET_PCT=5`
+stands. **K3 ≈ K4 within 3 %, but K2 costs ~2× K3** on the real model
+(~4.8 s/expert), so "no per-K distinction" holds for K3/K4 only.

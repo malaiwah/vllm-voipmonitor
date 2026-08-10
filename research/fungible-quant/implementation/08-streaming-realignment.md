@@ -51,6 +51,8 @@ tier, not a prerequisite.
 3. **T1+T2 cold, BF16 local**: crystallize K3 locally (~41 GPU-h across 4
    GPUs ≈ 10 h background). Correct but a bad first-boot story — document,
    don't optimize.
+   **Build note (2026-08-10):** measured, it is **~13 GPU-h ≈ 3.3 h on a
+   quad** (2.5 s/expert × 19,456) — `../runs/encode-bench/report.md`.
 4. **Fully streaming day-one** (boot in fast online NVFP4/MXFP8, serve
    immediately, trellis crystallizes expert-by-expert in background):
    requires mixed-format tiers in the kernel → **M6 extension**, noted not
@@ -67,6 +69,23 @@ tier, not a prerequisite.
   the community exchange story), fast-format cold boot (ladder rung 4).
 
 ## What this buys, stated once
+
+**Build note (2026-08-10) — this is now literal, not aspirational.**
+`--load-format progressive` boots a mixed-K EXL3 model **directly from
+segments + a policy document**: no `fq_assemble` run, no assembled shards,
+zero per-policy disk. Two different policies booted back-to-back from the
+same segment store; the 042-policy boot is **token-identical** to the
+assembled checkpoint's greedy output; streaming assembly costs **+1.8 s** in
+the weights phase and decode throughput is at parity
+(`../runs/loader-v2/report.md`). Two confirmations for the audit table
+above: **ε really does ride along with the encode** (per-expert rel-RT-MSE
+from the encoder's own done-JSONs drove the 0c solve — no `measure_model`
+campaign), and **the T2 remote tier is one fetch path** (FragmentResolver
+does local dirs → manifest/env source chain via HF ranged reads →
+sha-verified content-addressed cache). One correction: the campaign itself
+ran as a **streaming ring** (capture window → encode K2..K5 → publish →
+delete) under a fixed 3 TB disk, so the "capture is preserved" variant in
+`../runs/0c-campaign/MULTI-K-PLAN.md` did not happen.
 
 The system has no build step. A new model needs: BF16 on HF (day zero) +
 one K3 seed (crystallized by the first deployment that cares, shared via

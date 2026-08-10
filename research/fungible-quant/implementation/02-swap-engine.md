@@ -20,6 +20,20 @@ selected** — the fallback (per-layer slab rebuild) is retired from v1 scope.
   per tile — mutating their **contents** via `copy_` is CUDA-graph-safe.
 - Per-expert side tensors are row-independent: suh `[E,H]`, svh `[E,H]`,
   rotations `[E,3I]`, indexed by expert id in-kernel.
+  - **Build note (2026-08-10) — half of this is wrong.** Row-independent:
+    yes. "Indexed by expert id" and "the per-tier tensors": **no**.
+    `combine_trellis_rotations` **COPIES**
+    (`torch.cat(...).contiguous()`, `mixed_trellis.py:1125-1136`) and the
+    forward binds pointers only from the **combined** struct (`:1447-1502`);
+    the per-tier sources are dead after prepare. Writes go into the
+    **combined** `gate_suh`/`up_suh`/`down_svh`/`intermediate` tensors at
+    **combined-slot** indices (tier0 `[0,t0)`, tier1 `[t0,t0+t1)`).
+    Consequence for the row inventory below: **a tier swap changes BOTH
+    experts' combined slots, so BOTH experts' four combined rows must be
+    rewritten at their NEW slots** — a 1-pair swap = 2 slab-row groups +
+    8 combined rows + 2 map entries. Commit ordering unchanged.
+    (`../runs/pre-m4-checks/report.md` consequence #2, honored by both the
+    M3 reload path and the M4 engine.)
 - Buffers are sized by geometry only; compile is keyed by structure only —
   same-shape content rewrites never resize or recompile. (Confirms D1.)
 - Two tiers and K∈{3,4,5,6} are structural (compiled two-arm dispatch;
@@ -73,6 +87,28 @@ Within the quiesce window, per layer, strictly:
 4. `FusedMoEQuantConfig` memo nulled;
 5. bump policy generation; persist `policy/current.json` via
    write-temp + atomic rename (startup_plan pattern).
+
+**Build note (2026-08-10) — three additions to this row inventory**, all
+verified by `../runs/pre-m4-checks/report.md` and honored by the shipped
+engine (`../runs/m4-swap/report.md`):
+
+- Step 2 rewrites rows of the **COMBINED** rotation/suh/svh tables at both
+  experts' **new combined slots**, never the per-tier sources (see the K6
+  build note above).
+- **Absence must be expressed in `global_to_combined`** (`-1` / out of
+  range). The route packer drops such routes (`route_pack.py:177-178`) and
+  `topk_sum` zeroes them (`kernel.py:7960-7967`). Marking only
+  `descriptor_map` is a **silent-garbage bug**: the route still packs, the
+  GEMM tiles skip, and `topk_sum` blends never-written fc2 rows into the
+  output. v1 keeps occupancy == capacity, so the engine's actual check is
+  stronger — the rebuilt `global_to_combined` must be a **full
+  permutation**, validated fail-closed before the live copy.
+- Descriptor writes must be exactly `local` or `256+local`: tier is the
+  **unmasked** upper bits (`>>8` over all bits), so one stray high bit
+  silently changes tier. Broadcast/shared-H suh/svh layouts are **refused**
+  at engine construction (out of v1 scope), and staged fragments must agree
+  on the layer's `mcg` word — r33 pins the MCG LUT ABI and the mixed kernel
+  has no per-expert mcg plumbing.
 Crash at any point before (5) → boot rehydrates the previous committed
 policy; slab state is rebuilt from artifacts at startup anyway (slabs are a
 cache, never authoritative).
@@ -106,6 +142,20 @@ ships:
    content mutation).
 3. `combine_trellis_rotations` in GG: aliases the per-expert rotation rows
    (row write visible) or copies (must rewrite the combined tensor instead).
+
+**Build note (2026-08-10) — checklist CLOSED, 4/4 + the occupancy GPU test**
+(`../runs/pre-m4-checks/report.md`, `occupancy-gpu-report.md`):
+(1) map semantics `(tier<<8)|local` **PASS**, single decode site;
+(2) no host-side reads of map contents at launch **PASS** (all host touches
+metadata-only; zero `.item()/.tolist()/.cpu()` on map values);
+(3) `combine_trellis_rotations` **COPIES** — the second branch is the live
+one, see the build note under "K6 verdict";
+(4) occupancy < capacity **PASS** on GPU (7/7 bitwise-equal with full-range
+random int32 in unreferenced slab rows and NaN in their scales/rotation
+rows; the leakage control turns 1024/1024 outputs NaN, so the equalities are
+not vacuous). Measured window cost of the shipped engine: **0.061 ms**
+(1 pair) / **0.368 ms** (8 pairs) on a toy layer — fixed overhead only; at
+64 pairs (~504 MB) the H2D estimate above still governs.
 
 Also carried from the GG surface map: checkpoint-form tensors are **freed
 post-prepare** (`exl3.py:1706-1710`) — the swap engine must never assume it
