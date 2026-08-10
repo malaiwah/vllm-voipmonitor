@@ -1,0 +1,13 @@
+== coherence (greedy, 100 tok) ==
+PROMPT: 'Once upon a time, there was a small robot who'
+  -> ' lived in a small house. He was very lonely, so he decided to go for a walk. He walked and walked until he found a big tree. He sat down under the tree and look'
+PROMPT: 'The quick brown fox'
+  -> ' jumps over the lazy dog. The fox is very scared and runs away. The fox is very fast and very clever. The fox is very clever and very good at running. The fox i'
+PROMPT: 'To make a cup of tea, first you'
+  -> ' need to boil the water. You can do this by adding a little salt and stirring it. You can also add a little sugar and stir it. You can also add a little honey o'
+PROMPT: '1, 2, 3, 4, 5,'
+  -> ' 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, '
+== first-token time (max_tokens=1, cold-ish prompt) ==
+first_token_s=0.024
+== throughput (512-tok greedy decode, batch 1) ==
+tokens=512 wall=1.04s tok_s=490.5
