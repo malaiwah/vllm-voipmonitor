@@ -106,3 +106,22 @@ to ~27 GPU-min/layer-window-K-mix at 2.5 s/expert. Ring launches per
 window as stream-capture seals it; K4-complement priority ordered by the
 window's routing mass (hot-adjacent first — cheapest future-promotion
 insurance).
+
+## Attestation rung 3 — equivalence-of (Michel, 2026-08-10)
+
+Three proof strengths in the segment family:
+1. `repack-of` — byte-identity with a pinned source (transport fidelity).
+2. `encode-of` — recorded recipe ⇒ independent re-encode byte-matches ⇒
+   countersignable (reproducible-builds rung; fires for all OUR encodes).
+3. `equivalence-of` (NEW) — for legacy fragments with unrecorded recipes:
+   when we encode the same expert from BF16, decode BOTH fragments and
+   attest their reconstruction errors against the same BF16 ground truth,
+   side by side. Signed payload: {subject fragment sha, counterpart
+   fragment sha, bf16 tensor materials, eps_subject, eps_counterpart,
+   decode method + tolerance}. 3-way: BF16 ⇔ our encode ⇔ community
+   fragment — proves the hydrated community segment is VALID (bounded ε
+   vs the real thing) without claiming unattainable byte-identity
+   (their Hessians were never recorded; cross-stack activation drift).
+Produce these during the K3/K4 window passes (#24) — the decode + BF16
+compare is nearly free at encode time. Publish alongside the primed
+fragments' attestations (#22).
