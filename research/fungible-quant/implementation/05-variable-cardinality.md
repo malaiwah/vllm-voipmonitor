@@ -15,6 +15,19 @@ accounting? Some layers deserve more accurate experts than others.
 | L4 | ≥3 tiers in one layer | b12x kernel: N-arm dispatch (map encoding already has 8 tier bits: `(tier<<8)\|local`) | Kernel project (M6) |
 | L5 | K2 tier | `_TRELLIS256_BITS=(3,4,5,6)` blocks it: intrinsics/codebook work | Kernel project (M6) |
 
+**Build note (2026-08-10):** L5's blocker is **execution only**. The
+sha-pinned encoder accepts **bits 2–5** (K2 and K5 smoke tests PASS on
+SM120, byte-exact round trip), and K2 segments for GLM-5.2 layers 3–10 are
+encoded and published today — at **~4.8 s/expert**, roughly 2× K3's cost
+(`../runs/0c-campaign/MULTI-K-PLAN.md`, `glm52-encode-k2.log`). K5
+*executes* on today's kernel. So the K2 fast-load base can be produced and
+shipped ahead of the kernel work that will run it. L2 also gained an
+operator knob during the build: **`VLLM_FQ_CAPACITY_UTILIZATION`**
+(default 1.0) sets `C = ceil(N / util)` bounded by E and the global byte
+budget — `util=1.0` reproduces v1 exactly, `util=0.9` pre-provisions ~11 %
+spare upper-tier rows and makes displacement-free upgrades a slider rather
+than an arithmetic exercise.
+
 ## 1. The capacity/occupancy split (L2 — the door-opener)
 
 D1 ("cardinality is compiled state") conflates two things the K6 audit lets
@@ -55,6 +68,22 @@ high-variance, ±1 elsewhere.
    the compiled `tier_num_experts` (e.g. a prefetch or scale-preload loop)
    breaks it. One file read + one test (forward with occupancy N < C vs
    fresh-built layer at N: bitwise equal).
+
+   **Build note (2026-08-10) — CONFIRMED, both halves**
+   (`../runs/pre-m4-checks/occupancy-gpu-report.md`). Source: the kernel is
+   fully gather-driven (tile expert read from route metadata,
+   `mixed_trellis.py:339-345`); skipped tiles no-op; no dense per-expert
+   capacity loop; the grid is never expert-sized. GPU: C=16 (12 K3 + 4 K4),
+   N=10 with 6 slots retired, full-range random int32 scribbled into their
+   slab rows and NaN into their global scales and rotation/suh/svh rows —
+   **all 7 cases bitwise-equal** to the clean reference (which matches the
+   fresh full-map layer and a serial per-tier oracle at rel 4.7e-08). The
+   leakage control (routing that *does* reference the scribbled slots) turns
+   **1024/1024 outputs NaN**, so the equalities are not vacuous. No runtime
+   active-count scalar is needed (§2.2 is moot). **Hard prerequisite:**
+   absence must be expressed in `global_to_combined` (−1 / out of range);
+   marking only `descriptor_map` is a silent-garbage bug — see
+   `02-swap-engine.md` §Commit protocol build note.
 2. If the kernel needs an explicit active-count, add a runtime scalar (or
    derive from map contents) — small API addition, no layout change.
 3. **Signature/buffer economics** (also L0's cost): distinct per-layer

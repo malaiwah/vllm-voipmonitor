@@ -126,6 +126,18 @@ Code-level integration maps (agent-audited, file:line):
 | D8 | **Cold start = generic offline allocation, never uniform; rehydrate last policy at boot.** | The JSON loader already exists in `exl3.py`. |
 | D9 | **Ship the brutal path first** (full reload under quiesce), atomic row-swap second. | Validates decide→apply end-to-end before the hard engineering. |
 
+**Build note (2026-08-10):** the decision log survived the build with two
+amendments, both in `14-build-findings.md`. **D3/D3′** — encode measures
+**2.5 s/expert** (K3/K4), not 7.5 s, so a full K4 overlay is ~13 GPU-h, not
+~41 (`../runs/encode-bench/report.md`). **D6** — `pause_scheduler(mode="keep")`
+is the *wrong* mode: `keep` freezes in-flight requests across the swap
+(mixed-provenance KV). The shipped M3 path drains with
+`POST /pause?mode=wait`, which needs the multiproc serve and
+`VLLM_SERVER_DEV_MODE=1` (`../runs/m3-reload/report.md` §5). D1, D9 and the
+graph-safety argument all held; D9's "brutal path first" turned out to be
+the right call twice over (M3 landed in a night; T3 then proved the atomic
+path is not blocked).
+
 ## What Phase 0 still gates (unchanged)
 
 Committing to *implementation* does not skip the measurements — it reorders
@@ -139,3 +151,12 @@ them from "go/no-go" to "parameter setting":
 
 Run them on the existing trace + one measure_model campaign; feed the numbers
 into the knobs table in `01-artifacts-policy-stats.md` §6.
+
+**Build note (2026-08-10):** 0a is measured (`12-phase0a-routing-stability.md`),
+0c's proxy leg is measured (`../runs/0c-campaign/report.md`: ε ladder ~3.8×
+per bit; the **K2 abort does not fire**), and 0f(ii) is measured
+(`../runs/encode-bench/report.md`). `measure_model` was **not** the vehicle:
+stock exllamav3 has no `GlmMoeDsaForCausalLM` support, so the campaign runs
+on the sha-pinned `encode_tr3_v31` bundle shipped inside the K3 repo
+(`../runs/0c-campaign/PIVOT.md`), and ε comes from encoder-emitted per-expert
+rel-RT-MSE rather than dKL deltas. 0d and 0e remain unmeasured.

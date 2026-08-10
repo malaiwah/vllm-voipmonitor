@@ -28,6 +28,18 @@ Identifiers keep the `fq-` prefix deliberately (`fq-manifest.json`,
 - Upload granularity = one layer file whenever N new fragments accumulate;
   Xet dedupes re-uploads of unchanged regions.
 
+**Build note (2026-08-10) — shipped as specified, with one repo-level
+hazard.** `fq_repack` emits exactly this shape and the round trip is
+byte-identical; measured per-layer sizes are K2 **2.458 GB**, K3 **3.67 GB**,
+K5 **6.082 GB** (K3 full model 278.6 GB). **Hazard:** `fq-manifest.json` is
+written **whole-repo, last-writer-wins** on every repack, so publishing a
+second K into an existing family silently overwrites `k_variants`,
+`sources`, `revision` and `tensor_index` — which is exactly what happened to
+the GLM-5.2 seed repo when the window-1 K2/K5 segments landed
+(`14-build-findings.md` §9; the same overwrite was flagged on the Fruit
+store in `../runs/loader-v2/report.md` §8). The manifest must become
+**cumulative**, and it should gain the `dense_source` field loader-v2 wants.
+
 ## 2. The progressive-JPEG community model
 
 - **Base layer = flat K3 everywhere** (today's intrinsics floor; K2 stays a
@@ -66,6 +78,24 @@ must come from provenance, and it can:
    uploader. (A cryptographic *proof* without re-execution would need
    zkML-grade verifiable computation over Viterbi — orders of magnitude
    impractical today; not proposed.)
+
+   **Build note (2026-08-10) — determinism is STACK-SCOPED; this rung as
+   written is too strong.** Three independent measurements this session
+   (`14-build-findings.md` §4): CUDA `pow()` differs from CPU by 1 ulp on
+   3/32 exponents at `rope_theta=5e5`, enough on its own to flip ~1.4 % of
+   routings per layer and compound to an 88 % id match by layer 12;
+   `grouped_mm` and plain cuBLAS GEMMs (including the fp32 router) are **not
+   row-stable across batch composition**, so packed-batch capture drifts to
+   81.6 % id match by layer 12; and legacy community quants recorded neither
+   Hessians nor stack. A re-encode is therefore bit-reproducible **only
+   within the same stack**, and an `encode-of` attestation must *name* that
+   stack (encoder sha, exllamav3 version, torch+CUDA build, GPU arch,
+   capture-methodology version) plus full `quant_args` and capture lineage.
+   Cross-stack, the honest predicate is **`equivalence-of`** — decode both
+   fragments, attest both reconstruction errors against the same BF16 ground
+   truth. The predicate vocabulary grew to five rungs accordingly:
+   `repack-of | encode-of | derived-from | equivalence-of | assembly-of`
+   (`../runs/0c-campaign/ATTESTATION-V2.md`).
 4. Note the baseline being improved: today the community loads entire
    multi-hundred-GB quants from named uploaders with **zero** verification.
    Signed, content-addressed, independently re-encodable fragments are
@@ -79,6 +109,20 @@ must come from provenance, and it can:
   on a dequantized sample of tiles.
 - `VLLM_FQ_TRUST = local | signed | any` (default `signed`): `signed`
   requires a valid attestation from a key in the operator's trust list.
+  - **Build note (2026-08-10) — shipped with a different, finer shape.**
+    Not one tri-state knob but `VLLM_FQ_TRUST_SIGNERS` (hex ed25519 keys;
+    default = the manifest's `signer_pubkey`) + `VLLM_FQ_TRUST_PREDICATES`
+    (default `repack-of,encode-of,derived-from`). Enforcement arms **only
+    when a trust anchor exists**; without one, behavior is the legacy
+    sha-only path. **Sha verification is unconditional in every mode** —
+    there is no `any`. Countersignatures work: any allowed line in a
+    source's `attestations/layer-LLL.kK.jsonl` that passes the predicate
+    filter accepts (a rogue line beside a trusted one does not block), and
+    the bytes are then checked against **that** line's `expert_sha256`.
+    Per-source attestation caches are isolated so mirrors holding different
+    encodings of the same (layer, K) cannot poison each other. Rejecting one
+    mirror no longer aborts the chain. Details:
+    `../runs/loader-v2/trust-and-lazy-encode.md` §2.
 - Optional paranoia: `VLLM_FQ_REMOTE_DENY` pins named experts/layers to
   local-encode only.
 - Existing runtime guards still apply downstream (probe + rollback bound

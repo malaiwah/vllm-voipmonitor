@@ -17,6 +17,18 @@ K6 → row-write path (`02-swap-engine.md`), L2 door-openers as v1 defaults
 | P2 | ~~Encode venue~~ **dissolved by D3′** (`07-lazy-encode.md`) — K4 encodes lazily on the serving box | `VLLM_FQ_K4_SOURCE=lazy` | `artifact` mode remains available for boot-complete deployments |
 | P3 | Ks the lazy encoder may target: {3,4} vs {3,4,6} | {3,4} | Config not campaign now; +K6 just widens the cache |
 
+**Build note (2026-08-10) — P1–P3 settled by the build.** **P1**: the K3
+base is a *repack* of `brandonmusic@9297b9f1` (byte-identity verified,
+79/79 shards) — no fresh K3 encode was needed. **P2**: stays dissolved, but
+`artifact` mode turned out cheap anyway (~13 GPU-h for a full K4 overlay,
+not 41). **P3**: the answer is **{2,3,4,5}**, not {3,4} — the encoder accepts
+bits 2–5, K5 runs on today's kernel, K2 is encode-now/execute-later, and the
+0c campaign produced all four from one hessian-identical capture
+(`../runs/0c-campaign/MULTI-K-PLAN.md`). Also note the encoder itself is not
+stock exllamav3: `convert_model` cannot load `GlmMoeDsaForCausalLM`, so the
+canonical encoder is the sha-pinned `encode_tr3_v31.py` (`e9a85a47…`) bundle
+shipped inside the K3 repo (`../runs/0c-campaign/PIVOT.md`).
+
 ### Defaults to accept-or-veto (no research needed)
 
 | Decision | Default |

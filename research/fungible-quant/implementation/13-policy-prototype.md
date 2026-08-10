@@ -84,3 +84,16 @@ Conclusion: the §3.2 decision procedure is implementable deterministically in
 <200 lines of NumPy and satisfies every T2 property on the first green run; no
 spec contradictions surfaced. AI-assisted (Claude); research de-risk artifact,
 not a vLLM contribution.
+
+**Build note (2026-08-10):** this prototype is now the CPU twin of in-tree
+code — `exl3_fungible/policy.py` (SwapPlan diff/inverse algebra) and
+`store.PolicyStore` (write-temp + atomic rename on commit) are exercised by
+the M4 swap engine's contract tests (`../runs/m4-swap/report.md`). Two of the
+"out of scope" items got real inputs during the build: ε is no longer a stub
+— `tools/fq_eps.py` turns encoder-emitted per-expert rel-RT-MSE into the
+4-point curves and the global budget solve
+(`../runs/0c-campaign/report.md`), and the solve's output
+(`policy-fruit-mixed-042.json`, `n_k4_per_layer` 42…152) was minted, booted
+and live-swapped. §3.3's probe loop is still unbuilt, though `fq_probe`
+(32 held-out prompts, teacher-forced logprobs) and the reload driver's
+`probe`/`compare` subcommands now provide its measurement half.

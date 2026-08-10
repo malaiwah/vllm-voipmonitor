@@ -71,6 +71,18 @@ Provenance (shard metadata): GLM-5.2 753B via `GLM-5.2-EXL3-TR3-3.0bpw`, layer p
    - **Counts only, no gate mass** — the promotion signal PLAN §4 prefers (gate mass / LHU) is not in this dataset.
 4. **Caution flag for K1:** the distribution is near-uniform (Gini 0.31, entropy 97% of max) and a frequency-picked K4 tier of 108 experts covers only **63.2%** of routed mass. Frequency-only specialization has limited headroom on this layer; the case for mixed precision must rest on per-expert *sensitivity* (0c) and gate-mass weighting, not on routing skew.
 
+**Build note (2026-08-10) — 0c answers §4's caution flag.** This report ends
+by warning that "the case for mixed precision must rest on per-expert
+*sensitivity* (0c) and gate-mass weighting, not on routing skew." The 0c
+proxy leg (`../runs/0c-campaign/report.md`) found the opposite emphasis and
+a happier result: per-expert Δε is nearly uniform (median CV **0.047**) —
+sensitivity alone would not justify per-expert allocation — but
+**benefit = Δε · φ is strongly concentrated (median Gini 0.48**, median
+top-16-of-256 share **0.318**), and the concentration is *driven by routing
+skew*. So the per-expert premise holds, and it holds because of routing
+mass, measured on a **non-MTP** layer set (10 MoE layers of the Fruit proxy)
+rather than layer 78. The K2 abort criterion does not fire.
+
 **Recommendation:** treat 0a as *supporting* the expected outcome — "allocation converges; startup specialization (Phase 1) captures the value" — but do not close K3 on this evidence alone. Add gate-value capture + a multi-day live-traffic slice to the 0b collector run; re-run this exact script on that trace (it is workload-agnostic).
 
 ## 5. Reproduce

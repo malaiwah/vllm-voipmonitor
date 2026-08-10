@@ -13,6 +13,18 @@ with the product and with MoE calibration reality. D3 → **D3′**.
 | Chunked/parallel encode compute | **Yes** | After the prepass, every 16×16 tile is an independent tail-biting Viterbi codeword; pausable, parallel. Natural unit = one expert (3 tensors, ~37.7M weights, ~7.5 s @ ~5M w/s on one GPU) |
 | Streaming **calibration** | **Yes** | The Hessian is a running sum over routed tokens (H += xᵀx) — a streaming sufficient statistic; live accumulation proven by the mtp78-collector |
 
+**Build note (2026-08-10) — the 7.5 s planning number is 3× too slow.**
+Measured on one real GLM-5.2 expert (layer 30, expert 137) on SM120:
+**2.55 s** whole-expert K3 cold / **2.48 s** K4 cold (2.39 / 2.32 s with a
+warm finalized H), K3 ≈ K4 within 3 % (`../runs/encode-bench/report.md`).
+Every "7.5 s" and "~41 GPU-h" below should be read as **2.5 s** and
+**~13 GPU-h** (one card; ~3.3 h on an idle quad); at the default 5 % encode
+budget that is **~71 experts/hour**, so a freshly promoted ~100-expert
+working set fully K4-encodes in ~1.4 h of background time. Two caveats the
+bench did not cover: K-independence holds for K3/K4 only — on the real model
+**K2 costs ~4.8 s/expert** and K5 ~3.4 s — and the routed-expert count is
+**19,456** (76 MoE layers × 256, MTP included), not 19,712.
+
 ## The structural advantage
 
 **Promotion candidates are hot experts; hot experts have well-fed live
@@ -103,3 +115,15 @@ with the stored general-corpus statistic; reweight, never replace.)
 | Calibration | one campaign, uniform provenance | live-blended, per-expert fresher; provenance recorded per cached tensor (hessian blend hash) |
 | Disk | 607 GB day one | 260 GB day one, grows with use |
 | New-model day-one story | needs a campaign first | **K3 base + empty cache = deployable immediately** — strictly better fit for the product statement |
+
+**Build note (2026-08-10):** the lazy-encode *plumbing* shipped ahead of the
+executor. `VLLM_FQ_K_FALLBACK` lets boot substitute an available K for a
+missing one (marked, never silent: `Fragment.requested_k`/`.substituted`,
+and the serve's tier bitmap is written from the **loaded** Ks, not the
+requested ones), and every substitution or hard miss appends to a persisted
+`encode-queue.jsonl` drained by a worker CLI — `--drain` is a dry run that
+validates BF16 and capture availability, `--execute` shells out to the
+sha-pinned encoder (`../runs/loader-v2/trust-and-lazy-encode.md` §3).
+Unbuilt so far: the live host-resident Hessian accumulation of §2, the
+side-stream w2 recompute, and the encode executor's rate limiter. Note the
+driver's unit of work is a **layer**, not an expert.
