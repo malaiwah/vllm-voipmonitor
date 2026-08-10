@@ -1,0 +1,82 @@
+{
+  "active_layers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "attn_implementation": "sdpa",
+  "batching": "one sample per forward (batch=1, no padding), exact plan order",
+  "capture_engine": "transformers-5.14",
+  "capture_fingerprint": "c338b54782f25e5c9271149cc0248c6d56b0cc2218619a558e0b3ce4b8691302",
+  "capture_payload_bytes": 21597622080,
+  "capture_run_uuid": "39711adb-18fa-4844-9f0a-ef5c1f1d3059",
+  "capture_tp": 1,
+  "corpus_sha256": "cf247acc7c5da9f0600c7d6ab3b7c2fcfc54ec30b794e3b6047559285fa44df4",
+  "cpu_offload_gb": 0,
+  "enable_prefix_caching": false,
+  "enforce_eager": true,
+  "experts_implementation": "grouped_mm",
+  "finished": "2026-08-10T16:43:13+0000",
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "low_memory_mode": false,
+  "max_tokens": 0,
+  "model_snapshot": "/home/mbelleau/.cache/huggingface/hub/models--malaiwah--GLM-5.2-SIQ-Fruit-Instruct-bf16/snapshots/678954f65e056a0f508e21eeb9251c655bb9463f",
+  "output_tp": 4,
+  "pass_audit": [
+    {
+      "index": 0,
+      "name": "axis1_general",
+      "samples": 247,
+      "tokens": 294790
+    },
+    {
+      "index": 1,
+      "name": "axis2_legal",
+      "samples": 832,
+      "tokens": 294681
+    },
+    {
+      "index": 2,
+      "name": "axis3_code_agentic",
+      "samples": 361,
+      "tokens": 295687
+    },
+    {
+      "index": 3,
+      "name": "axis4_reasoning_termination",
+      "samples": 3057,
+      "tokens": 165310
+    }
+  ],
+  "prefill_only": true,
+  "rank_assignment": {
+    "10": 0,
+    "11": 0,
+    "12": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 0,
+    "9": 0
+  },
+  "row_order_note": "rows are appended in plan order (all tokens of sample 1, then sample 2, ...). This can differ from the vLLM engine's internal scheduling order; the downstream encoder accumulates order-independent Hessian sums (H += x^T x per expert), so only the set of (token, x, routing) rows and the per-layer counts are contractual.",
+  "schema": "glm52-b300-capture-run-v1",
+  "tokens_per_layer": 1050468,
+  "torch": "2.12.0+cu132",
+  "transformers": "5.14.1",
+  "verify_routing": {
+    "checked_tokens": 10504680,
+    "kwarg_logits_layers": 44970,
+    "mismatch_tokens": 0
+  },
+  "verify_routing_note": "verify_routing compares the reference fp32 gate recompute (sigmoid(x@W^T)+bias, top-8) against the transformers router's own topk indices at every captured token; kwarg_logits_layers counts hook invocations where the model's indices were visible."
+}
