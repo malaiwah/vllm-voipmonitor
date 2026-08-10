@@ -21,6 +21,20 @@ PATCHES = [
     ('worker_extension_cls="capture_b300.CaptureWorkerExtension"',
      'worker_extension_cls="capture_fruit.CaptureWorkerExtension"'),
     ("!= (10, 3):", "!= (12, 0):"),
+    # JarvisAI managed container: memory.current is dominated by reclaimable
+    # page cache from the 1.8 TB weight downloads; credit the cgroup "file"
+    # cache back to headroom or the guard always trips.
+    ("    return max(0, int(raw) - int(current.read_text().strip()))",
+     """    used = int(current.read_text().strip())
+    reclaimable = 0
+    stat = root / "memory.stat"
+    if stat.is_file():
+        for line in stat.read_text().splitlines():
+            k, _, v = line.partition(" ")
+            if k == "file":
+                reclaimable = int(v)
+                break
+    return max(0, int(raw) - used + reclaimable)"""),
 ]
 
 

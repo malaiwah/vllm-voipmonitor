@@ -16,8 +16,8 @@ NCCL="$ROOT/opt/libnccl.so.2.30.4"   # real file; /opt symlink is absolute+broke
 
 LIBP="$ROOT/lib/x86_64-linux-gnu"
 LIBP="$LIBP:$ROOT/usr/lib/x86_64-linux-gnu"
-LIBP="$LIBP:$ROOT/usr/local/cuda/lib64"
-LIBP="$LIBP:$ROOT/usr/local/cuda/targets/x86_64-linux/lib"
+LIBP="$LIBP:$ROOT/usr/local/cuda-13.2/lib64"
+LIBP="$LIBP:$ROOT/usr/local/cuda-13.2/targets/x86_64-linux/lib"
 LIBP="$LIBP:$ROOT/opt/venv/lib/python3.12/site-packages/torch/lib"
 LIBP="$LIBP:/usr/lib/x86_64-linux-gnu"   # host driver: libcuda.so.1, libnvidia-ml
 
@@ -27,7 +27,13 @@ case "$cmd" in
   *) target="$cmd" ;;
 esac
 
+# $PY is a shim that re-execs through the image loader with --argv0, so
+# sys.executable-based child spawns (vLLM registry inspect, multiprocessing
+# spawn, EngineCore) recurse correctly. Real binary: python3.12.real.
 exec env \
+  CUDA_HOME="$ROOT/usr/local/cuda-13.2" \
+  PATH="$ROOT/usr/local/cuda-13.2/bin:$PATH" \
+  CPATH="$ROOT/usr/include:$ROOT/usr/include/x86_64-linux-gnu" \
   PYTHONHOME="$ROOT/usr" \
   PYTHONPATH="$ROOT/opt/venv/lib/python3.12/site-packages:$ROOT/opt/venv/lib/python3.12/site-packages/nvidia_cutlass_dsl/dsl_packages:$ROOT/opt/exllamav3-python:$ROOT/opt/exllamav3:/home/mbelleau/gg-extra" \
   PYTHONDONTWRITEBYTECODE=1 \
@@ -39,4 +45,4 @@ exec env \
   NCCL_LOCAL_INFERENCE_PATH="$NCCL" \
   CUDA_CACHE_PATH="${CUDA_CACHE_PATH:-/home/mbelleau/cache/jit/cuda}" \
   TRITON_CACHE_DIR="${TRITON_CACHE_DIR:-/home/mbelleau/cache/jit/triton}" \
-  "$LOADER" --preload "$NCCL" --library-path "$LIBP" "$target" "$@"
+  "$target" "$@"

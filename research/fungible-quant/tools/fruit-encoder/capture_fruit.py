@@ -145,7 +145,16 @@ def _cgroup_memory_headroom() -> int | None:
     raw = maximum.read_text().strip()
     if raw == "max":
         return None
-    return max(0, int(raw) - int(current.read_text().strip()))
+    used = int(current.read_text().strip())
+    reclaimable = 0
+    stat = root / "memory.stat"
+    if stat.is_file():
+        for line in stat.read_text().splitlines():
+            k, _, v = line.partition(" ")
+            if k == "file":
+                reclaimable = int(v)
+                break
+    return max(0, int(raw) - used + reclaimable)
 
 
 def active_swap_bytes() -> int:
