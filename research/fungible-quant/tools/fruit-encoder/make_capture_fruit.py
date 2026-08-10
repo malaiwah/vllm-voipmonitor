@@ -21,6 +21,10 @@ PATCHES = [
     ('worker_extension_cls="capture_b300.CaptureWorkerExtension"',
      'worker_extension_cls="capture_fruit.CaptureWorkerExtension"'),
     ("!= (10, 3):", "!= (12, 0):"),
+    # Triton MoE backend: routing statistics are backend-independent, and
+    # FlashInfer's lazy autotuner costs ~30-60 min per bf16 engine process.
+    ("        enforce_eager=True,",
+     "        enforce_eager=True,\n        moe_backend=\"triton\","),
     # JarvisAI managed container: memory.current is dominated by reclaimable
     # page cache from the 1.8 TB weight downloads; credit the cgroup "file"
     # cache back to headroom or the guard always trips.
