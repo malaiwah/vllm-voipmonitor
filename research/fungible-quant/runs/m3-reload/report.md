@@ -154,8 +154,10 @@ Retired per 04-milestones M3: the decide→apply lifecycle on a live engine,
 policy projection into device state, quiesce choreography through the
 production pause surface, CUDA-graph safety of content-only rewrites at
 serve scale (graphs ON throughout; post-swap decode bit-exact). The serve
-was left running on `fruit-mixed-042b` with the extension loaded — further
-swaps are one HTTP call.
+ran on `fruit-mixed-042b` with the extension loaded (further swaps = one
+HTTP call) until it was stopped externally at ~19:11 by another session on
+this box, which took GPUs 0-3 for a separate port-8802 experiment — after
+all measurements here were complete.
 
 Not yet M4: this is the full-rewrite reload (every mixed layer rewritten,
 0.4 s stall), not the incremental row-write engine (<1 engine-step stall,
