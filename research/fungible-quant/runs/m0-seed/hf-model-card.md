@@ -201,11 +201,18 @@ Our campaign supervisor publishes *incrementally* — it uploads each encode
 window as it finishes, in many commits, and only then is a new release
 manifest built and pushed. So:
 
-- at the release commit, the file list is exact and complete;
+- at the release commit, the file list is exact and complete — verified:
+  353 files hashed, 0 absent, 0 mismatched, 0 unlisted;
 - at `main`, which moves under you, there will usually be published
-  segments that are **newer than the release manifest and therefore not
-  covered by it**. `verify --complete` against `main` is expected to report
-  them as unlisted, and that is the mechanism working, not a fault;
+  segments **newer than the release manifest and therefore not covered by
+  it**. `verify --complete` against `main` is expected to report them as
+  unlisted, and that is the mechanism working, not a fault;
+- **and `fq-manifest.json` will report as `MISMATCHED` against an older
+  release**, for the same reason: each incremental publish rewrites it from
+  the live inventory so that it always describes what is really there. That
+  is a *newer* manifest, not a tampered one — but the release signature
+  cannot tell those apart, and should not pretend to. Pin the revision and
+  the question does not arise;
 - it says nothing about *freshness*. A replayed older release verifies
   perfectly; it is simply stale. Compare `release`, `created_utc` and
   `parent_revision` inside the document against what you expected.
