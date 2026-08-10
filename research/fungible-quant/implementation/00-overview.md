@@ -24,6 +24,60 @@ specializes itself to its own traffic**. Even if the allocation stabilizes
   under live evidence, instead of a calibration corpus chosen months earlier
   by someone else.
 
+## Naming
+
+- **Progressive Tensors** — prose name for the two-tier artifact scheme and
+  its loader (docs 09/10/11): a K3 base everyone shares plus per-expert K4+
+  enhancement fragments fetched progressively — the progressive-JPEG model
+  for quants, and the name says exactly that.
+- vLLM `load_format` id: **`progressive`** (no existing vLLM load format
+  uses the word).
+- Casual short form: **protensors** — unclaimed everywhere checked; use
+  sparingly, prose name preferred.
+- The runtime policy loop keeps the name **fungible quant**: the loop is
+  about bit-budget fungibility, not loading. Two names, two halves of the
+  system.
+
+**Scheme, not container.** Progressive Tensors is a *scheme/loader* name,
+never a new container format: every file on disk and on HF is pure,
+unmodified safetensors, readable by any safetensors tool. What is
+"progressive" is the fetch/assemble policy *across* files. State this
+explicitly wherever the name is introduced.
+
+**Identifiers keep the `fq-` prefix deliberately** (`fq-segment/1`,
+`fq-manifest.json`, `VLLM_FQ_*`, `fq_encode`): they belong to the fungible
+quant system as a whole, and schema strings are stable API — no renames.
+
+### Naming due diligence (2026-08-10)
+
+No hard collisions found (checks: GitHub, PyPI, HF, arXiv, web):
+
+- "progressive tensors": zero GitHub repos (`progressive-tensors in:name` →
+  0 results); PyPI unclaimed (<https://pypi.org/pypi/progressive-tensors/json>
+  → 404); HF model search empty
+  (<https://huggingface.co/api/models?search=progressive-tensors>); no arXiv
+  paper by that title.
+- "protensors"/"protensor": PyPI both unclaimed (404 at
+  <https://pypi.org/pypi/protensors/json> and
+  <https://pypi.org/pypi/protensor/json>); GitHub's only near-hit is
+  <https://github.com/srujotheesh/ProTensorGo> (0-star unrelated repo,
+  different name); HF empty; web search resolves only to the existing
+  safetensors/tensorizer ecosystem.
+- "fungible quant": zero GitHub repos; PyPI `fungible-quant` unclaimed
+  (404). Nearest lexical neighbors are unrelated: Fungible Inc., a DPU
+  vendor acquired by Microsoft
+  (<https://en.wikipedia.org/wiki/Fungible_Inc.>), and Quant Network
+  (blockchain). No project combines the two words.
+- Adjacent research term, not a collision: "progressive quantization" is an
+  established *technique* term (e.g. <https://arxiv.org/abs/1906.06698>,
+  <https://arxiv.org/abs/2506.09104>) with no software/format claiming the
+  name — favorable association.
+- Lexically distinct from the loader ecosystem it sits beside: safetensors
+  (<https://github.com/safetensors/safetensors>), fastsafetensors
+  (<https://arxiv.org/abs/2505.23072>), InstantTensor
+  (<https://github.com/scitix/InstantTensor>), CoreWeave tensorizer
+  (<https://github.com/coreweave/tensorizer>).
+
 ## Architecture (five components)
 
 ```
