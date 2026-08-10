@@ -11,14 +11,20 @@ tags:
 - glm
 ---
 
-# GLM-5.2 — Progressive Tensors segments (K3 base + K2/K5 window)
+# GLM-5.2 — Progressive Tensors segments (K2 · K3 · K4 · K5)
 
 > **Tools:** [github.com/malaiwah/progressive-tensors](https://github.com/malaiwah/progressive-tensors)
 > — verify these fragments, reassemble any recipe into a bootable
 > checkpoint, or prime segments from another community quant.
 > **Research + evidence:** [vllm-voipmonitor `research/fungible-quant`](https://github.com/malaiwah/vllm-voipmonitor/tree/claude/gg-overview-exploration-jchgd3/research/fungible-quant).
-> **Status:** experimental alpha — the schemas are versioned, the consuming
-> tools are gaining mandatory attestation verification; pin a signer.
+> **Maturity, by component:** the *segment/assembly* side is heavily
+> verified — reassembly is sha256-identical on **76/76** MoE shards, every
+> primed fragment re-checked against fresh ranged reads of its pinned
+> source (2048/2048 spans), the expanded family fully re-derived, 121 tests
+> green. Mandatory signer-pinned verification inside assembly is landing
+> now (until it does, pass `--trust-signer` yourself). The *runtime*
+> side — the progressive loader and live per-expert reallocation — is
+> **experimental**.
 
 **Purpose-built research artifact** for the *Progressive Tensors / fungible
 quant* project: runtime per-expert bit-width reallocation for EXL3 MoE
