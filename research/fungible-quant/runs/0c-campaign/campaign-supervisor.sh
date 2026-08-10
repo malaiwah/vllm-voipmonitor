@@ -36,6 +36,8 @@ TIERS="2 5 4"
 FIRST=3; LAST=78; STEP=8
 MIN_FREE_GB=180          # refuse to start a window below this
 export HOME=/home/mbelleau
+# credentials for the publish step (missing token => silent hang)
+[ -f "$HOME/.fq_env" ] && . "$HOME/.fq_env"
 
 log() { echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
