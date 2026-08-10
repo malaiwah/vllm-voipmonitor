@@ -1,0 +1,35 @@
+{
+ "schema": "fq-campaign/1",
+ "history": [
+  {
+   "tier": "2",
+   "window": "19-26",
+   "phase": "encode(gpus=0,1,2,3)",
+   "updated_utc": "2026-08-10T21:32:17Z"
+  },
+  {
+   "tier": "2",
+   "window": "19-26",
+   "phase": "publish",
+   "updated_utc": "2026-08-10T21:34:01Z"
+  },
+  {
+   "tier": "2",
+   "window": "27-34",
+   "phase": "capture",
+   "updated_utc": "2026-08-10T22:01:44Z"
+  },
+  {
+   "tier": "2",
+   "window": "27-34",
+   "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+   "updated_utc": "2026-08-10T22:12:22Z"
+  }
+ ],
+ "current": {
+  "tier": "2",
+  "window": "27-34",
+  "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+  "updated_utc": "2026-08-10T22:12:22Z"
+ }
+}
