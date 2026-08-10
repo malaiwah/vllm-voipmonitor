@@ -139,3 +139,12 @@ by the occupancy test). One knob, headroom becomes a slider instead of an
 arithmetic exercise. Lands with the M2 loop wiring: policy schema already
 reserves capacity fields (fq-policy/2), decide() gains the two-ledger
 branch, decision_log gains "upgrade (free)" vs "swap (trade)" vocabulary.
+
+## Tier order (Michel, 2026-08-10): K2 to completion FIRST
+
+K2 (progressive fast-load base) is finished across all MoE layers before
+any GPU time goes to other tiers. Rationale: a partial fast-load tier
+serves nobody, whereas a complete K2 is immediately useful as the
+progressive base everyone fetches first. K5 window-2 was stopped mid-flight
+for this. Backfill order afterwards: K5 (hot-tier headroom, layers 11-78),
+then the K4 complement not covered by community priming.
