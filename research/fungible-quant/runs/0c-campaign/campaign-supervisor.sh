@@ -65,6 +65,20 @@ json.dump(d, open(p, "w"), indent=1)
 PY
 }
 
+# Single-owner lock: refuse to start if another supervisor OR a stray
+# encode from an earlier ring is still running — two encoders writing one
+# work dir race on the same layer files.
+LOCK=$CAMP/.supervisor.lock
+if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
+  echo "supervisor already running (pid $(cat "$LOCK")) — exiting"; exit 0
+fi
+echo $$ > "$LOCK"
+trap 'rm -f "$LOCK"' EXIT
+while pgrep -f "fruit_encode_driver.*--encode" >/dev/null; do
+  log "waiting for a pre-existing encode to finish before taking ownership"
+  sleep 120
+done
+
 log "supervisor start (tiers: $TIERS, layers $FIRST-$LAST, step $STEP)"
 while true; do
   PROGRESS=0
@@ -95,6 +109,9 @@ while true; do
       fi
 
       # -- encode on whatever is idle right now
+      if pgrep -f "fruit_encode_driver.*--encode" >/dev/null; then
+        log "another encode is active — waiting"; sleep 120; continue
+      fi
       G=$(free_gpus); [ -z "$G" ] && { log "no idle GPU — waiting"; sleep 180; continue; }
       W=$(echo "$G" | tr ',' '\n' | wc -l)
       write_state "$T" "$START-$END" "encode(gpus=$G)"
