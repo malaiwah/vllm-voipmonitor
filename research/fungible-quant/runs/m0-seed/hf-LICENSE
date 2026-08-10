@@ -1,0 +1,33 @@
+MIT License
+
+Copyright (c) 2026 Michel Belleau
+
+This licence covers the contributions made by this repository: the
+segmentation of MoE expert weights into per-layer, range-readable
+`fq-segment/1` files, the `index-k*.json` byte-range indexes, the
+`fq-manifest/1` and `fq-release/1` documents, the signed
+`fq-attestation/1` lines, the `fq-policy/2` recipes, and the accompanying
+documentation.
+
+The weights themselves are derived work. They come from a base model and
+from third-party quantizations, each under its own copyright and licence
+terms, and this file grants nothing on their behalf. See NOTICE for the
+full attribution chain and the upstream licences.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

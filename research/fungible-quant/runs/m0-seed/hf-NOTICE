@@ -1,0 +1,87 @@
+# NOTICE — attribution for malaiwah/GLM-5.2-EXL3-FQ-segments
+
+Nothing in this repository is an original model. Every byte of weight data
+here descends from someone else's work, and this file names them. The
+machine-readable version of the same chain is in `fq-manifest.json`,
+`sources/fq-manifest.json` and the per-fragment `attestations/*.jsonl`,
+each of which pins its upstream by repository **and commit revision** so the
+claims below can be checked rather than believed.
+
+---
+
+## Base model
+
+**GLM-5.2** — [`zai-org/GLM-5.2`](https://huggingface.co/zai-org/GLM-5.2)
+@ `b4734de4facf877f85769a911abafc5283eab3d9`
+Copyright (c) Zhipu AI (Z.ai). Licensed under the MIT License, as declared
+by the publisher on that repository.
+
+Every quantized weight in this repository is a lossy encoding of those
+weights. The K2 and K5 tiers were encoded by us directly from this base
+model (predicate `encode-of`); the K3 tier reaches it through the source
+quantization below.
+
+## Source quantizations
+
+These are other people's EXL3 quants. Where a fragment carries the
+`repack-of` predicate, the trellis bytes are copied **verbatim** — the
+quantization work is theirs, not ours, and byte-identity is verified per
+layer before signing.
+
+- **`brandonmusic/GLM-5.2-EXL3-TR3-3.0bpw`**
+  @ `9297b9f1d53af5c67cffa01e30cc071a1ff7144b`
+  Source of the entire **K3 base tier** (layers 3–78) at the repository
+  root. Repacked verbatim; the all-K3 recipe reassembles that checkpoint
+  sha256-identically, shard for shard.
+
+- **`willfalco/GLM-5.2-EXL3-TR3-3.42bpw`**
+  @ `ae68c65947efa90bea37308e15421872f124c46d`
+  Source of `sources/willfalco-3.42bpw/shared-h/` (verbatim, `repack-of`)
+  and, through the `shared_h_expand_v1` rule, of
+  `sources/willfalco-3.42bpw/expanded/` (`derived-from`).
+
+- **`willfalco/GLM-5.2-EXL3-TR3-3.36bpw`**
+  @ `8d9aa923a17502675ca23737349b67f2e66bb69d`
+  Source of `sources/willfalco-3.36bpw/` (verbatim, `repack-of`).
+
+If you are one of these producers and want the attribution worded
+differently, or removed, open an issue on
+[github.com/malaiwah/progressive-tensors](https://github.com/malaiwah/progressive-tensors)
+and it will be changed.
+
+## Format and tooling
+
+- **EXL3 / trellis quantization format and reference implementation** —
+  [`turboderp/exllamav3`](https://github.com/turboderp/exllamav3).
+  Copyright (c) 2025 Turboderp. MIT License. The trellis codebook layout
+  these fragments carry, and the encoder our `encode-of` tiers were
+  produced with, derive from that project.
+
+- **safetensors** — the container format every file here uses, unmodified.
+  Copyright (c) Hugging Face. Apache License 2.0.
+
+- **Progressive Tensors** — the segmentation scheme, byte-range indexes,
+  attestation/release schemas and the `fq_*` tools that produced and verify
+  this repository.
+  Copyright (c) 2026 Michel Belleau. MIT License (see `LICENSE`).
+  [github.com/malaiwah/progressive-tensors](https://github.com/malaiwah/progressive-tensors)
+
+---
+
+## What the licence does and does not settle
+
+The MIT text in `LICENSE` is ours to grant, and it covers our
+contribution: the segmentation, the indexes, the attestations, the release
+manifest, the recipes and the docs.
+
+It is **not** a licence for the model weights, and we cannot grant one.
+Your right to use these weights comes from the base model's licence and
+from the licences of the source quantizations, upstream of us. Both are
+pinned above by revision so you can read them at the exact commit this
+material was derived from. If any upstream licence conflicts with the
+above, the upstream licence governs that material.
+
+Attribution here is not endorsement in either direction: a signature on a
+fragment says who assembled the bytes and where they came from. It says
+nothing about whether the upstream authors reviewed, approved of, or are
+associated with this repository.
