@@ -84,3 +84,22 @@ Active research artifact (2026-08); schema strings `fq-segment/1`,
 on an 8× RTX PRO 6000 (SM120) box; the all-K3 assembly of these segments
 was verified byte-identical to the source checkpoint and served under the
 GG r33 stack (TP4/DCP4).
+
+## Reassemble it yourself
+
+Tools, tests, and a full walkthrough live at
+**[github.com/malaiwah/progressive-tensors](https://github.com/malaiwah/progressive-tensors)**:
+
+```bash
+git clone https://github.com/malaiwah/progressive-tensors && cd progressive-tensors
+uv venv && uv pip install pynacl numpy huggingface_hub
+hf download malaiwah/GLM-5.2-EXL3-FQ-segments --local-dir ./segments
+uv run tools/fq_assemble.py --segments ./segments --source <source-dir> \
+  --policy <your-recipe.json> --out ./my-checkpoint
+```
+
+The all-K3 recipe reproduces the source checkpoint **sha256-identical,
+shard for shard** (verified on all 79). Mixed recipes (your own K per
+expert) assemble the same way as K4/K5/K2 segments land in this repo
+family. Every fragment is spot-checkable against its signed attestation
+with one ranged read — see the walkthrough for the 6-line verifier.
