@@ -2,9 +2,10 @@
 
 Answers: can we proceed on defaults? what needs deciding? how much work?
 
-## 1. Settled (no action): D1–D9 (`00-overview.md`), K6 → row-write path
-(`02-swap-engine.md`), L2 door-openers as v1 defaults (`05` §5), all runtime
-knobs (`01` §4 — Phase 0 refines, never gates).
+## 1. Settled (no action): D1–D9 (`00-overview.md`; D3 revised to D3′ by
+`07-lazy-encode.md` — lazy K4 encode-and-cache, K3 base artifact only),
+K6 → row-write path (`02-swap-engine.md`), L2 door-openers as v1 defaults
+(`05` §5), all runtime knobs (`01` §4 — Phase 0 refines, never gates).
 
 ## 2. Open decisions
 
@@ -12,9 +13,9 @@ knobs (`01` §4 — Phase 0 refines, never gates).
 
 | # | Decision | Default | Trade |
 |---|---|---|---|
-| P1 | Artifact provenance: fresh K3+K4 pair from one campaign vs reuse existing K3 + encode K4 only | Fresh pair | Reuse ≈ halves encode bill, valid only if Hessian/calibration provenance matches (`hessian_id` consistency) |
-| P2 | Encode venue + budget | Rented, one-time (~40 GPU-h, ~5–10 h wall parallelized) | Only cash outlay before M3 |
-| P3 | v1 K variants: {3,4} vs {3,4,6} | {3,4} | +K6 now: ~519 GB NVMe + hours; enables per-layer bit-pair (L1) without a second campaign |
+| P1 | K3 base provenance: fresh encode vs reuse existing K3 checkpoint | Reuse if `hessian_id` consistency holds | Under D3′ only the K3 base ships; the measure campaign still runs once for ε curves + kept Hessians |
+| P2 | ~~Encode venue~~ **dissolved by D3′** (`07-lazy-encode.md`) — K4 encodes lazily on the serving box | `VLLM_FQ_K4_SOURCE=lazy` | `artifact` mode remains available for boot-complete deployments |
+| P3 | Ks the lazy encoder may target: {3,4} vs {3,4,6} | {3,4} | Config not campaign now; +K6 just widens the cache |
 
 ### Defaults to accept-or-veto (no research needed)
 
