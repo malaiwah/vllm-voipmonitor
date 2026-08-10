@@ -18,6 +18,7 @@ LIBP="$ROOT/lib/x86_64-linux-gnu"
 LIBP="$LIBP:$ROOT/usr/lib/x86_64-linux-gnu"
 LIBP="$LIBP:$ROOT/usr/local/cuda/lib64"
 LIBP="$LIBP:$ROOT/usr/local/cuda/targets/x86_64-linux/lib"
+LIBP="$LIBP:$ROOT/opt/venv/lib/python3.12/site-packages/torch/lib"
 LIBP="$LIBP:/usr/lib/x86_64-linux-gnu"   # host driver: libcuda.so.1, libnvidia-ml
 
 cmd=$1; shift
@@ -28,7 +29,7 @@ esac
 
 exec env \
   PYTHONHOME="$ROOT/usr" \
-  PYTHONPATH="$ROOT/opt/venv/lib/python3.12/site-packages:$ROOT/opt/venv/lib/python3.12/site-packages/nvidia_cutlass_dsl/dsl_packages" \
+  PYTHONPATH="$ROOT/opt/venv/lib/python3.12/site-packages:$ROOT/opt/venv/lib/python3.12/site-packages/nvidia_cutlass_dsl/dsl_packages:$ROOT/opt/exllamav3-python:$ROOT/opt/exllamav3:/home/mbelleau/gg-extra" \
   PYTHONDONTWRITEBYTECODE=1 \
   CUDA_DEVICE_ORDER=PCI_BUS_ID \
   TORCH_CUDA_ARCH_LIST=12.0a \
