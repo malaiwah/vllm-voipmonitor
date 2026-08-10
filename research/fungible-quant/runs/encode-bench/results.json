@@ -1,0 +1,79 @@
+{
+ "config": {
+  "layer": 30,
+  "expert": 137,
+  "h_samples": 4096,
+  "repeats": 3,
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+ },
+ "tensors": {
+  "gate_proj": {
+   "shape": [
+    6144,
+    2048
+   ],
+   "runs": {
+    "K3": {
+     "cold_s": 0.9204891733825207,
+     "warmH_s": 0.8455983800813556,
+     "proxy_err": 0.007240324398849128
+    },
+    "K4": {
+     "cold_s": 0.8696872666478157,
+     "warmH_s": 0.7875180598348379,
+     "proxy_err": 0.0018329694751410429
+    }
+   }
+  },
+  "up_proj": {
+   "shape": [
+    6144,
+    2048
+   ],
+   "runs": {
+    "K3": {
+     "cold_s": 0.8704736586660147,
+     "warmH_s": 0.7946725338697433,
+     "proxy_err": 0.0072473251348479095
+    },
+    "K4": {
+     "cold_s": 0.8604063838720322,
+     "warmH_s": 0.7846880499273539,
+     "proxy_err": 0.0018341293200377382
+    }
+   }
+  },
+  "down_proj": {
+   "shape": [
+    2048,
+    6144
+   ],
+   "runs": {
+    "K3": {
+     "cold_s": 0.7564627854153514,
+     "warmH_s": 0.7531026313081384,
+     "proxy_err": 0.01346500828477396
+    },
+    "K4": {
+     "cold_s": 0.7513954089954495,
+     "warmH_s": 0.7452394431456923,
+     "proxy_err": 0.0034876875392864095
+    }
+   }
+  }
+ },
+ "extrapolation_K3": {
+  "expert_cold_s": 2.55,
+  "expert_warmH_s": 2.39,
+  "layer_256experts_cold_h": 0.18,
+  "full_model_75layers_cold_h": 13.6,
+  "experts_per_hour_at_5pct_budget": 70.7
+ },
+ "extrapolation_K4": {
+  "expert_cold_s": 2.48,
+  "expert_warmH_s": 2.32,
+  "layer_256experts_cold_h": 0.18,
+  "full_model_75layers_cold_h": 13.2,
+  "experts_per_hour_at_5pct_budget": 72.5
+ }
+}
