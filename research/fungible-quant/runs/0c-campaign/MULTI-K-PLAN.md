@@ -125,3 +125,17 @@ Three proof strengths in the segment family:
 Produce these during the K3/K4 window passes (#24) — the decode + BF16
 compare is nearly free at encode time. Publish alongside the primed
 fragments' attestations (#22).
+
+## Capacity as an operator knob (Michel, 2026-08-10)
+
+`VLLM_FQ_CAPACITY_UTILIZATION` (default 1.0) — the gpu-memory-utilization
+analog for expert-tier headroom. Semantics: at startup, per-layer tier
+capacity C = ceil(occupancy N / util), bounded by E and by the global byte
+budget; util=1.0 reproduces v1 exactly (cap == n, trade-only); util=0.9
+pre-provisions ~11% spare upper-tier rows per layer, unlocking
+displacement-free upgrades within the two-ledger check (per-layer capacity
+ledger + global byte ledger, L2 mechanics — kernel side verified bitwise
+by the occupancy test). One knob, headroom becomes a slider instead of an
+arithmetic exercise. Lands with the M2 loop wiring: policy schema already
+reserves capacity fields (fq-policy/2), decide() gains the two-ledger
+branch, decision_log gains "upgrade (free)" vs "swap (trade)" vocabulary.
