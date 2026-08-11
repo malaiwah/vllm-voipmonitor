@@ -178,7 +178,14 @@ export CUDA_CACHE_PATH=/home/mbelleau/cache/jit-$FQ_TAG/cuda
 export TRITON_CACHE_DIR=/home/mbelleau/cache/jit-$FQ_TAG/triton
 export TORCHINDUCTOR_CACHE_DIR=/home/mbelleau/cache/jit-$FQ_TAG/inductor
 mkdir -p "$CUDA_CACHE_PATH" "$TRITON_CACHE_DIR" "$TORCHINDUCTOR_CACHE_DIR"
-export CUDA_MODULE_LOADING=EAGER
+# Respect an inherited value. This was an unconditional EAGER, which silently
+# discarded a deliberate CUDA_MODULE_LOADING=LAZY passed on the command line —
+# so an experiment testing "graphs with LAZY" actually re-ran "graphs with
+# EAGER" and reproduced the same failure, twice, looking like confirmation.
+# EAGER stays the DEFAULT: it is the M2 mitigation for a cuBLAS status-14
+# flake seen when other GPUs are loaded, which is exactly the two-instance
+# case.
+export CUDA_MODULE_LOADING=${CUDA_MODULE_LOADING:-EAGER}
 export VLLM_SERVER_DEV_MODE=1
 # Forced re-tiering (POST /fq/retier) and the read-only activation matrix
 # (GET /fq/heatmap). Both are doubly gated -- dev mode plus their own env --
