@@ -63,7 +63,7 @@ report m5-serve   "vllm.*api_server"            "${M5LOG:-/nonexistent}"
 # Tier coverage is the actual deliverable; process liveness is only a proxy.
 for K in 2 4 5; do
   n=$(ls /home/mbelleau/glm52-work-k$K/*.done.json 2>/dev/null | wc -l)
-  [ "$n" -gt 0 ] && printf "  K%-2s layers encoded: %s/76\n" "$K" "$n"
+  [ "$n" -gt 0 ] && printf "  K%-2s layers encoded: %s/75\n" "$K" "$n"
 done
 
 # M5 evidence-run artifacts, when that campaign is active.
