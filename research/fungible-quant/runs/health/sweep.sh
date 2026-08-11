@@ -57,7 +57,10 @@ report publish    "publish_window[.]py"         "$RUNS/0c-campaign/publish-auto.
 # Newest serve log across all result dirs — the tag varies per run
 # (baseline-k3, live, scenario1...), and hardcoding one made a running serve
 # report "no-log" while it was mid-boot.
-M5LOG=$(ls -t "$RUNS"/m5-serve/results/*/serve.log 2>/dev/null | head -1)
+# serve-attempt*.log, NOT serve.log: the attempts are where the live boots
+# write, and globbing only serve.log silently pinned this to a dead run --
+# reporting "quiet" for hours while a healthy boot streamed beside it.
+M5LOG=$(ls -t "$RUNS"/m5-serve/results/*/serve*.log 2>/dev/null | head -1)
 report m5-serve   "vllm.*api_server"            "${M5LOG:-/nonexistent}"
 
 # Tier coverage is the actual deliverable; process liveness is only a proxy.
@@ -73,10 +76,23 @@ for d in "$RUNS"/m5-serve/results/*/; do
   printf "  m5 %-12s timeline rows: %s\n" "$(basename "$d")" "$tl"
 done
 
-if curl -fsS -m 3 http://127.0.0.1:8000/health >/dev/null 2>&1; then
-  echo "  m5-serve :8000 HEALTHY"
+# Probe every port a serve has actually used. Hardcoding 8000 reported
+# "down" for a server healthy on 8100.
+M5PORT=$(grep -oE '\-\-port [0-9]+' "${M5LOG:-/dev/null}" 2>/dev/null | tail -1 | awk '{print $2}')
+M5UP=""
+for _p in ${M5PORT:-} 8100 8000; do
+  if curl -fsS -m 3 "http://127.0.0.1:$_p/health" >/dev/null 2>&1; then M5UP=$_p; break; fi
+done
+# Progress signal for a boot still loading: bytes delivered, not liveness.
+if [ -n "${M5LOG:-}" ]; then
+  _dl=$(grep -E "FQ downloads" "$M5LOG" 2>/dev/null | tail -1 | sed 's/^.*\] //')
+  _ly=$(grep -c "FQ progressive layer" "$M5LOG" 2>/dev/null)
+  [ -n "$_dl" ] && echo "  m5-serve load: ${_ly}/76 layers | $_dl"
+fi
+if [ -n "$M5UP" ]; then
+  echo "  m5-serve :$M5UP HEALTHY"
 else
-  echo "  m5-serve :8000 down"
+  echo "  m5-serve :${M5PORT:-8100} down"
 fi
 
 echo "--- GPUs:"; nvidia-smi --query-gpu=index,utilization.gpu,memory.used --format=csv,noheader | paste -sd' ' -
