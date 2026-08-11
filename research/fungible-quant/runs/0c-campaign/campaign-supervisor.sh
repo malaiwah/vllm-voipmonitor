@@ -128,6 +128,23 @@ while true; do
         [ -d "$CAPTURE/layer_$(printf %03d $L)" ] || NEED_CAP=1
       done
       if [ $NEED_CAP -eq 1 ]; then
+        # Stale-state guard. capture_stream resumes from state.json's
+        # per-shard packs_done. If a window's captures were PRUNED to reclaim
+        # disk, that state still claims the packs were emitted, so the shards
+        # skip every layer, exit 0, and the seal dies with
+        # "seal: layer N missing x.bin" -- on every retry, forever.
+        # A window with NO layer dirs on disk has nothing to resume, so the
+        # state can only be stale. Mid-window resume (some dirs present) is
+        # preserved, which is the case the state file exists for.
+        HAVE=0
+        for L in $(seq $START $END); do
+          [ -d "$CAPTURE/layer_$(printf %03d $L)" ] && HAVE=1
+        done
+        if [ $HAVE -eq 0 ] && [ -f "$CAPTURE/state.json" ]; then
+          log "window $START-$END: no layer dirs but state.json exists — clearing stale capture state"
+          rm -f "$CAPTURE/state.json"
+          rm -rf "$CAPTURE/work"
+        fi
         write_state "$T" "$START-$END" capture
         log "K$T window $START-$END: capture"
         LAYERS=$START-$END STOP=$END "$CAMP/run-capture-glm52.sh" \
