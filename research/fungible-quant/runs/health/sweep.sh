@@ -54,7 +54,11 @@ report encode-k2  "fruit_encode_driver.*bits 2" "$RUNS/0c-campaign/glm52-encode-
 report encode-k5  "fruit_encode_driver.*bits 5" "$RUNS/0c-campaign/glm52-encode-k5.log"
 report capture    "capture_stream[.]py"         "$RUNS/0c-campaign/capture-glm52.log"
 report publish    "publish_window[.]py"         "$RUNS/0c-campaign/publish-auto.log"
-report m5-serve   "vllm.*api_server"            "$RUNS/m5-serve/results/live/serve.log"
+# Newest serve log across all result dirs — the tag varies per run
+# (baseline-k3, live, scenario1...), and hardcoding one made a running serve
+# report "no-log" while it was mid-boot.
+M5LOG=$(ls -t "$RUNS"/m5-serve/results/*/serve.log 2>/dev/null | head -1)
+report m5-serve   "vllm.*api_server"            "${M5LOG:-/nonexistent}"
 
 # Tier coverage is the actual deliverable; process liveness is only a proxy.
 for K in 2 4 5; do
