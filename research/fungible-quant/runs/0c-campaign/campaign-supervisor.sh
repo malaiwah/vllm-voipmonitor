@@ -188,6 +188,29 @@ while true; do
         >> "$CAMP/glm52-encode-k$T.log" 2>&1
       log "K$T window $START-$END: encode exit $? ($(layers_done $T $START $END)/$WANT layers)"
 
+      # -- reclaim BEFORE publishing, not only after.
+      # The disk guard runs once per window, at the top. With 8 GPUs an
+      # encode now finishes in half the time and produces artifacts twice as
+      # fast, so a single window can consume more headroom than existed when
+      # it started -- observed: 46G free, 134G under the floor, with no guard
+      # able to fire because none of them run mid-window. This window's own
+      # captures are dead the moment its encode exits 0, so drop them here
+      # rather than waiting for the post-publish prune.
+      FREEGB=$(df --output=avail -BG /home | tail -1 | tr -dc 0-9)
+      if [ "${FREEGB:-0}" -lt "$MIN_FREE_GB" ]; then
+        log "post-encode disk ${FREEGB}G < ${MIN_FREE_GB}G — reclaiming this window's captures early"
+        DONE_ALL=1
+        for L in $(seq $START $END); do
+          [ -f "/home/mbelleau/glm52-work-k$T/layer-$(printf %03d $L).done.json" ] || DONE_ALL=0
+        done
+        if [ $DONE_ALL -eq 1 ]; then
+          for L in $(seq $START $END); do rm -rf "$CAPTURE/layer_$(printf %03d $L)"; done
+          log "reclaimed to $(df --output=avail -BG /home | tail -1 | tr -dc 0-9)G"
+        else
+          log "NOT reclaiming: window $START-$END is not fully encoded"
+        fi
+      fi
+
       # -- publish + prune
       write_state "$T" "$START-$END" publish
       if $PY "$CAMP/publish_window.py" >> "$CAMP/publish-auto.log" 2>&1; then
