@@ -189,15 +189,21 @@ fi
 # Hand the loader the same utilization the engine will use, so its projection
 # is the engine's arithmetic and not a guess that can drift out of sync.
 export VLLM_FQ_BUDGET_UTIL=${FQ_GPUMEM:-0.92}
-export VLLM_FQ_BUDGET_MIN_KV=${FQ_MIN_KV:-4g}
-# MEASURED on attempt 15, not guessed: budget 90.81 - weights 79.08 - KV 3.67
-# = 8.06 GiB of real non-weight overhead at util 0.95 / eager / 8192 ctx. An
-# earlier 5.27 GiB figure was inferred from a flat-K3 run at a different
-# context length with graph capture on, and did not transfer.
+# 4 GiB was my invention, not a requirement, and it would have REJECTED the
+# boot that served fine at 3.67 GiB / 73,024 tokens (~9 concurrent sequences
+# at 8192 ctx). The floor exists to catch a policy that leaves no usable
+# cache, not to enforce a comfortable one.
+export VLLM_FQ_BUDGET_MIN_KV=${FQ_MIN_KV:-2g}
+# MEASURED, using the DEVICE budget the loader itself sees (90.22 GiB from
+# torch.cuda.mem_get_info) rather than nvidia-smi's total: 90.22 - 79.08 -
+# 3.67 = 7.47 GiB of real non-weight overhead at util 0.95 / eager / 8192 ctx.
+# An earlier 5.27 GiB figure came from a flat-K3 run at a different context
+# length with graph capture on and did not transfer; an 8.06 GiB figure used
+# nvidia-smi's total and over-charged by 0.6 GiB.
 if [ "$FQ_FAST" = 1 ]; then
-  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-8.1g}
+  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-7.6g}
 else
-  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-8.6g}
+  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-8.2g}
 fi
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export VLLM_WORKER_MULTIPROC_METHOD=spawn

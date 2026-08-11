@@ -90,9 +90,18 @@ always the binding constraint.
 - Live K3→K4 promotion. The loop is running but no swap has been driven yet —
   that is BT-5 and BT-6.
 - Quality. BT-7 pairs a degraded arm against a converged one on GSM8K.
-- KV headroom is tight at 3.67 GiB (73,024 tokens). The envelope that clears a
-  4 GiB floor under measured overhead is ~2,300 promotions, not the 2,658 in
-  the fitted policy and certainly not the 5,126 the coder-shaped seed asked
-  for. **The demo envelope is set by the card, not by the 3.42bpw quant's
-  shape** — worth saying in the PR, since it bounds what any single-node
-  reproduction can show.
+- KV lands at 3.67 GiB (73,024 tokens ~ 9 concurrent sequences at 8192 ctx).
+
+  **Corrected figure.** An earlier draft of this file said the envelope
+  allowed only ~2,300 promotions. That was wrong twice: it charged the
+  projection against nvidia-smi's card total (90.81 GiB) instead of the device
+  budget the loader actually sees (90.22 GiB), and it measured against a 4 GiB
+  KV floor I had invented rather than derived — a floor that would have
+  rejected the very boot that serves fine at 3.67 GiB.
+
+  Against the device budget and a 2 GiB floor, the ceiling is **~4,200
+  promotions**. The fitted policy's 2,658 clears it comfortably; the seeded
+  5,126 does not. So the envelope is still set by the card rather than by the
+  3.42bpw quant's shape, and that still belongs in the PR — but the headroom
+  is roughly 1.6x what I first reported, and the fitted policy is not close to
+  the limit.
