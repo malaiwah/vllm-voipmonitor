@@ -146,6 +146,14 @@ def test_served_is_true_without_a_timestamp_on_the_ready_line(tmp_path):
         "INFO:     Application startup complete.")
     m = BT.extract(_w(tmp_path, "u.log", uvicorn))
     assert m["served"] is True
+    # ...and the timing still resolves, from the last timestamped line.
+    assert m["time_to_serve_s"] == pytest.approx(689)  # 15:09:31 -> 15:21:00
+
+
+def test_time_to_serve_stays_none_when_the_boot_never_finished(tmp_path):
+    """The fallback must not manufacture a duration for a run that died."""
+    died = COLD.replace("Application startup complete", "Traceback")
+    assert BT.extract(_w(tmp_path, "d.log", died))["time_to_serve_s"] is None
 
 
 def test_stream_summary_does_not_invent_a_substitution(tmp_path):
