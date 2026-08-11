@@ -19,10 +19,20 @@ for i in $(seq 1 "$N"); do
     python3 - "$f" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1]))
-m=d.get("matrix") or d.get("counts") or []
-tot=sum(sum(r) for r in m) if m and isinstance(m[0],list) else 0
-nz=sum(1 for r in m for v in r if v) if m and isinstance(m[0],list) else 0
-print(f"  {sys.argv[1].split('/')[-1]}: {len(m)} layers, {nz} active cells, {tot:,.0f} total activations")
+# fq-heatmap/1: layers[] each carrying a per-expert vector. Report the
+# activation mass, because that is the only thing separating a real sample
+# from a well-formed empty one.
+rows=d.get("layers") or []
+def vec(r):
+    if isinstance(r,dict):
+        for k in ("counts","experts","values","activations","mass"):
+            if isinstance(r.get(k),list): return r[k]
+        return []
+    return r if isinstance(r,list) else []
+tot=sum(sum(v for v in vec(r) if isinstance(v,(int,float))) for r in rows)
+nz=sum(1 for r in rows for v in vec(r) if isinstance(v,(int,float)) and v)
+print(f"  {sys.argv[1].split('/')[-1]}: {len(rows)} layers, step={d.get('step')}, "
+      f"{nz} active cells, {tot:,.0f} activation mass")
 PY
   else
     echo "  sample $i: endpoint unavailable"
