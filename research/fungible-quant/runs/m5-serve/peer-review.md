@@ -923,8 +923,11 @@ line:
 ```
 
 ### MIN-8 and small stuff
-* `report m5-serve … "$RUNS/m5-serve/results/live/serve.log"` hardcodes the tag
-  `live`; an `off` or `dryrun` evidence run reports `no-log`.
+* `report m5-serve … "$RUNS/m5-serve/results/live/serve.log"` hardcoded the tag
+  `live`, so an `off` or `dryrun` evidence run reported `no-log`. **Already fixed
+  concurrently** in `972beb96d` (`ls -t …/results/*/serve.log | head -1`). Note
+  that `grew()` keys the stamp on the file path, so the first sweep after the
+  newest log changes tag prints `first-look` rather than a delta — harmless.
 * `FREE=$(df … | tr -dc 0-9)` yields an empty string if `df` fails, and
   `[ "$FREE" -lt 180 ]` then errors to stderr. `${FREE:-0}` fixes it.
 * `pgrep -fc "vllm.*api_server"` counts the API server *and* every TP worker, so
