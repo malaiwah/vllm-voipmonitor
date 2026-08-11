@@ -1202,3 +1202,223 @@ inverse and assert the original output returns bitwise.
    (`loop.py:479-483`) is compared across intervals; a forced change does not
    alter the *desired* set, only the resident set, so probably not — but state
    the reasoning in a comment either way.
+
+---
+
+# As implemented
+
+Status: **shipped**, 2026-08-11, `gg-vllm` branch `fq/m1-stats-collector`.
+CPU suite green: **407 passed / 10 skipped** (baseline before this change was
+326 / 11 — see §I.7 for why one skip became a pass).
+
+## I.1 Files actually touched
+
+| File | Change | vs spec §11 |
+|---|---|---|
+| `.../exl3_fungible/admin.py` | **new**, ~2.3k lines — parsing, guards, plan construction, `adopt_policy`, `explain_forced`, `build_swap_engine`, worker entry points, **and the router** | router folded in (below) |
+| `vllm/entrypoints/serve/__init__.py` | +11 lines in `register_vllm_dev_api_routers` | as specified |
+| `vllm/v1/worker/gpu_worker.py` | +3 thin lazy-delegating methods on `Worker` | as specified |
+| `tests/exl3_fungible/test_admin_cpu.py` | **new**, 80 tests | as specified |
+| `loop.py`, `policy.py`, `decision_log.py` | **untouched** | spec wanted `loop.py` + `decision_log.py` edits |
+| `swap.py`, `store.py`, `fragments.py`, `occupancy_table.py` | **untouched** | as specified |
+
+The router lives in `admin.py` (`build_router()` / `attach_router(app)`) rather
+than `vllm/entrypoints/serve/dev/fq/api_router.py`. Two reasons: the brief
+scoped core-tree changes to "a new module plus the minimum hook in the API
+server", and keeping the router in the FQ package is what lets the CPU suite
+drive it with FastAPI's `TestClient` — importing anything under
+`vllm/entrypoints/` in this environment pulls in `vllm._C_stable_libtorch`,
+which is not built. `attach_router` is the same five-line shape the dev routers
+use, so moving it later is a file move.
+
+## I.2 Deviations from the spec, and why
+
+**1. The gate is `VLLM_FQ_ADMIN_API=1`, with `VLLM_FQ_ADMIN_ENABLE` as an
+accepted alias.** The brief named the former, the spec the latter; honouring
+both costs one `or`. Both gates are checked **twice**: at attach time (the
+routes do not exist unless `VLLM_SERVER_DEV_MODE` *and* the FQ flag are set)
+and again per request (404 `fq_admin_disabled`), so nothing that attaches the
+router by another path can slip a live weight mutation through.
+
+**2. `adopt_policy` lives in `admin.py`, not on `FungibleQuantState`.**
+`loop.py` was owned by another change this round, so it is a free function
+taking the state as a parameter, duck-typed over the loop-state attribute
+surface. It does all six steps of §8.1 **including the missing
+`self.pins = self._pins_from_doc(new_doc)`**, which is the line the admin path
+actually needs. Consequence: `loop._maybe_apply` was *not* refactored onto it
+and still leaves `pins` stale on the loop's own path. Harmless today (the loop
+never writes `pinned`) and now covered by a golden test
+(`test_adopt_policy_matches_the_loop_for_a_loop_driven_swap`) asserting the two
+transitions agree on `tier_of`, `_entered_step`, `policy_sha` and
+`_policy_step` — so whoever owns `loop.py` next can point `_maybe_apply` at
+`admin.adopt_policy` and the test will hold them to it.
+
+**3. `explain_forced` lives in `admin.py`; `decision_log.py` is untouched.**
+Admin records carry `"origin": "operator"`, `"forced": true` on every swap,
+`actor`, `reason`, `request_id`, `guards_waived`, and `items[].source`. Interval
+records do **not** gain `"origin": "policy"` — so read *absent* `origin` as
+"policy". One-line change for whoever next touches `decision_log.py`.
+
+**4. `auto_balance` is recognised and refused (501) even with
+`VLLM_FQ_ADMIN_ALLOW_AUTO_BALANCE=1`.** Only `strict_pair` ships, as §4.3
+recommends. `grow_budget` returns 501 with all three structural reasons, tested
+verbatim.
+
+**5. `/fq/pins` is not a separate route.** It turned out not to need one:
+`apply_pin_change` now pins **no-op items too**, on the reading that "expert 5
+should be K4" about an expert that is already K4 is still an explicit statement
+about where it belongs. So `{"items":[{"layer":23,"expert":5,"k":4}],
+"pin":"hold"}` is a pure pin change. It short-circuits `_apply_pins_only`:
+no staging, no quiesce window (a metadata edit must not stall the serve), but
+the document **is** committed — otherwise the pin evaporates at the next
+interval and the operator got a no-op with a 200 status code.
+
+**6. Not implemented, deliberately deferred:** `501 dp_not_supported`
+(the router has no `parallel_config` handle without widening the engine
+protocol; a DP serve will instead diverge at the phase-1 `plan_sha` check and
+get `500 rank_divergence`, which is refusal, not corruption);
+`503 engine_unavailable` (`pause_generation` already fails when the engine is
+elsewhere); `expected_mcg` is left `None` (open question 1 — the engine learns
+the codebook from the first staged fragment).
+
+**7. Open question 3, answered: no.** A forced retier does not touch
+`_prev_desired`. It changes the *resident* set, not the *desired* set, and the
+Jaccard floor exists to detect router churn — resetting it on an operator
+action would blind the guard for one interval for no reason.
+
+## I.3 The finding: the occupancy diff for a successful retier is empty
+
+The brief asked for "the occupancy_table diff after a successful change so the
+operator sees exactly what moved". The obvious implementation —
+`state.log_composition(diff_only=True)`, as §8.1 step 5 specifies — prints
+this for a successful 1-for-1 trade:
+
+```
+FQ expert composition after operator retier fqr-...: no tier changes across 90 layers (totals K3=21504 K4=8042)
+```
+
+That is not a bug in `occupancy_table`; it is fixed cardinality being exactly
+what it claims to be. The table counts **experts per tier**, and a K3↔K4
+transposition leaves every count identical *by construction*. The delta column
+can never show a legal retier. Truthful, and useless.
+
+So `admin.render_retier_table` renders the **touched layers in full** (the
+shape is what the operator wants confirmed), then names the pairs underneath,
+because the pairs are the only place the change is visible at all:
+
+```
+FQ expert composition after operator retier fqr-01JT8Q2M4: 1 MoE layers x 256 experts
+  layer |     K2     K3     K4     K5 |  change
+  ------+-----------------------------+--------------------
+     23 |      0    148    108      0 |
+  ------+-----------------------------+--------------------
+  total |      0    148    108      0 |
+  mean bits/expert: 3.4219
+  moved (fixed cardinality: the per-tier COUNTS above are invariant by
+  construction, so a 1-for-1 trade cannot show up as a delta — these are
+  the 1 pair(s) that actually moved):
+    L23: e250 K4->K3  <->  e1 K3->K4
+  (89 untouched layer(s) omitted)
+```
+
+It is returned in the response as `occupancy_diff` and logged line-by-line on
+rank 0. `state._last_composition` is re-armed from the post-change shape so the
+loop's own periodic table stays coherent.
+
+## I.4 The memory model is derived, and it disagrees with §5.1's constant
+
+§5.1 gives `K3 expert = 3,542,028 B/rank` = `3 x UNIT + 3,084`, i.e. a
+3,084-byte fixed term for the rotations. `MemoryModel` instead derives both
+terms from what `swap.ExpertStage` actually allocates — which is the authority
+on what a swap moves:
+
+```
+trellis  = 3 x H x I x k / 8      # == UNIT x k, UNIT = 3*H*I/8
+rotations= 6 x (H + I)            # gate_suh + up_suh + down_svh + the 3I row, fp16
+```
+
+For GLM-5.2 TP4 geometry `6*(H+I)` is 29,184 B, not 3,084 B. The two accounts
+disagree on the rotation term. **The guard is unaffected**: it blocks on
+`delta = UNIT x Σ(k_to − k_from)`, and the rotation term is independent of K, so
+it cancels in every accounting. `test_unit_bytes_match_expert_stage_geometry`
+asserts `MemoryModel.expert_bytes(k) == ExpertStage(k, H, I).nbytes` exactly,
+for k in (3, 4).
+
+Flagged for reconciliation: `loop.py` has concurrently grown its own byte model
+(`VLLM_FQ_EXPERT_BYTES`, `VLLM_FQ_MEMORY_BUDGET`, and the same 3,084-byte
+reference constants). Two byte models in one package will drift. The derived
+one is the correct base; the reference constants belong behind it as a fallback
+for when the geometry cannot be read.
+
+Guard defaults, unchanged from §5.1: the budget defaults to the *current*
+resident expert payload per rank, i.e. **no growth**, so any `delta > 0` is
+refused with `409 memory_budget_exceeded` naming the budget, the projected
+figure and the overshoot in bytes and in MiB. Under `strict_pair` `delta` is
+exactly 0 and the guard is reported, never fired — which is why it is also
+tested directly, off the endpoint, with a synthetic growing batch.
+
+## I.5 The FastAPI gotcha worth recording
+
+`admin.py` uses `from __future__ import annotations` (package convention) and
+imports fastapi lazily (laziness contract). Those two combine badly: every
+annotation becomes a *string*, FastAPI resolves handler annotations with
+`typing.get_type_hints` against the **module** globals, and `Request` is a
+local inside `build_router` — so FastAPI reads `raw_request: "Request"` as an
+unresolvable name, decides it must be a query parameter, and answers **422 on
+every route**, including `GET /fq/state`. Fix: publish `Request` and
+`JSONResponse` into module globals at the top of `build_router`.
+
+## I.6 Worker binding
+
+Shipping route: three thin lazy delegates on `Worker`
+(`fq_admin_describe` / `fq_admin_plan` / `fq_admin_apply`) in `gpu_worker.py`,
+each importing `admin` and forwarding. `FqWorkerAdmin` is also exported as a
+`--worker-extension-cls` mixin — but use **one or the other**, never both:
+`worker_base.py` asserts no extension attribute collides with the worker class,
+so injecting the mixin on top of the core methods raises at startup.
+
+Phase 2 re-derives the plan on each rank rather than trusting the wire (under
+`strict_pair` the plan is a pure function of the request and the live
+membership) and cross-checks `plan_sha`; a mismatch is
+`500 rank_divergence` with nothing applied. Phase 1 agreement is checked on
+`plan_sha`, `membership_sha` and `policy_sha_before`; phase 2 on `generation`
+and `policy_sha_after`.
+
+`apply_failed` uses the **generation counter** as the witness for which side of
+the visibility flip the failure landed on (`apply()` bumps it in a `finally`
+with the map writes). If it flipped, the weights are new and `adopt_policy` is
+run anyway — the loop must not keep deciding against a membership that no
+longer exists.
+
+## I.7 Tests
+
+80 tests in `tests/exl3_fungible/test_admin_cpu.py`, all CPU, no built
+`vllm._C`, no b12x. Coverage against §12 and the brief:
+
+| Requirement | Tests |
+|---|---|
+| relative and absolute `adjust_k` | the whole §3.2 table incl. `1` → `ambiguous_adjust_k` with the literal remedy text; `k`/`delta_k`/`adjust_k` mutual exclusion; query shorthand and `mixed_input` |
+| batch atomicity | one out-of-range item in a batch of four legal ones → nothing planned, nothing staged, `policy_sha` and `tier_of` unchanged; cross-layer "balance" refused (balance is per layer) |
+| memory guard | derived unit cross-checked against `ExpertStage.nbytes`; balanced batch → `delta == 0`; synthetic growing batch → `memory_budget_exceeded` with byte-exact arithmetic; headroom guard |
+| cardinality | balanced pair → `SwapPlan([(23, 0, 8)])` exactly; lone promotion → 409 with no engine call and no store write; a no-op that unbalances a pair → 409 listing the no-op; `grow_budget` → 501 with all three reasons |
+| unavailable fragment | fake resolver substituting K3 for two separate K4 asks → **both** listed, `encode_queued: true` with queue positions, nothing staged; a resolver that *raises* is a refusal, not a crash |
+| disabled by default | `admin_enabled` truth table; routes absent for all three off-states; token gate |
+| attributable | provenance block, `fq-decision/1` record with `origin: operator` / `forced` / `actor` / `reason` / `request_id`, written to `decisions/{step:08d}-admin-{id}.json` without colliding with an interval record at the same step |
+| pins | hold/none/release; `policy.decide` refuses to trade the pinned pair back; `pin_would_starve_layer` plus a regression showing what it prevents |
+| router | pause/apply/resume ordering; **resume even when the RPC raises**; dry-run never pauses and never applies; phase-1 divergence never applies; worker errors forwarded with their status; parse errors never reach the workers |
+
+One previously-skipped test now runs and passes: `test_loop_cpu.py::
+test_maybe_init_fq_state_degrades_to_collector`. This module is collected first
+alphabetically and installs the standalone stub package, so the later modules'
+"is the real package importable" probe starts answering yes. The stub is given
+a real `__path__` and preloads `integration` so it is not a trap for whoever
+imports next.
+
+## I.8 Not yet exercised on hardware
+
+Everything above is CPU. `build_swap_engine` — the binding `loop.py:26-28` says
+is missing, and which this change adds — has never run against live layers,
+because GPUs 0-3 are serving and 4-7 are encoding. The GPU test of §12
+(`test_admin_gpu.py`: force one pair through the real engine on the toy
+checkpoint, assert bitwise equality against a freshly built layer, force the
+inverse, assert the original output returns) is still owed.
