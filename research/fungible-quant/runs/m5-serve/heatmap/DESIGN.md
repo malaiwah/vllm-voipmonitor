@@ -495,14 +495,28 @@ fair share"; +1 means 2× uniform; −1 means half.
   the colour range and 99% of cells are crushed into the bottom fifth — the picture becomes "a few
   black dots on white". Log2 spreads it: the [−4,+4] domain lands 2028/2739/3995/4802/3501/1470/
   487/153/25 cells in its nine unit-wide bands.
-* **Domain [−4, +4] clips essentially nothing**: it covers 99.87% / 100.00% / 99.97% / 99.90% of
-  cells for code-axis / full / synthetic / truncated respectively. Clipping must still be shown —
-  mark saturated cells with a 1 px white or black pip at the cell corner in the ≥ 8 px zoom view,
-  and report the clipped count in the caption.
+* **Domain [−4, +4] clips the top tail and nothing else — but it clips a real slice of the
+  bottom.** ~~"covers 99.87% / 100.00% / 99.97% / 99.90%"~~ **(corrected 2026-08-11, review):**
+  those four figures are the *upper* clip only. Counting both ends, the domain covers
+  **95.95% / 99.88% / 94.34% / 95.90%** of cells for code-axis / full / synthetic / truncated,
+  because **3.92% / 0.12% / 5.64% / 3.99%** of cells sit *below* 1/16× of uniform and saturate at
+  the pale end. Clipping must still be shown — mark saturated cells with a 1 px white or black pip
+  at the cell corner in the ≥ 8 px zoom view, and report **both** clipped counts in the caption
+  (`heatmap.html` already does; do not restate the one-sided number anywhere).
 * **Zeros**: the synthetic dump has 42 dead cells. Floor at `1/16` of uniform (the domain edge)
   rather than dropping to −∞, and render true zeros with a distinct hatch or the pure background
   colour `#FFFFFF` so "never routed" is not confused with "rarely routed". Never silently add an
   epsilon without saying so.
+  * **OPEN (review 2026-08-11): `#FFFFFF` does not achieve that separation and must change.**
+    Measured: `#FFFFFF` vs the palest ramp stop `#FCFBFD` is **ΔE76 = 1.66**, below the ~2.3 JND,
+    and vs the light/export figure ground `#FFFFFF` it is **ΔE = 0** — a never-routed cell is
+    literally a hole in the exported PNG. It is also indistinguishable from the 3.9–5.6% of cells
+    clipped at the bottom (§ above), so the pale end of the figure conflates *dead*, *clipped-low*
+    and *merely cold*. `make_axis_panels.py` already rejects this choice for the same figure and
+    uses a neutral gray (`#b0b0aa` light / `#6e6e66` dark, ΔE 27.4 from `#FCFBFD`); the two
+    renderers of this design disagree. The page's "flag dead cells" control (crimson) is the
+    workaround and is OFF by default. Not changed in the review commit: it is a palette decision
+    and nobody can see the page render on this box.
 
 ### 5.3 What each choice hides — say this in the caption
 
@@ -640,7 +654,9 @@ Source: `research/fungible-quant/runs/m5-serve/results/k3-fq/`, 75 layers (3–7
 
 * Per-layer totals are **identical across all 75 layers** in every file (rel. tol < 1e-12).
 * Total assignments span **71×** across runs — raw counts are not comparable without normalisation.
-* Domain [−4,+4] on log2(share/uniform) covers 99.87 / 100.00 / 99.97 / 99.90 % of cells.
+* Domain [−4,+4] on log2(share/uniform) covers 95.95 / 99.88 / 94.34 / 95.90 % of cells
+  (corrected 2026-08-11 — the old 99.87 / 100.00 / 99.97 / 99.90 counted the UPPER clip only;
+  clipped LOW is 752 / 23 / 1082 / 767 cells, clipped HIGH is 25 / 0 / 5 / 20).
 * Cross-layer correlation of per-expert-index heat: mean −0.000, p95 0.113; adjacent layers 0.011.
 * Per-layer Spearman between runs: code↔synthetic 0.23/0.37/0.56, code↔full 0.12/0.39/0.58,
   synthetic↔full 0.09/0.32/0.57, code↔truncated 0.85/0.91/0.94.

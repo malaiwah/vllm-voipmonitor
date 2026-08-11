@@ -469,7 +469,9 @@ function lutIndex(v, lo, hi){
 function lutCss(lut, i){ return "rgb("+lut[i*3]+","+lut[i*3+1]+","+lut[i*3+2]+")"; }
 
 /* nine unit-wide bands over [-4,+4]; band 0 = below -3, band 8 = at/above +4.
-   Used by the legend and by the maths test, not by the renderer.          */
+   NOT used by the renderer or the legend (both go through the 257-entry LUT).
+   It exists so the maths test can bucket cells the way DESIGN.md 5.2 does and
+   compare the census against the measured table there.                    */
 function band9(v){
   if(!isFinite(v)) return 0;
   var b=Math.floor(v)+4;
@@ -636,7 +638,18 @@ function parseSample(j, label, source){
   };
   if(mir===null) f.warnings = f.warnings.concat(
     ["mass_is_real is absent from this sample — the mass panel is UNVERIFIED and may be an alias of count"]);
-  if(mir===false && mass===null) f.mass=null;
+  /* mass_is_real === false means the collector ALIASED mass to count
+     (stats.py:302-318). The ENDPOINT already drops the array in that case
+     (heatmap.py:688-698), but a raw VLLM_FQ_DUMP_STATS record still carries
+     it, byte-identical to count. Drop it here too: anything downstream that
+     merely tests `f.mass` — the CSV export above all, which LEAVES the page
+     and loses every caveat on the way out — would otherwise publish count
+     under a column named `mass`.                                            */
+  if(mir===false && f.mass!==null){
+    f.mass=null;
+    f.warnings = f.warnings.concat(
+      ["mass was DROPPED: mass_is_real is false, so the array in this record is a copy of count, not gate mass (boot with VLLM_FQ_GATE_MASS=1 to record it)"]);
+  }
   return f;
 }
 
@@ -802,9 +815,24 @@ function buildPerm(frames){
 }
 
 /* ================================================================ PANELS   */
+/* Panels dropped by the guards below, reported in the caption. Reset on
+   every buildPanels() call, which happens exactly once per computeLayout.  */
+var PANEL_DROPS=[];
+
+/* Which array derive() will ACTUALLY read for this frame. A frame whose mass
+   was dropped (mass_is_real false, parseSample above) silently falls back to
+   count, and `updateMassGate` only inspects the CURRENT frame — so a figure
+   built from snapshots can still mix the two. Inside the compare panel that is
+   catastrophic and silent: differencing real gate mass against count produces
+   a fully saturated diverging field out of two frames whose counts are
+   identical, i.e. a picture of traffic that did not move. Same hazard class as
+   the shape mismatch below, so it gets the same treatment.                  */
+function metricOf(f){ return (S.metric==="mass" && f.mass) ? "mass" : "count"; }
+
 function buildPanels(){
   var out=[], k, f;
   var slotKeys=["A","B","C","D"];
+  PANEL_DROPS=[];
   if(S.stack){
     for(k=0;k<slotKeys.length;k++){
       f=S.slots[slotKeys[k]];
@@ -825,11 +853,34 @@ function buildPanels(){
   }
   if(S.compare){
     var A=resolveRef(S.cmpA), B=resolveRef(S.cmpB);
-    if(A&&B&&A!==B&&A.L===B.L&&A.E===B.E)
-      out.push({kind:"diff", frame:B, a:A, b:B,
-                name:"compare · "+labelOf(S.cmpA)+" → "+labelOf(S.cmpB)});
+    if(A&&B&&A!==B&&A.L===B.L&&A.E===B.E){
+      var cname="compare · "+labelOf(S.cmpA)+" → "+labelOf(S.cmpB);
+      if(metricOf(A)!==metricOf(B))
+        PANEL_DROPS.push(cname+" [side A reads "+metricOf(A)+", side B reads "+
+          metricOf(B)+" — differencing gate mass against count is not a difference]");
+      else out.push({kind:"diff", frame:B, a:A, b:B, name:cname});
+    }
   }
-  return out;
+  /* HAZARD (same class as DESIGN.md 7.1): every panel is drawn under ONE
+     permutation sized to the FIRST panel's (L,E). A panel of another shape
+     indexes d.v[l*E + perm[l][j]] with an expert id from the other geometry,
+     so roughly half its cells are read out of the NEXT layer's row, and the
+     reads that run past the end of the array become NaN -> pure black, a
+     colour that is in no ramp. It is silent and it looks plausible. Compare
+     mode already refuses a shape mismatch (just above); stack mode did not.
+     Drop the odd panels and say so in the caption rather than draw them.   */
+  var L0=out.length?out[0].frame.L:0, E0=out.length?out[0].frame.E:0, kept=[];
+  var M0=out.length?metricOf(out[0].frame):"count";
+  for(k=0;k<out.length;k++){
+    var fr=out[k].frame;
+    if(fr.L!==L0 || fr.E!==E0)
+      PANEL_DROPS.push(out[k].name+" ["+fr.L+"×"+fr.E+" ≠ "+L0+"×"+E0+"]");
+    else if(out[k].kind==="mag" && metricOf(fr)!==M0)
+      PANEL_DROPS.push(out[k].name+" [reads "+metricOf(fr)+", this figure is "+
+                       M0+"]");
+    else kept.push(out[k]);
+  }
+  return kept;
 }
 function labelOf(sel){
   var f=resolveRef(sel);
@@ -870,8 +921,18 @@ function panelValues(p, perm){
       else if(S.cmpMetric==="symlog"){
         var dd=db.rel[i]-da.rel[i];
         x = (dd<0?-1:1)*Math.log(1+Math.abs(dd))/Math.LN2;
+      } else if(da.rel[i]>0 && db.rel[i]>0){
+        x = Math.log(db.rel[i]/da.rel[i])/Math.LN2;
+      } else if(db.rel[i]>0 || da.rel[i]>0){
+        /* An expert that switched ON or OFF has no finite log-ratio, and 0 is
+           exactly the WRONG answer: 0 is the neutral-gray "no change" colour,
+           painted on precisely the cells this mode exists to find (the page's
+           own banner says "use it only for which experts switched on or off").
+           Saturate instead — lutIndex clamps ±Infinity onto the ends of the
+           diverging ramp, which is the honest reading of an infinite ratio.  */
+        x = db.rel[i]>0 ? Infinity : -Infinity;
       } else {
-        x = (da.rel[i]>0 && db.rel[i]>0) ? Math.log(db.rel[i]/da.rel[i])/Math.LN2 : 0;
+        x = 0;              /* dead on BOTH sides really is no change */
       }
       out[l*E+j]=x;
     }
@@ -881,6 +942,30 @@ function panelValues(p, perm){
   /* tier */
   for(l=0;l<L;l++) for(j=0;j<E;j++) out[l*E+j]=f.tier[l*E+perm[l][j]];
   return {vals:out, dead:null, lo:0, hi:0, lut:null, tier:true};
+}
+
+/* Column means of a magnitude panel, for the marginal strip.
+
+   derive() stores -Infinity for a never-routed cell (it is drawn OFF the ramp,
+   not on it). A plain mean would therefore make the WHOLE column -Infinity the
+   moment one layer never routed that expert, and lutIndex clamps that to index
+   0 — the palest swatch. An expert that is 3.5x uniform in 74 layers and dead
+   in one would be repainted as the coldest column on the figure. Measured on
+   results/k3-fq/stats-code-axis.jsonl record 0: columns E65/E67/E155, true
+   means -0.71/-0.86/-0.68, all three rendered as the coldest.
+
+   Floor at the panel's own domain edge instead, which is exactly what happens
+   to every other sub-1/16x value (derive clips them to -MAG_DOMAIN) and what
+   make_axis_panels.to_scale does for the same figure. `v>lo?v:lo` also sends
+   NaN to the floor rather than propagating it into a black cell.            */
+function colMeans(vals, L, E, lo){
+  var out=new Float64Array(E), l, j, s, v;
+  for(j=0;j<E;j++){
+    s=0;
+    for(l=0;l<L;l++){ v=vals[l*E+j]; s += (v>lo ? v : lo); }
+    out[j]=s/L;
+  }
+  return out;
 }
 
 /* ==FQ-HEATMAP-PURE-END==
@@ -949,6 +1034,11 @@ function ground(){ return S.exportLight ? "#FFFFFF" : cssVar("--fig-ground"); }
 function inkA(){ return S.exportLight ? "#16161D" : cssVar("--fig-ink"); }
 function inkB(){ return S.exportLight ? "#5A5A68" : cssVar("--fig-ink-2"); }
 function lineC(){ return S.exportLight ? "#D2D2DC" : cssVar("--fig-line"); }
+/* The on-figure error colour. NOT a hardcoded #A32014: that is the LIGHT
+   token, and against the dark figure ground (#14141B) it lands at ~2.4:1
+   contrast — the one message that says the figure is meaningless would be
+   the least readable thing on it. --err is defined for both themes.       */
+function errC(){ return S.exportLight ? "#A32014" : cssVar("--err"); }
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
 function txt(s,x,y,size,color,weight,align){
@@ -985,8 +1075,15 @@ function titleLines(panels, P){
   L.push({t:bits.join("  ·  "), s:11, w:400, c:inkB()});
   var b2=[];
   b2.push("source: "+f.source+" «"+f.label+"»");
-  b2.push("sampled "+timeOf(f.sampledAt));
-  if(f.ranks) b2.push("ranks "+f.ranks.count+" agree="+f.ranks.agree);
+  /* A dump record carries no wall clock, so sampledAt falls back to "now".
+     Printing that as "sampled" would date an archived record to the moment
+     someone opened it. Say what actually happened at that time.            */
+  b2.push((f.source==="file" ? "loaded " : "sampled ")+timeOf(f.sampledAt));
+  /* The merge rule belongs ON the figure: "is this 4x too big under TP4?" is
+     the first question a reader of an exported PNG asks, and the answer is
+     not recoverable from the pixels. See heatmap.py MERGE_RULE.            */
+  if(f.ranks) b2.push("ranks "+f.ranks.count+" agree="+f.ranks.agree+
+                      (f.ranks.merge_rule?" merge "+f.ranks.merge_rule:""));
   if(f.policySha) b2.push("policy "+String(f.policySha).slice(0,12));
   b2.push("order: "+(S.order==="sorted"?("sorted, ref "+P.ref+", perm "+P.hash):"native expert id"));
   L.push({t:b2.join("  ·  "), s:11, w:400, c:inkB()});
@@ -1020,6 +1117,9 @@ function captionLines(panels, P, wide){
     out.push("Per-layer Spearman ρ of expert heat A↔B: min "+st.rho.min.toFixed(2)+" / median "+st.rho.med.toFixed(2)+" / max "+st.rho.max.toFixed(2)+
              "   ·   top-32 overlap median "+(100*st.ov.med).toFixed(0)+"%   ·   |Δ|>1 for "+pct(st.gt1)+", clipped "+pct(st.clip));
   }
+  if(PANEL_DROPS.length)
+    out.push("⚠ "+PANEL_DROPS.length+" panel(s) were OMITTED because they cannot share this figure's basis ("+
+             f.L+"×"+f.E+" cells, metric "+d.metricUsed+"): "+PANEL_DROPS.join(";  ")+".");
   var warn=[];
   for(i=0;i<panels.length;i++){
     var ws=panels[i].frame.warnings||[];
@@ -1184,8 +1284,7 @@ function drawPanel(p, perm){
 
   /* column-mean marginal strip */
   if(p.margY!==null && p.kind==="mag"){
-    var mstrip=new Float64Array(E);
-    for(j=0;j<E;j++){ var s=0; for(l=0;l<L;l++) s+=pv.vals[l*E+j]; mstrip[j]=s/L; }
+    var mstrip=colMeans(pv.vals, L, E, pv.lo);
     for(j=0;j<E;j++){
       var mi=lutIndex(mstrip[j], pv.lo, pv.hi);
       ctx.fillStyle=lutCss(LUT_MAG, mi);
@@ -1334,7 +1433,7 @@ function render(){
     if(shared===null) shared=q._perm;
     else if(shared!==q._perm) bad=true;
   }
-  if(bad) txt("⚠ INTERNAL: panels do not share one permutation — this figure is meaningless", PAD_L, LAYOUT.legendY-4, 12, "#A32014", 700);
+  if(bad) txt("⚠ INTERNAL: panels do not share one permutation — this figure is meaningless", PAD_L, LAYOUT.legendY-4, 12, errC(), 700);
 
   /* x axis */
   var last=LAYOUT.panels[LAYOUT.panels.length-1];
@@ -1389,15 +1488,26 @@ function onMove(ev){
   octx.clearRect(0,0,ov.width,ov.height);
   if(!h){ $("tip").style.display="none"; S.hoverLayer=null; return; }
   S.hoverLayer=h;
-  /* crosshair on the overlay: never repaint the data canvas on mousemove */
+  /* Crosshair on the overlay: never repaint the data canvas on mousemove.
+     TWO-TONE, light halo under a dark line. A single rgba(63,0,125,·) stroke
+     is literally #3F007D — the darkest stop of RAMP_MAG — so the crosshair
+     disappeared over exactly the hot cells worth pointing at, and the tier
+     strip's K5 (#096231) is nearly as dark. A light-over-dark pair is
+     visible against every colour either ramp can produce.                  */
   var p=h.p;
-  octx.strokeStyle="rgba(63,0,125,.85)"; octx.lineWidth=1;
-  octx.strokeRect(p.x+h.col*p.cell-0.5, p.y+h.row*p.cell-0.5, p.cell+1, p.cell+1);
-  octx.strokeStyle="rgba(63,0,125,.28)";
-  octx.beginPath();
-  octx.moveTo(p.x, p.y+h.row*p.cell+p.cell/2); octx.lineTo(p.x+p.frame.E*p.cell, p.y+h.row*p.cell+p.cell/2);
-  octx.moveTo(p.x+h.col*p.cell+p.cell/2, p.y); octx.lineTo(p.x+h.col*p.cell+p.cell/2, p.y+p.frame.L*p.cell);
-  octx.stroke();
+  var guides=function(){
+    octx.beginPath();
+    octx.moveTo(p.x, p.y+h.row*p.cell+p.cell/2); octx.lineTo(p.x+p.frame.E*p.cell, p.y+h.row*p.cell+p.cell/2);
+    octx.moveTo(p.x+h.col*p.cell+p.cell/2, p.y); octx.lineTo(p.x+h.col*p.cell+p.cell/2, p.y+p.frame.L*p.cell);
+    octx.stroke();
+  };
+  var bx=p.x+h.col*p.cell-0.5, by=p.y+h.row*p.cell-0.5, bw=p.cell+1;
+  octx.lineWidth=3; octx.strokeStyle="rgba(255,255,255,.90)";
+  octx.strokeRect(bx, by, bw, bw); guides();
+  octx.lineWidth=1; octx.strokeStyle="rgba(14,14,19,.95)";
+  octx.strokeRect(bx, by, bw, bw);
+  octx.strokeStyle="rgba(14,14,19,.42)";
+  guides();
   showTip(h, ev.clientX, ev.clientY);
   if(!S.pinnedLayer) renderLayerTable(h.p.frame, h.row);
 }
@@ -1718,10 +1828,15 @@ $("btn-csv").addEventListener("click", function(){
   var f=currentFrame();
   if(!f){ return; }
   var d=derive(f,S.metric);
-  var lines=["layer,expert,count,mass,tier,share_x_uniform,log2_rel"];
+  /* The provenance has to travel WITH the file. A CSV leaves the page and
+     every caveat on screen stays behind, so `mass_is_real` is a column, not
+     a footnote: without it a reader cannot tell gate mass from an alias of
+     count, and the archived dumps carry the alias with the flag ABSENT.   */
+  var mir = f.massIsReal===true ? "true" : (f.massIsReal===false ? "false" : "unknown");
+  var lines=["layer,expert,count,mass,mass_is_real,tier,share_x_uniform,log2_rel"];
   for(var l=0;l<f.L;l++) for(var e=0;e<f.E;e++){
     var i=l*f.E+e;
-    lines.push(f.layers[l]+","+e+","+f.count[i]+","+(f.mass?f.mass[i]:"")+","+
+    lines.push(f.layers[l]+","+e+","+f.count[i]+","+(f.mass?f.mass[i]:"")+","+mir+","+
       (f.tier?f.tier[i]:"")+","+d.rel[i]+","+(d.rel[i]>0?(Math.log(d.rel[i])/Math.LN2):"-inf"));
   }
   dl(lines.join("\n"), "text/csv", "fq-heatmap-"+nowStamp()+".csv");
