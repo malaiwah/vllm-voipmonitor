@@ -28,6 +28,16 @@ HOOKS=(
   # Safe to copy: this file is byte-identical to the r33 rootfs copy
   # apart from that change.
   "model_executor/layers/fused_moe/router/base_router.py"
+  # Dev-endpoint registration. This is where BOTH FQ HTTP surfaces are
+  # attached — the admin API (VLLM_FQ_ADMIN_API=1) and the heatmap API
+  # (VLLM_FQ_HEATMAP=1). It was missing from this list, so the rootfs copy
+  # had neither block and every /fq/* route was silently absent on a serve
+  # booted from the rootfs no matter how the env was set: exactly the
+  # failure mode the header of this script exists to prevent, one level up.
+  # Safe to copy: verified byte-identical to the r33 rootfs copy apart
+  # from those two guarded blocks. Boot-time only — copying it has no
+  # effect on an already-running serve.
+  "entrypoints/serve/__init__.py"
 )
 
 [ -d "$SRC/vllm/$PKG_REL" ] || { echo "no source package at $SRC/vllm/$PKG_REL" >&2; exit 2; }
