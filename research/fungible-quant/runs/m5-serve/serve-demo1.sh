@@ -80,6 +80,11 @@ mkdir -p "$VLLM_FQ_CACHE"
 # ladder (auto = nearest lower K), log it loudly, and enqueue the miss for an
 # out-of-band encode. Boot never blocks on an encoder.
 export VLLM_FQ_K_FALLBACK=${VLLM_FQ_K_FALLBACK:-auto}
+# Whole-segment prefetch goes through hf_hub_download, which picks up
+# hf_transfer's parallel chunked transfer when this is set. A single urllib
+# stream measured 45 MiB/min on the per-expert path; parallel chunks are the
+# difference between a boot and an overnight job.
+export HF_HUB_ENABLE_HF_TRANSFER=${HF_HUB_ENABLE_HF_TRANSFER:-1}
 export VLLM_FQ_ENCODE_QUEUE=${VLLM_FQ_ENCODE_QUEUE:-$RUN/results/demo1/encode-queue.jsonl}
 mkdir -p "$(dirname "$VLLM_FQ_ENCODE_QUEUE")"
 
