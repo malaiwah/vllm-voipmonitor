@@ -42,8 +42,14 @@ export HOME=/home/mbelleau
 log() { echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
 free_gpus() {   # idle = <1 GiB resident (utilization can read 100% spuriously)
+  # A GPU listed in .reserved-gpus is off limits even when idle: a serve that
+  # is still loading looks idle for minutes, and the campaign would grab the
+  # cards out from under it. Operator writes e.g. "0,1,2,3" to that file.
+  local res=""
+  [ -f "$CAMP/.reserved-gpus" ] && res=$(tr -d ' \n' < "$CAMP/.reserved-gpus")
   nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits |
-    awk -F', *' '$2 < 1024 {printf "%s,", $1}' | sed 's/,$//'
+    awk -F', *' -v res=",$res," '$2 < 1024 && index(res, ","$1",") == 0 {printf "%s,", $1}' |
+    sed 's/,$//'
 }
 
 layers_done() { # tier -> count of done-JSONs in [a,b]
