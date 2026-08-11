@@ -1,0 +1,82 @@
+{
+ "range": "33-42",
+ "shards": [
+  {
+   "shard": "model-embed.safetensors",
+   "assembled_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "source_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-head.safetensors",
+   "assembled_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "source_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-033.safetensors",
+   "assembled_sha256": "203229e06cfb11398345d99a3095dc5e1dbef3e4a932d7d7b408b760512482fc",
+   "source_sha256": "203229e06cfb11398345d99a3095dc5e1dbef3e4a932d7d7b408b760512482fc",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-034.safetensors",
+   "assembled_sha256": "941feb7d80b18eb1e7197686fe96e94faad37dc39d371c66f4d4b2f77656a725",
+   "source_sha256": "941feb7d80b18eb1e7197686fe96e94faad37dc39d371c66f4d4b2f77656a725",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-035.safetensors",
+   "assembled_sha256": "9417b1aa875c8633ab7569d5ba772d4bc4cddba910763cbfc35ae0c4c9a358c6",
+   "source_sha256": "9417b1aa875c8633ab7569d5ba772d4bc4cddba910763cbfc35ae0c4c9a358c6",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-036.safetensors",
+   "assembled_sha256": "26c86c37a0c561a8603177a509a3a2288352d316d23b1f9a5726ecc0932906d2",
+   "source_sha256": "26c86c37a0c561a8603177a509a3a2288352d316d23b1f9a5726ecc0932906d2",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-037.safetensors",
+   "assembled_sha256": "e52412112253e360cf3e5e43b91979ce6136ef008b63772580e97a3d7ce762e9",
+   "source_sha256": "e52412112253e360cf3e5e43b91979ce6136ef008b63772580e97a3d7ce762e9",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-038.safetensors",
+   "assembled_sha256": "2f67a05706fee1928d9a78d646bb142a25e27ee3ddee474d7d77957c3833ee8f",
+   "source_sha256": "2f67a05706fee1928d9a78d646bb142a25e27ee3ddee474d7d77957c3833ee8f",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-039.safetensors",
+   "assembled_sha256": "094d89de92d782f785ff88e615d63e8d77a58a00593c6726d065dd76d7c02da5",
+   "source_sha256": "094d89de92d782f785ff88e615d63e8d77a58a00593c6726d065dd76d7c02da5",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-040.safetensors",
+   "assembled_sha256": "8bea80bae6506ec0ecc7634ef647e485657f17a64648116b35e878dbc3750373",
+   "source_sha256": "8bea80bae6506ec0ecc7634ef647e485657f17a64648116b35e878dbc3750373",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-041.safetensors",
+   "assembled_sha256": "42aa35c5472a18b6f136fadf75f70941efd7c521829b682407d8ec543ec3adbe",
+   "source_sha256": "42aa35c5472a18b6f136fadf75f70941efd7c521829b682407d8ec543ec3adbe",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-042.safetensors",
+   "assembled_sha256": "fe887f998754bedf1ff76e508052615c21af3944ef82bd089691fbbbf542ee89",
+   "source_sha256": "fe887f998754bedf1ff76e508052615c21af3944ef82bd089691fbbbf542ee89",
+   "bit_exact": true
+  }
+ ],
+ "segments_verified": 10,
+ "trusted_signers": [
+  "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525"
+ ],
+ "mode": "verified"
+}

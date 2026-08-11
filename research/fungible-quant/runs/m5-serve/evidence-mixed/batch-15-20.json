@@ -1,0 +1,74 @@
+{
+ "range": "15-20",
+ "shards": [
+  {
+   "shard": "model-embed.safetensors",
+   "assembled_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "source_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 1903165584
+  },
+  {
+   "shard": "model-head.safetensors",
+   "assembled_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "source_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 1903177952
+  },
+  {
+   "shard": "model-layer-015.safetensors",
+   "assembled_sha256": "452196c9da2e62960fbe608eef090659f1262de47b196278aadb7de5394d737a",
+   "source_sha256": "452196c9da2e62960fbe608eef090659f1262de47b196278aadb7de5394d737a",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4075018864
+  },
+  {
+   "shard": "model-layer-016.safetensors",
+   "assembled_sha256": "1ecc2bd54d02501d6b9e4ab21d0556d054ed116c5ccb7fd42f0a6686e867aca9",
+   "source_sha256": "1ecc2bd54d02501d6b9e4ab21d0556d054ed116c5ccb7fd42f0a6686e867aca9",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4075018864
+  },
+  {
+   "shard": "model-layer-017.safetensors",
+   "assembled_sha256": "85c6876bdf1cf1c5d4f596d79f7625fe63a4814935c331b4b362f4ed827fe14a",
+   "source_sha256": "85c6876bdf1cf1c5d4f596d79f7625fe63a4814935c331b4b362f4ed827fe14a",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4075018864
+  },
+  {
+   "shard": "model-layer-018.safetensors",
+   "assembled_sha256": "3e0caca28dad9b7616a4eb58cb10001a1455d9e49a193cb94b7b317ce22aaecb",
+   "source_sha256": "3e0caca28dad9b7616a4eb58cb10001a1455d9e49a193cb94b7b317ce22aaecb",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4093763392
+  },
+  {
+   "shard": "model-layer-019.safetensors",
+   "assembled_sha256": "01f1e20f426e47f33d27dabfa158bfb09c80acb30c2328a1417302c9810349a0",
+   "source_sha256": "01f1e20f426e47f33d27dabfa158bfb09c80acb30c2328a1417302c9810349a0",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4075018864
+  },
+  {
+   "shard": "model-layer-020.safetensors",
+   "assembled_sha256": "b0cd1da85d3af4c77c66e2f6a86c9ed07c7c1d3a12e3123f5bb039bfcfe3be94",
+   "source_sha256": "b0cd1da85d3af4c77c66e2f6a86c9ed07c7c1d3a12e3123f5bb039bfcfe3be94",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4075018864
+  }
+ ],
+ "segments_verified": 6,
+ "trusted_signers": [
+  "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525"
+ ],
+ "mode": "verified"
+}

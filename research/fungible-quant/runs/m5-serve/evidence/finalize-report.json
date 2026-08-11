@@ -1,0 +1,157 @@
+{
+ "mode": "k3",
+ "out": "/home/mbelleau/glm52-k3-assembled",
+ "k_values": [
+  3
+ ],
+ "metadata_installed": [
+  "LICENSE",
+  "README.md",
+  "RELEASE_TEST_SUITE.md",
+  "calibration_manifest.json",
+  "chat_template.jinja",
+  "config.json",
+  "docker-compose.yml",
+  "generation_config.json",
+  "server.sh",
+  "tier_bitmap.json",
+  "tokenizer.json",
+  "tokenizer_config.json"
+ ],
+ "fragments_signature_verified": 76,
+ "fragments_signature_failed": [],
+ "batches": [
+  {
+   "range": "0-2",
+   "shards": 5,
+   "segments_verified": 0,
+   "mode": "verified"
+  },
+  {
+   "range": "13-22",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "23-32",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "3-12",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "33-42",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "43-52",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "53-62",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "63-72",
+   "shards": 12,
+   "segments_verified": 10,
+   "mode": "verified"
+  },
+  {
+   "range": "73-78",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  }
+ ],
+ "shards_checked": 97,
+ "shards_differing_from_source": [],
+ "shards_identical_to_source": 97,
+ "tensor_count": {
+  "assembled": 935105,
+  "source": 935105,
+  "equal": true
+ },
+ "tensor_names_equal": true,
+ "tensor_placement_equal": true,
+ "param_count": {
+  "assembled": 158152144896,
+  "source": 158152144896,
+  "equal": true,
+  "delta": 0
+ },
+ "tensor_bytes": {
+  "assembled": 316304795648,
+  "source": 316304795648,
+  "delta": 0
+ },
+ "tp4_memory": {
+  "expert_bytes_per_rank": 69630922752,
+  "expert_bytes_all_ranks": 278523691008,
+  "non_expert_bytes_total": 37781104640,
+  "per_rank_bytes": 79076198912,
+  "per_rank_GiB": 73.65,
+  "pct_of_95.6GiB": 77.0,
+  "model": "expert bytes exact per rank + non-expert/4; excludes KV cache, activations, CUDA graphs and small replicated tensors (norms)"
+ },
+ "index": {
+  "entries": 935105,
+  "dangling_shard_refs": [],
+  "tensors_missing_from_index": [],
+  "total_size": 316304795648,
+  "total_size_matches_headers": true,
+  "self_consistent": true
+ },
+ "file_set": {
+  "shards_present": 81,
+  "shards_expected": 81,
+  "missing": [],
+  "unexpected": []
+ },
+ "config": {
+  "hybrid_tr3_tail.bits": 3.0,
+  "hybrid_tr3_tail.k_values": null,
+  "hybrid_tr3_tail.bits_per_expert": null,
+  "quantization_config.quant_method": "exl3",
+  "quantization_config.bits": 3.0,
+  "quantization_config.codebook": "mcg",
+  "stale_modelopt_fields": [
+   "config_groups",
+   "producer",
+   "quant_algo"
+  ]
+ },
+ "mixed_contract": {
+  "uniform": true,
+  "bits_is_float_K": true,
+  "quant_method_exl3": true
+ },
+ "boot_files_present": {
+  "config.json": true,
+  "generation_config.json": true,
+  "tokenizer.json": true,
+  "tokenizer_config.json": true,
+  "chat_template.jinja": true,
+  "tier_bitmap.json": true,
+  "model.safetensors.index.json": true,
+  "MANIFEST.sha256": true
+ },
+ "physical_disk": {
+  "logical_bytes": 316304795648,
+  "shared_extent_bytes": 316420224008,
+  "unshared_extent_bytes": 0,
+  "shared_pct": 100.0
+ }
+}

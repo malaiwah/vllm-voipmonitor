@@ -1,0 +1,82 @@
+{
+ "range": "23-32",
+ "shards": [
+  {
+   "shard": "model-embed.safetensors",
+   "assembled_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "source_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-head.safetensors",
+   "assembled_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "source_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-023.safetensors",
+   "assembled_sha256": "4f0f6e24863a648b87c72d3bd571cca43e2a6fc79a74cb5152ef637200def3f2",
+   "source_sha256": "4f0f6e24863a648b87c72d3bd571cca43e2a6fc79a74cb5152ef637200def3f2",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-024.safetensors",
+   "assembled_sha256": "d28a775166193ed6a2fb31b93a065ac0c6ce196a21570df3a3377d3f4021e76d",
+   "source_sha256": "d28a775166193ed6a2fb31b93a065ac0c6ce196a21570df3a3377d3f4021e76d",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-025.safetensors",
+   "assembled_sha256": "e3aa5ae47ae074be6a02f825a4ed3b70f6fe5573f19a5650b49f153c248822ad",
+   "source_sha256": "e3aa5ae47ae074be6a02f825a4ed3b70f6fe5573f19a5650b49f153c248822ad",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-026.safetensors",
+   "assembled_sha256": "ea07777d0c68751bb6e13690deac85413777e29ed6c1530d498bd1ab1526000b",
+   "source_sha256": "ea07777d0c68751bb6e13690deac85413777e29ed6c1530d498bd1ab1526000b",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-027.safetensors",
+   "assembled_sha256": "0c99222d9022164a5ddcd64c422bbd76afb4e2abbbf3acb985d18bffc2048cfc",
+   "source_sha256": "0c99222d9022164a5ddcd64c422bbd76afb4e2abbbf3acb985d18bffc2048cfc",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-028.safetensors",
+   "assembled_sha256": "7022599423dd16d8fdfe673265d3281daeb506ddf8070b59661c7ba15d291b91",
+   "source_sha256": "7022599423dd16d8fdfe673265d3281daeb506ddf8070b59661c7ba15d291b91",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-029.safetensors",
+   "assembled_sha256": "05c9392e56954767de828f736fcbeee7f7b818b8fc3a65676a5734a2c0761433",
+   "source_sha256": "05c9392e56954767de828f736fcbeee7f7b818b8fc3a65676a5734a2c0761433",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-030.safetensors",
+   "assembled_sha256": "a52473451a97970627f752da41dc40fd5bb24c5ff863db9bf185e3591da0a6f4",
+   "source_sha256": "a52473451a97970627f752da41dc40fd5bb24c5ff863db9bf185e3591da0a6f4",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-031.safetensors",
+   "assembled_sha256": "5069636328af81fe4649daaccb0f402bc9c04e54ee54bb4afb2ec6b7b352cc8c",
+   "source_sha256": "5069636328af81fe4649daaccb0f402bc9c04e54ee54bb4afb2ec6b7b352cc8c",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-032.safetensors",
+   "assembled_sha256": "3f34d25eb7cb561f325646a82a74f600070a2e1a6f6142c6e978dbb339da0d29",
+   "source_sha256": "3f34d25eb7cb561f325646a82a74f600070a2e1a6f6142c6e978dbb339da0d29",
+   "bit_exact": true
+  }
+ ],
+ "segments_verified": 10,
+ "trusted_signers": [
+  "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525"
+ ],
+ "mode": "verified"
+}

@@ -1,0 +1,132 @@
+{
+ "attestation_sample": [
+  {
+   "expert_sha_mismatches": 0,
+   "experts_checked": 256,
+   "fragment_sha_match": true,
+   "k": 3,
+   "layer": 35,
+   "signature": "verified"
+  },
+  {
+   "expert_sha_mismatches": 0,
+   "experts_checked": 256,
+   "fragment_sha_match": true,
+   "k": 3,
+   "layer": 39,
+   "signature": "verified"
+  },
+  {
+   "expert_sha_mismatches": 0,
+   "experts_checked": 256,
+   "fragment_sha_match": true,
+   "k": 3,
+   "layer": 40,
+   "signature": "verified"
+  }
+ ],
+ "check": "local",
+ "created_utc": "2026-08-11T01:03:10Z",
+ "family_manifest": {
+  "layout": "rank_sliced_tp4",
+  "predicate": "repack-of",
+  "revision": "9297b9f1d53af5c67cffa01e30cc071a1ff7144b",
+  "signer_pubkey": "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525",
+  "source_revision": null,
+  "sources": [
+   "brandonmusic/GLM-5.2-EXL3-TR3-3.0bpw"
+  ]
+ },
+ "layers": [
+  {
+   "assembled_sha256": "9417b1aa875c8633ab7569d5ba772d4bc4cddba910763cbfc35ae0c4c9a358c6",
+   "bytes_from_segments": 3664785408,
+   "bytes_from_source": 410233456,
+   "expert_tensors": 12288,
+   "layer": 35,
+   "match": true,
+   "other_tensors": 14,
+   "shard": "model-layer-035.safetensors",
+   "source_sha256": "9417b1aa875c8633ab7569d5ba772d4bc4cddba910763cbfc35ae0c4c9a358c6",
+   "source_sha_from": "MANIFEST.sha256"
+  },
+  {
+   "assembled_sha256": "26c86c37a0c561a8603177a509a3a2288352d316d23b1f9a5726ecc0932906d2",
+   "bytes_from_segments": 3664785408,
+   "bytes_from_source": 410233456,
+   "expert_tensors": 12288,
+   "layer": 36,
+   "match": true,
+   "other_tensors": 14,
+   "shard": "model-layer-036.safetensors",
+   "source_sha256": "26c86c37a0c561a8603177a509a3a2288352d316d23b1f9a5726ecc0932906d2",
+   "source_sha_from": "MANIFEST.sha256"
+  },
+  {
+   "assembled_sha256": "e52412112253e360cf3e5e43b91979ce6136ef008b63772580e97a3d7ce762e9",
+   "bytes_from_segments": 3664785408,
+   "bytes_from_source": 410233456,
+   "expert_tensors": 12288,
+   "layer": 37,
+   "match": true,
+   "other_tensors": 14,
+   "shard": "model-layer-037.safetensors",
+   "source_sha256": "e52412112253e360cf3e5e43b91979ce6136ef008b63772580e97a3d7ce762e9",
+   "source_sha_from": "MANIFEST.sha256"
+  },
+  {
+   "assembled_sha256": "2f67a05706fee1928d9a78d646bb142a25e27ee3ddee474d7d77957c3833ee8f",
+   "bytes_from_segments": 3664785408,
+   "bytes_from_source": 428977984,
+   "expert_tensors": 12288,
+   "layer": 38,
+   "match": true,
+   "other_tensors": 19,
+   "shard": "model-layer-038.safetensors",
+   "source_sha256": "2f67a05706fee1928d9a78d646bb142a25e27ee3ddee474d7d77957c3833ee8f",
+   "source_sha_from": "MANIFEST.sha256"
+  },
+  {
+   "assembled_sha256": "094d89de92d782f785ff88e615d63e8d77a58a00593c6726d065dd76d7c02da5",
+   "bytes_from_segments": 3664785408,
+   "bytes_from_source": 410233456,
+   "expert_tensors": 12288,
+   "layer": 39,
+   "match": true,
+   "other_tensors": 14,
+   "shard": "model-layer-039.safetensors",
+   "source_sha256": "094d89de92d782f785ff88e615d63e8d77a58a00593c6726d065dd76d7c02da5",
+   "source_sha_from": "MANIFEST.sha256"
+  },
+  {
+   "assembled_sha256": "8bea80bae6506ec0ecc7634ef647e485657f17a64648116b35e878dbc3750373",
+   "bytes_from_segments": 3664785408,
+   "bytes_from_source": 410233456,
+   "expert_tensors": 12288,
+   "layer": 40,
+   "match": true,
+   "other_tensors": 14,
+   "shard": "model-layer-040.safetensors",
+   "source_sha256": "8bea80bae6506ec0ecc7634ef647e485657f17a64648116b35e878dbc3750373",
+   "source_sha_from": "MANIFEST.sha256"
+  }
+ ],
+ "mode": "identity",
+ "note": "expert bytes come from segments; safetensors header and non-expert (attention/gate/shared-experts/norm) bytes come from the source shard, exactly as fq_assemble writes them; dense shards (layers 0-2, embed, head) are source pass-through and are not claimed as reconstructed",
+ "segments": "/home/mbelleau/fq-segments/GLM-5.2-EXL3-FQ",
+ "source": "/home/mbelleau/glm52-k3-assembled",
+ "summary": {
+  "bytes_from_segments": 21988712448,
+  "bytes_from_source": 2480145264,
+  "failures": 0,
+  "shards": 6,
+  "shards_matched": 6
+ },
+ "trust": {
+  "key_id": null,
+  "rung": "pinned",
+  "signatures_verified": 3,
+  "signer": "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525",
+  "summary": "signatures: 3 verified against pinned signer a58b7bb79ba58457\u2026"
+ }
+}
