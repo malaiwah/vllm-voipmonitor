@@ -228,12 +228,24 @@
    "window": "67-74",
    "phase": "encode(gpus=4,5,6,7)",
    "updated_utc": "2026-08-11T12:20:11Z"
+  },
+  {
+   "tier": "4",
+   "window": "67-74",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T12:50:46Z"
+  },
+  {
+   "tier": "4",
+   "window": "75-77",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T13:19:23Z"
   }
  ],
  "current": {
   "tier": "4",
-  "window": "67-74",
-  "phase": "encode(gpus=4,5,6,7)",
-  "updated_utc": "2026-08-11T12:20:11Z"
+  "window": "75-77",
+  "phase": "capture",
+  "updated_utc": "2026-08-11T13:19:23Z"
  }
 }

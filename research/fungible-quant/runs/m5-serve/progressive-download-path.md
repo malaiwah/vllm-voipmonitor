@@ -140,9 +140,34 @@ FQ progressive L4: waiting on background prefetch (206 experts want K3, 50 exper
 
 ## Measured end-to-end
 
-**TBM** — first clean boot with all four levels active. The comparison that
-belongs here is wall-clock weight-load time against the recorded per-expert
-baseline (45 MiB/min, 18.2 s/expert).
+Sustained bulk-fetch throughput, read off a live TP4 boot (attempt 9,
+2026-08-11 13:09–13:10, authenticated, Xet high-performance, depth 1):
+
+```
+FQ downloads: 3 in flight, 2.2 GiB this boot, 149 MiB/s
+FQ downloads: 3 in flight, 2.8 GiB this boot, 148 MiB/s
+FQ downloads: 3 in flight, 5.2 GiB this boot, 142 MiB/s
+```
+
+| path | rate | source |
+|---|---:|---|
+| per-expert ranged fetch | 0.75 MiB/s (45 MiB/min) | earlier measurement, 18.2 s/expert |
+| bulk object fetch, HF client + Xet | **142–149 MiB/s** | above |
+
+**~190x.** That is the quantitative case for bulk fetch: it is not an
+optimisation of the per-expert path, it is a different order of magnitude.
+GLM-5.2's 19,200 experts at 18.2 s each is ~97 hours; the same bytes as
+whole objects at ~145 MiB/s is bounded by the model size, not the expert
+count.
+
+Caveats, so the number is not read wider than it is: this is *download*
+throughput during weight load, not time-to-ready (JIT compilation dominates a
+cold boot at ~9 min), and it was measured on one box against one Hub region.
+
+### Not yet measured
+
+Full 75-layer wall-clock weight-load time. Every boot so far has been cut
+short by a defect rather than finishing -- see the table below.
 
 ## Bugs this sequence surfaced
 
@@ -153,3 +178,6 @@ baseline (45 MiB/min, 18.2 s/expert).
 | transfers at default speed despite "enabling" fast transfer | `HF_HUB_ENABLE_HF_TRANSFER` is a no-op on `huggingface_hub` 1.27 |
 | unbounded cache growth | prefetch had no eviction |
 | 4x download volume | no cross-rank sharing |
+| 190 experts silently degraded to K2, boot wedged | `self.stats["bytes_from_prefetch"] += ...` incremented an UNDECLARED counter, on the SUCCESS branch of the prefetch fast path — so the KeyError fired exactly when prefetch worked, was caught as a source rejection, and dropped the expert down the K ladder. The better prefetch performed, the more experts degraded |
+| 270 identical `REJECT error:KeyError` lines | rejection messages named the exception TYPE and discarded its argument. Fixed first; it then found the bug above in one traceback |
+| whole-box DNS outage mid-run | environmental (an interruptible instance) — `git push` from an unrelated process failed identically. Recovered on its own |
