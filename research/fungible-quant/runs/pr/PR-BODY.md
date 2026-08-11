@@ -230,6 +230,13 @@ $ cd /home/mbelleau/src/gg-vllm && CUDA_VISIBLE_DEVICES="" \
 493 passed, 10 skipped, 1 warning in 10.43s
 ```
 
+Re-run against a detached worktree checked out at exactly the head commit
+`161536085`, so the number is the committed tree's and not a working copy's:
+
+```
+493 passed, 10 skipped, 1 warning in 10.23s
+```
+
 All 10 skips are the GPU tests in `test_swap_gpu.py` and `test_swap_t5_gpu.py`
 skipping themselves with `requires b12x and an SM120/SM121 GPU`. The 1 warning
 is `Failed to read commit hash: No module named 'vllm._version'`, from running
@@ -492,20 +499,26 @@ layers × 256 experts, one shared pooled-rank column permutation
 domain that is never auto-scaled, with the per-axis overlap-vs-reference
 scores and the axis×axis matrix printed on the figure.
 
-- `research/fungible-quant/runs/m5-serve/results/axes/flagship-4axis.svg`
-  — **present** (848 KB, `synthetic: false`), with its numeric sidecar
-  `flagship-4axis.json`.
-- `research/fungible-quant/runs/m5-serve/heatmap/axis-panels.SYNTHETIC.svg`
-  — **present**, and is **synthetic**; it exists to validate the renderer and
-  must not be presented as data.
-- `research/fungible-quant/runs/m5-serve/heatmap/renders/`
-  — **NOT PRESENT at the time of writing.** Additional renders were being
-  produced in parallel. If that directory exists at submit time, attach its
-  contents; if not, ship the flagship SVG alone and delete this bullet.
+All paths under `research/fungible-quant/runs/m5-serve/`:
 
-> GitHub does not render an SVG linked from a raw URL inside a PR body. The
-> submitter must drag-and-drop the image into the PR body so GitHub hosts it,
-> or convert to PNG first. See `SUBMISSION-CHECKLIST.md` §5.
+- `results/axes/flagship-4axis.svg` — the flagship (848 KB,
+  `synthetic: false`), with its numeric sidecar `flagship-4axis.json`.
+  A 1600px PNG conversion is at `heatmap/renders/svg-flagship-4axis-1600px.png`
+  — **use the PNG in the PR body**, because GitHub does not render an SVG
+  linked from a raw URL.
+- `heatmap/renders/` — 24 PNG renders of the live `/fq/heatmap` page, as
+  matched light/dark pairs: default figure, `metric=mass`, dead-cell flagging,
+  the tier↔heat mismatch panel, legend closeups and strips, compare mode
+  (axis1 vs axis2) in all three metrics (linear Δ, `symlog`, `logratio`), and
+  the dead-probe flag on/off pair. Plus `canvas-stats.json`, a per-render
+  colour census. These are **supporting** material for the endpoint, not the
+  flagship; attach a subset if a reviewer asks what the page looks like.
+- `heatmap/axis-panels.SYNTHETIC.svg` (and
+  `heatmap/renders/svg-axis-panels.SYNTHETIC-1600px.png`) — **synthetic.**
+  Renderer-validation output. Must not be presented as data.
+- `heatmap/renders/light-13-DEFECT-stale-dimming-comparison.png` — a render of
+  a defect, kept for the review trail. Do not attach it to the PR without that
+  context.
 
 The figure was adversarially reviewed before being proposed as PR material
 (`runs/m5-serve/heatmap/REVIEW.md`, verdict **DEFECTS_FOUND** — three

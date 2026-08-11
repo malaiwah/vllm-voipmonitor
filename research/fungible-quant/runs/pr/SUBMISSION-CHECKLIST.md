@@ -155,7 +155,7 @@ Run these and confirm each output.
 cd /home/mbelleau/src/gg-vllm
 
 # a) everything is pushed
-git status --short                      # expect: empty
+git status --short                      # see the note below before you act on this
 git rev-parse HEAD                      # expect: 161536085362d5c717fa5f8a94ce70b873bfd1ff
 git rev-parse work/fq/m1-stats-collector    # expect: identical to HEAD
 git log --oneline work/fq/m1-stats-collector..HEAD   # expect: empty
@@ -176,6 +176,28 @@ CUDA_VISIBLE_DEVICES="" \
   python -m pytest tests/exl3_fungible/ -q --noconftest | tail -1
 # expect: 493 passed, 10 skipped, 1 warning in <N>s
 ```
+
+### Uncommitted work in the tree — decide before you submit
+
+At the time of writing `git status` in `gg-vllm` showed **one uncommitted
+modification** that another agent was working on and that is therefore **not
+part of the PR**:
+
+```
+ M vllm/model_executor/layers/quantization/exl3_fungible/loop.py   (+20 −1)
+```
+
+It restricts the loop's decision domain to layers the collector actually
+instruments, because GLM-5.2's layer 78 is an MTP layer that the EXL3 loader
+*requires* a bitrate entry for but that is never bound as a main-model
+`MoERunner` — so the two requirements were unsatisfiable at once and the loop
+refused to start.
+
+Decide deliberately: either commit it (and re-run the tests, and mention it in
+the body) or leave it out. Do not let it merge in by accident. The verbatim
+test result quoted in `PR-BODY.md` was taken **both** on the working tree and
+on a detached worktree at the exact head commit; both gave 493 passed, so this
+change adds no tests and breaks none.
 
 Only one file is touched by both sides — `vllm/v1/worker/gpu_model_runner.py`,
 where the base rewrote 240 lines and we add 14. Git resolves it: our two hunks
@@ -249,17 +271,21 @@ not a substitute for the `uv` venv when running `pre-commit`.)
    them. Do not paste anything below the template's `---` separator; GitHub
    Actions strips it.
 2. **Attach the flagship figure.** GitHub does not render an SVG linked from a
-   raw URL inside a PR body. Either drag-and-drop
-   `research/fungible-quant/runs/m5-serve/results/axes/flagship-4axis.svg`
-   into the comment box so GitHub hosts it, or convert to PNG first
-   (`rsvg-convert -w 1728 flagship-4axis.svg -o flagship-4axis.png`) and drop
-   that in. Replace the "Figures" bullet paths with the resulting
-   `user-images.githubusercontent.com` URL.
-   - Check whether `runs/m5-serve/heatmap/renders/` exists by then. It did
-     **not** at the time of writing. If it does, attach its contents too; if
-     not, delete that bullet from the body.
-   - Do **not** attach `heatmap/axis-panels.SYNTHETIC.svg` without its
-     "synthetic" label. It is renderer-validation output, not data.
+   raw URL inside a PR body, so use the PNG:
+   `research/fungible-quant/runs/m5-serve/heatmap/renders/svg-flagship-4axis-1600px.png`.
+   Drag-and-drop it into the comment box so GitHub hosts it, then replace the
+   "Figures" bullet path with the resulting `user-images.githubusercontent.com`
+   URL. (The source SVG is `results/axes/flagship-4axis.svg`; its numeric
+   sidecar `flagship-4axis.json` is what the on-figure numbers are read from.)
+   - `runs/m5-serve/heatmap/renders/` now exists — 24 light/dark PNG pairs of
+     the `/fq/heatmap` page plus `canvas-stats.json`. These are supporting
+     material; attach a couple only if a reviewer asks what the page looks
+     like. Do not lead with them.
+   - Do **not** attach `heatmap/axis-panels.SYNTHETIC.svg` or
+     `renders/svg-axis-panels.SYNTHETIC-1600px.png` without the "synthetic"
+     label. They are renderer-validation output, not data.
+   - Do **not** attach `renders/light-13-DEFECT-stale-dimming-comparison.png`.
+     It is a render of a defect, kept for the review trail.
 3. Replace the evidence-index paths with permalinks if the evidence repo is
    reachable to reviewers. Pin to a commit SHA rather than the branch name so
    the links do not rot:
