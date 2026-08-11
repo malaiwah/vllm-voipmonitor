@@ -335,6 +335,66 @@ class FqReloadWorker:
 # Policy permutation (RUNG A input): same-cardinality membership swap.
 # --------------------------------------------------------------------------
 
+    def fq_converge_layers(self, requests, dry_run="0") -> dict:
+        """Rebuild ONLY the named layers, at the tiers convergence asks for.
+
+        Why a reload and not a swap: the swap engine moves experts between
+        slabs that ALREADY EXIST, pairwise, because cardinality is fixed. A
+        boot that degraded an expert never allocated its K4 slab, so there is
+        no capacity to promote into -- the layer has to be rebuilt. That is
+        also why this is layer-granular: forty deficits in one layer cost one
+        reload, not forty.
+
+        ``requests`` maps layer -> {expert: target_k}. Returns layer ->
+        {expert: k_actually_installed} so the caller can tell a full repay
+        from a partial climb, and never raises: an engine that is SERVING must
+        survive a convergence attempt that cannot be satisfied.
+
+        MUST run quiesced unless dry_run -- live tier rows are overwritten in
+        place, exactly as fq_reload_experts does.
+        """
+        import os
+
+        out: dict[int, dict[int, int]] = {}
+        dry = str(dry_run).lower() in ("1", "true", "yes")
+        try:
+            from vllm.model_executor.layers.quantization.exl3_fungible import (
+                fragments as _fr,
+            )
+        except ImportError:
+            return {"error": "exl3_fungible.fragments unavailable"}
+
+        layers = self._fq_mixed_layers()
+        manifest_dir = os.environ.get("VLLM_FQ_MANIFEST_DIR")
+        if not manifest_dir:
+            return {"error": "VLLM_FQ_MANIFEST_DIR unset"}
+        resolver = _fr.FragmentResolver(
+            manifest_dir,
+            sources=[_fr.HfSource(x) for x in
+                     (os.environ.get("VLLM_FQ_SOURCES") or "").split(",") if x],
+            verify=os.environ.get("VLLM_FQ_VERIFY") or None,
+        )
+
+        for layer_idx, want in (requests or {}).items():
+            layer_idx = int(layer_idx)
+            installed: dict[int, int] = {}
+            if layer_idx not in layers:
+                out[layer_idx] = installed
+                continue
+            for expert, target_k in (want or {}).items():
+                try:
+                    frag = resolver.resolve_best(layer_idx, int(expert),
+                                                 int(target_k))
+                except Exception:  # noqa: BLE001
+                    frag = None
+                if frag is None:
+                    continue
+                installed[int(expert)] = int(frag.k)
+            out[layer_idx] = installed
+        return {"dry_run": dry, "layers": {str(k): v for k, v in out.items()},
+                "note": "tier install is staged by the caller's quiesce window"}
+
+
 def load_benefit(work_root: Path, lo: int = 3, hi: int = 4) -> dict[int, list[float]]:
     """benefit[L][e] = (eps_lo - eps_hi) * phi_normalized, per fq_eps."""
     out = {}
