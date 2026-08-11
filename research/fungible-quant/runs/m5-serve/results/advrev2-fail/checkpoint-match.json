@@ -1,0 +1,465 @@
+{
+ "checkpoint": "/home/mbelleau/glm52-mixed-k3k5",
+ "layers": [
+  {
+   "layer": 3,
+   "policy_k4": 25,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 4,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 5,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 6,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 7,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 8,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 9,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 10,
+   "policy_k4": 54,
+   "checkpoint_k4": 0,
+   "match": false
+  },
+  {
+   "layer": 11,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 12,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 13,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 14,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 15,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 16,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 17,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 18,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 19,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 20,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 21,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 22,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 23,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 24,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 25,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 26,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 27,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 28,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 29,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 30,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 31,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 32,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 33,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 34,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 35,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 36,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 37,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 38,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 39,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 40,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 41,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 42,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 43,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 44,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 45,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 46,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 47,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 48,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 49,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 50,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 51,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 52,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 53,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 54,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 55,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 56,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 57,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 58,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 59,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 60,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 61,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 62,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 63,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 64,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 65,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 66,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 67,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 68,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 69,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 70,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 71,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 72,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 73,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 74,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 75,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 76,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  },
+  {
+   "layer": 77,
+   "policy_k4": 0,
+   "checkpoint_k4": 0,
+   "match": true
+  }
+ ],
+ "mismatches": [
+  "L3: policy wants 25 K4 experts, checkpoint holds 0 (25 declared-but-absent, 0 present-but-undeclared)",
+  "L4: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)",
+  "L5: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)",
+  "L6: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)",
+  "L7: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)",
+  "L8: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)",
+  "L9: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)",
+  "L10: policy wants 54 K4 experts, checkpoint holds 0 (54 declared-but-absent, 0 present-but-undeclared)"
+ ]
+}

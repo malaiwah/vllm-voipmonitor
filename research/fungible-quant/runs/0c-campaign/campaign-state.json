@@ -66,12 +66,174 @@
    "window": "51-58",
    "phase": "capture",
    "updated_utc": "2026-08-11T00:15:09Z"
+  },
+  {
+   "tier": "4",
+   "window": "3-10",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T03:58:13Z"
+  },
+  {
+   "tier": "4",
+   "window": "3-10",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T03:59:40Z"
+  },
+  {
+   "tier": "4",
+   "window": "3-10",
+   "phase": "encode(gpus=4,5,6,7)",
+   "updated_utc": "2026-08-11T04:11:07Z"
+  },
+  {
+   "tier": "4",
+   "window": "3-10",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T04:41:43Z"
+  },
+  {
+   "tier": "4",
+   "window": "11-18",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T04:54:39Z"
+  },
+  {
+   "tier": "4",
+   "window": "11-18",
+   "phase": "encode(gpus=4,5,6,7)",
+   "updated_utc": "2026-08-11T05:08:38Z"
+  },
+  {
+   "tier": "4",
+   "window": "11-18",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T05:39:07Z"
+  },
+  {
+   "tier": "4",
+   "window": "19-26",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T05:51:41Z"
+  },
+  {
+   "tier": "4",
+   "window": "19-26",
+   "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+   "updated_utc": "2026-08-11T06:10:46Z"
+  },
+  {
+   "tier": "4",
+   "window": "19-26",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T06:26:46Z"
+  },
+  {
+   "tier": "4",
+   "window": "27-34",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T06:34:22Z"
+  },
+  {
+   "tier": "4",
+   "window": "27-34",
+   "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+   "updated_utc": "2026-08-11T06:58:43Z"
+  },
+  {
+   "tier": "4",
+   "window": "27-34",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T07:14:34Z"
+  },
+  {
+   "tier": "4",
+   "window": "35-42",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T07:19:18Z"
+  },
+  {
+   "tier": "4",
+   "window": "35-42",
+   "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+   "updated_utc": "2026-08-11T07:49:01Z"
+  },
+  {
+   "tier": "4",
+   "window": "35-42",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T08:04:52Z"
+  },
+  {
+   "tier": "4",
+   "window": "43-50",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T08:12:08Z"
+  },
+  {
+   "tier": "4",
+   "window": "43-50",
+   "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+   "updated_utc": "2026-08-11T08:46:42Z"
+  },
+  {
+   "tier": "4",
+   "window": "43-50",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T09:02:32Z"
+  },
+  {
+   "tier": "4",
+   "window": "51-58",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T09:07:26Z"
+  },
+  {
+   "tier": "4",
+   "window": "51-58",
+   "phase": "encode(gpus=0,1,2,3,4,5,6,7)",
+   "updated_utc": "2026-08-11T09:45:59Z"
+  },
+  {
+   "tier": "4",
+   "window": "51-58",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T10:01:50Z"
+  },
+  {
+   "tier": "4",
+   "window": "59-66",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T10:07:31Z"
+  },
+  {
+   "tier": "4",
+   "window": "59-66",
+   "phase": "encode(gpus=4,5,6,7)",
+   "updated_utc": "2026-08-11T10:51:29Z"
+  },
+  {
+   "tier": "4",
+   "window": "59-66",
+   "phase": "publish",
+   "updated_utc": "2026-08-11T11:21:53Z"
+  },
+  {
+   "tier": "4",
+   "window": "67-74",
+   "phase": "capture",
+   "updated_utc": "2026-08-11T11:26:42Z"
+  },
+  {
+   "tier": "4",
+   "window": "67-74",
+   "phase": "encode(gpus=4,5,6,7)",
+   "updated_utc": "2026-08-11T12:20:11Z"
   }
  ],
  "current": {
-  "tier": "2",
-  "window": "51-58",
-  "phase": "capture",
-  "updated_utc": "2026-08-11T00:15:09Z"
+  "tier": "4",
+  "window": "67-74",
+  "phase": "encode(gpus=4,5,6,7)",
+  "updated_utc": "2026-08-11T12:20:11Z"
  }
 }

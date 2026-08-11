@@ -93,3 +93,23 @@ Stated so the claim is not read wider than the evidence:
   exited 0).
 - Bit-exactness of the assembled tensors against the source quant is the
   assembly report's job, not this one.
+
+## Addendum: KV-dtype variant checked, not assumed
+
+The assembly review flagged that `fp8_ds_mla` was the *Fruit proxy's* KV
+variant while the big-model baseline used `nvfp4_ds_mla`, and that the wrong
+`ds_mla` variant "boots fine then emits prompt-independent text" — which would
+invalidate every number above.
+
+Tested directly with three unrelated prompts at `temperature=0`:
+
+| prompt | model's own restatement of the task |
+|---|---|
+| capital of France | "asking for the capital city of France" |
+| reverse a string in Python | "Task: Write Python code to reverse a string" |
+| how many legs has a spider | "asking for the number of legs a spider has" |
+
+Each response identifies its own distinct prompt, so decoding is
+prompt-DEPENDENT and the failure mode does not manifest on this checkpoint
+with `fp8_ds_mla`. The baseline stands. Comparing the two KV variants for
+quality remains open work, not a correctness blocker.
