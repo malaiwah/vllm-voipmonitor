@@ -124,6 +124,19 @@ def test_substitutions_are_surfaced_for_BT4(tmp_path):
     assert m["substitutions"] == ["e19:K4->K3"]
 
 
+def test_cache_hits_are_counted_as_their_own_origin(tmp_path):
+    """A warm boot resolves segments as 'cached' — neither local nor
+    prefetched. Without a counter for it the run shows zero of everything,
+    which is indistinguishable from a cache that did nothing."""
+    warm_cached = COLD.replace(
+        "FQ progressive L3: prefetched layer-003.k3.safetensors (100 B) from hf:repo",
+        "FQ progressive L3: cached layer-003.k3.safetensors")
+    m = BT.extract(_w(tmp_path, "wc.log", warm_cached))
+    assert m["segments_from_cache"] == 1
+    assert m["segments_prefetched_remote"] == 0
+    assert m["segments_local_no_fetch"] == 0
+
+
 def test_served_is_true_without_a_timestamp_on_the_ready_line(tmp_path):
     """uvicorn prints 'INFO:     Application startup complete.' with no
     timestamp. Keying `served` off a parsed timestamp reported False for a
