@@ -169,6 +169,36 @@ cold boot at ~9 min), and it was measured on one box against one Hub region.
 Full 75-layer wall-clock weight-load time. Every boot so far has been cut
 short by a defect rather than finishing -- see the table below.
 
+## What a cold boot actually costs
+
+Worth stating plainly, because it bounds the claim. Progressive boot fetches
+what the policy asks for and does not already have. On this box that split is
+lopsided:
+
+| tier | local | consequence |
+|---|---|---|
+| K2 | 75/75 + index | never fetched |
+| K4 | 56/75 + index | 56 layers skip the network entirely |
+| K5 | 24/75 + index | never fetched for the layers it covers |
+| **K3** | **no index, no segments** | **all 75 layers fetched, ~5 GB each** |
+
+K3 is the seeded policy's BASE tier — 206 of 256 experts at layer 3 — so a
+cold cache pays roughly 375 GB before the model is up, and per-layer wall
+clock is dominated by that single object:
+
+```
+layer 3  13:21:46
+layer 4  13:21:49   (+3 s     — both objects already cached)
+layer 5  13:30:38   (+8m49s   — fresh K3 fetch)
+layer 6  13:35:05   (+4m27s)
+```
+
+The 3-second layer is the honest upper bound on what the loader costs when
+the bytes are already present; the 9-minute layer is the honest lower bound
+on what a cold tier costs. Both are the same code. This is why local-first
+resolution matters more than any transfer tuning: the fastest download is the
+one that does not happen.
+
 ## Bugs this sequence surfaced
 
 | symptom | cause |
