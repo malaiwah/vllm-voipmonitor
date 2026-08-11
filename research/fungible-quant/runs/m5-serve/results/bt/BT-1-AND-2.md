@@ -64,7 +64,15 @@ FQ reclaim (post process_weights_after_loading):
     reserved 79.39 -> 79.39 GiB, freed 0.00 GiB; weight footprint 79.17 GiB
 ```
 
-`reserved` exceeds `allocated` by 0.22 GiB. **There is no residue.** The
+`reserved` exceeds `allocated` by 0.22 GiB. **There is no residue.** Confirmed
+on every rank of every subsequent boot — attempts 15, 16, 17 and 18 all report
+`79.39 -> 79.39 GiB, freed 0.00 GiB`, four ranks each. Sixteen independent
+measurements of zero is not a fluke.
+
+The code stays anyway, for three reasons: it is a few milliseconds, it is the
+hook that writes the dense calibration, and it is instrumented — so if some
+future configuration DOES strand memory, the log says so instead of hiding
+it. An instrument that currently reads zero is still an instrument. The
 3.92 GiB gap came from comparing two runs that differed in configuration
 (`max_model_len` 32768 vs 8192, graph capture on vs off), not in allocator
 behaviour. 5.27 GiB was never a constant of this system.
