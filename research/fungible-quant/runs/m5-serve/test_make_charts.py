@@ -121,6 +121,93 @@ def test_missing_throughput_samples_do_not_break_the_line():
     assert "<path" in svg
 
 
+# ------------------------------------------- hostile values reaching the plot
+def test_nice_ticks_survives_non_finite_bounds():
+    """ymax = Inf reached int() and raised OverflowError after the whole
+    evidence run was already spent; ymax = NaN produced a [0, nan] tick list
+    and a chart with no y-axis at all."""
+    for lo, hi in ((0, float("inf")), (0, float("nan")), (float("nan"), 1),
+                   (float("-inf"), float("inf"))):
+        t = mc.nice_ticks(lo, hi)
+        assert t, (lo, hi)
+        assert all(mc.finite(x) for x in t), (lo, hi, t)
+
+
+def test_fit_never_inverts_the_axis_on_negative_values():
+    """A counter reset makes decode_tok_s negative. ymin=0 > ymax then
+    inverts the axis: nice_ticks collapses to a single '0' label and a
+    falling series is drawn as if it were rising."""
+    p = mc.Panel(70, 66, 806, 180, 0, 100, "y").fit([-100.0, -109.0])
+    assert p.ymin < 0 <= p.ymax
+    assert p.ymin <= -109.0
+    ys = [p.py(v) for v in (-100.0, -109.0)]
+    assert all(p.y0 - 1 <= y <= p.y0 + p.h + 1 for y in ys), ys
+
+
+def test_fit_ignores_non_finite_values():
+    p = mc.Panel(70, 66, 806, 180, 0, 100, "y").fit(
+        [float("nan"), float("inf"), 5.0])
+    assert p.ymax == pytest.approx(5.75)
+    assert mc.finite(p.py(5.0))
+
+
+def test_a_negative_sample_stays_inside_the_viewbox():
+    rows = timeline()
+    rows[7]["decode_tok_s"] = -250000.0        # counter reset mid-run
+    svg = render_rows(rows)
+    for d in re.findall(r'<path d="([^"]+)"', svg):
+        for x, y in re.findall(r"(-?\d+\.?\d*),(-?\d+\.?\d*)", d):
+            assert -1 <= float(y) <= H + 1, f"y {y} outside viewBox"
+
+
+def test_a_nan_series_does_not_silently_erase_the_line():
+    rows = timeline()
+    for r in rows:
+        if r.get("kind") != "phase":
+            r["fq"]["swaps_total"] = float("nan")
+    svg = render_rows(rows)
+    assert "nan" not in svg.lower()
+    ET.fromstring(svg)
+    # the K5 occupancy line must still be drawn even though swaps went NaN
+    assert svg.count("<path") >= 2
+
+
+def test_an_inf_sample_does_not_crash_the_renderer():
+    rows = timeline()
+    rows[4]["decode_tok_s"] = float("inf")
+    svg = render_rows(rows)          # used to raise OverflowError
+    ET.fromstring(svg)
+    assert "inf" not in svg.lower().replace("font", "")
+
+
+def test_a_timeline_with_no_throughput_at_all_fails_loudly():
+    """Every scrape errored, or the token counter was renamed: the chart
+    would otherwise render a flat empty panel that reads as an idle serve."""
+    rows = timeline()
+    for r in rows:
+        r.pop("decode_tok_s", None)
+    with pytest.raises(SystemExit):
+        render_rows(rows)
+
+
+def test_phase_band_before_the_first_sample_stays_inside_the_panel():
+    rows = timeline()
+    rows.insert(0, {"t": 900_000.0, "kind": "phase", "event": "phase_start",
+                    "family": "early"})
+    svg = render_rows(rows)
+    for x in re.findall(r'<line x1="([-\d.]+)" y1="66"', svg):
+        assert float(x) >= 70 - 0.01, f"phase rule at x={x} left of the plot"
+
+
+def test_the_two_panels_share_one_x_domain():
+    """They are stacked precisely so they can share an axis; if px() ever
+    differed, a spike would appear at a different time in each panel."""
+    a = mc.Panel(70, 66, 806, 180, 1_000_000.0, 1_000_600.0, "top")
+    b = mc.Panel(70, 320, 806, 180, 1_000_000.0, 1_000_600.0, "bot")
+    for t in (1_000_000.0, 1_000_300.0, 1_000_600.0):
+        assert a.px(t) == b.px(t)
+
+
 def test_load_splits_samples_from_phase_rows(tmp_path):
     p = tmp_path / "t.jsonl"
     p.write_text("\n".join(json.dumps(r) for r in timeline()) + "\n")

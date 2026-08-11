@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 # Default categorical theme, light/dark pairs, used in fixed slot order.
@@ -61,7 +62,22 @@ def load(path: Path) -> tuple[list[dict], list[dict]]:
     return samples, phases
 
 
+def finite(v) -> bool:
+    """True for a plottable number.
+
+    Everything upstream of the chart can produce NaN (a 0/0 gauge) or Inf (a
+    ``+Inf`` sample), and both are silent poison here: NaN turns every
+    coordinate of a path into ``nan`` — the SVG still parses, the line simply
+    is not drawn — and Inf reaches ``int()`` inside nice_ticks and raises
+    OverflowError after the whole run is already spent.
+    """
+    return isinstance(v, (int, float)) and not isinstance(v, bool) \
+        and math.isfinite(v)
+
+
 def nice_ticks(lo: float, hi: float, n: int = 5) -> list[float]:
+    if not (finite(lo) and finite(hi)):
+        return [0.0]
     if hi <= lo:
         return [lo]
     raw = (hi - lo) / n
@@ -86,9 +102,21 @@ class Panel:
         self.ymin, self.ymax = 0.0, 1.0
 
     def fit(self, values):
-        vals = [v for v in values if v is not None]
-        if vals:
-            self.ymax = max(vals) * 1.15 or 1.0
+        """Set the y domain from the data, honestly.
+
+        ``max(vals) * 1.15 or 1.0`` covered the all-zero case but not the two
+        that lie: a NaN/Inf max propagates into every coordinate, and a
+        NEGATIVE max (a counter reset makes decode_tok_s negative) left
+        ymin=0 > ymax, which inverts the axis, collapses nice_ticks to a
+        single "0" label and draws a downward series as if it were rising.
+        Negative values now widen the domain downwards so they are visible
+        as what they are.
+        """
+        vals = [v for v in values if finite(v)]
+        top = max(vals, default=0.0)
+        bot = min(vals, default=0.0)
+        self.ymax = top * 1.15 if top > 0 else 1.0
+        self.ymin = bot * 1.15 if bot < 0 else 0.0
         return self
 
     def px(self, t):
@@ -103,7 +131,7 @@ class Panel:
                    f'height="{self.h}" fill="none" class="axis"/>')
         for t in nice_ticks(self.ymin, self.ymax):
             y = self.py(t)
-            if not (self.y0 - 1 <= y <= self.y0 + self.h + 1):
+            if not finite(y) or not (self.y0 - 1 <= y <= self.y0 + self.h + 1):
                 continue
             out.append(f'<line x1="{self.x0}" y1="{y:.1f}" x2="{self.x0+self.w}" '
                        f'y2="{y:.1f}" class="grid"/>')
@@ -122,7 +150,9 @@ class Panel:
                            f'{esc(lab)}</text>')
 
     def line(self, out, pts, cls, width=2):
-        pts = [(self.px(t), self.py(v)) for t, v in pts if v is not None]
+        pts = [(self.px(t), self.py(v)) for t, v in pts
+               if finite(v) and finite(t)]
+        pts = [(x, y) for x, y in pts if finite(x) and finite(y)]
         if len(pts) < 2:
             return
         d = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts)
@@ -130,10 +160,18 @@ class Panel:
                    f'stroke-linejoin="round" stroke-linecap="round"/>')
 
     def phase_bands(self, out, phases, label=True):
-        starts = [p for p in phases if p.get("event") == "phase_start"]
+        starts = [p for p in phases
+                  if p.get("event") == "phase_start" and finite(p.get("t"))]
+
+        def clamp(x):
+            # The x domain comes from the SAMPLE rows only, so a phase row
+            # written a few ms before the first scrape lands left of the plot
+            # and drew its dashed rule and family label on top of the y-axis.
+            return min(max(x, self.x0), self.x0 + self.w)
+
         for i, p in enumerate(starts):
-            a = self.px(p["t"])
-            b = (self.px(starts[i + 1]["t"]) if i + 1 < len(starts)
+            a = clamp(self.px(p["t"]))
+            b = (clamp(self.px(starts[i + 1]["t"])) if i + 1 < len(starts)
                  else self.x0 + self.w)
             if i % 2 == 1:
                 out.append(f'<rect x="{a:.1f}" y="{self.y0}" '
@@ -149,8 +187,19 @@ def render(samples: list[dict], phases: list[dict], title: str,
            subtitle: str) -> str:
     if not samples:
         raise SystemExit("no samples in timeline")
-    t0 = min(s["t"] for s in samples)
-    t1 = max(s["t"] for s in samples)
+    ts = [s["t"] for s in samples if finite(s.get("t"))]
+    if not ts:
+        raise SystemExit("no sample carries a usable timestamp")
+    # A timeline whose every row is a scrape error, or whose token counter
+    # never matched any of the three names we try, renders as a chart with a
+    # flat empty throughput panel and no complaint. That is indistinguishable
+    # from "the serve was idle", so refuse it instead.
+    if not any(finite(s.get("decode_tok_s")) for s in samples):
+        raise SystemExit(
+            "no sample carries decode_tok_s — the throughput counter was "
+            "never scraped (metric renamed? every scrape errored?); refusing "
+            "to draw a chart that would read as an idle serve")
+    t0, t1 = min(ts), max(ts)
     W, H = 900, 560
     L, R = 70, 24
     pw = W - L - R
@@ -162,7 +211,8 @@ def render(samples: list[dict], phases: list[dict], title: str,
         occ = (s.get("fq") or {}).get("tier_occupancy") or {}
         tot = 0.0
         for layer_tiers in occ.values():
-            tot += float(layer_tiers.get(str(tier), 0) or 0)
+            v = layer_tiers.get(str(tier), 0) or 0
+            tot += float(v) if finite(v) else 0.0
         return tot
 
     k5 = [(s["t"], occ_at(s, 5)) for s in samples]
