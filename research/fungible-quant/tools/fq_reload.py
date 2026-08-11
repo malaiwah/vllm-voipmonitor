@@ -345,13 +345,25 @@ class FqReloadWorker:
         also why this is layer-granular: forty deficits in one layer cost one
         reload, not forty.
 
-        ``requests`` maps layer -> {expert: target_k}. Returns layer ->
-        {expert: k_actually_installed} so the caller can tell a full repay
-        from a partial climb, and never raises: an engine that is SERVING must
-        survive a convergence attempt that cannot be satisfied.
+        ``requests`` maps layer -> {expert: target_k}.
 
-        MUST run quiesced unless dry_run -- live tier rows are overwritten in
-        place, exactly as fq_reload_experts does.
+        Returns ``{"installed": bool, "layers": {layer: {expert: k}}, ...}``.
+        **installed is the whole contract.** It is False while this only
+        RESOLVES fragments, and a caller must never mark a deficit repaid on
+        a result it did not install -- doing so would drive the convergence
+        plan to state=converged, drift_bits=0 on a model whose weights never
+        changed, which is exactly the fabricated evidence the ConvergenceState
+        invariant exists to prevent.
+
+        Never raises: an engine that is SERVING must survive a convergence
+        attempt that cannot be satisfied.
+
+        STATUS: resolve-only. The device-side tier install (staging through
+        _load_b12x_mixed_trellis under a quiesce window, as
+        fq_reload_experts does) is NOT implemented here yet, so installed is
+        hard-False below. Verifying the fragments are fetchable is genuinely
+        useful on its own -- it proves convergence WOULD succeed -- but it is
+        not convergence.
         """
         import os
 
@@ -391,8 +403,14 @@ class FqReloadWorker:
                     continue
                 installed[int(expert)] = int(frag.k)
             out[layer_idx] = installed
-        return {"dry_run": dry, "layers": {str(k): v for k, v in out.items()},
-                "note": "tier install is staged by the caller's quiesce window"}
+        return {
+            "dry_run": dry,
+            # HARD FALSE until the device-side install lands. Any caller that
+            # repays on this is reporting convergence that did not happen.
+            "installed": False,
+            "resolvable": {str(k): v for k, v in out.items()},
+            "reason": "resolve-only: device tier install not implemented",
+        }
 
 
 def load_benefit(work_root: Path, lo: int = 3, hi: int = 4) -> dict[int, list[float]]:
