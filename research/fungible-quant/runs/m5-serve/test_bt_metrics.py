@@ -124,6 +124,27 @@ def test_substitutions_are_surfaced_for_BT4(tmp_path):
     assert m["substitutions"] == ["e19:K4->K3"]
 
 
+def test_served_is_true_without_a_timestamp_on_the_ready_line(tmp_path):
+    """uvicorn prints 'INFO:     Application startup complete.' with no
+    timestamp. Keying `served` off a parsed timestamp reported False for a
+    boot that demonstrably served — the single most important field."""
+    uvicorn = COLD.replace(
+        "(APIServer pid=1) INFO 08-11 15:22:31 [api.py:9] Application startup complete",
+        "INFO:     Application startup complete.")
+    m = BT.extract(_w(tmp_path, "u.log", uvicorn))
+    assert m["served"] is True
+
+
+def test_stream_summary_does_not_invent_a_substitution(tmp_path):
+    """'substituted=0, encode_queued=0' in the completion summary is NOT a
+    substitution; matching it reported one on a clean boot."""
+    clean = COLD + (
+        "(Worker_TP0 pid=2) INFO 08-11 15:19:00 [progressive.py:1] FQ "
+        "progressive stream complete: policy=x k_values=(3, 4) "
+        "fragments(local=2240, substituted=0, encode_queued=0) wall=1.0s\n")
+    assert BT.extract(_w(tmp_path, "s.log", clean))["substitutions"] == []
+
+
 def test_missing_fields_do_not_crash_the_parser(tmp_path):
     """A boot killed mid-load has no KV line, no digest, no ready marker."""
     m = BT.extract(_w(tmp_path, "p.log", "INFO 08-11 15:00:00 [x:1] starting\n"))

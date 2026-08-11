@@ -40,7 +40,7 @@ RE_MODELLOAD = re.compile(
     r"Model loading took ([\d.]+) GiB memory and ([\d.]+) seconds")
 RE_RECLAIM = re.compile(
     r"post-load reclaim: reserved ([\d.]+) -> ([\d.]+) GiB")
-RE_SUBST = re.compile(r"substituted=(\S+)")
+RE_SUBST = re.compile(r"bits_digest=\S+ tensors=\d+ substituted=(\S+)")
 RE_TS = re.compile(r"(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)")
 RE_RANK = re.compile(r"Worker_TP(\d+)")
 READY = "Application startup complete"
@@ -58,6 +58,7 @@ def _ts(line: str) -> datetime | None:
 
 def extract(path: Path) -> dict:
     first_ts = ready_ts = None
+    ready_seen = False
     gib = mibs = 0.0
     layers: set[int] = set()
     digests: dict[int, str] = {}
@@ -73,6 +74,7 @@ def extract(path: Path) -> dict:
         if t and first_ts is None:
             first_ts = t
         if READY in line:
+            ready_seen = True
             ready_ts = t or ready_ts
 
         if m := RE_DL.search(line):
@@ -113,7 +115,7 @@ def extract(path: Path) -> dict:
 
     return {
         "log": str(path),
-        "served": ready_ts is not None,
+        "served": ready_seen,
         "time_to_serve_s": ttfs,
         "gib_fetched": gib,
         "mib_s_avg": mibs,
