@@ -88,6 +88,16 @@ export VLLM_FQ_K_FALLBACK=${VLLM_FQ_K_FALLBACK:-auto}
 # used anymore") in favour of Xet, so HF_HUB_ENABLE_HF_TRANSFER is now a no-op
 # that only emits a FutureWarning. HF_XET_HIGH_PERFORMANCE is the live knob.
 export HF_XET_HIGH_PERFORMANCE=${HF_XET_HIGH_PERFORMANCE:-1}
+# Authenticate. The Hub said so itself on attempt 7, once per rank:
+#   "You are sending unauthenticated requests to the HF Hub. Please set a
+#    HF_TOKEN to enable higher rate limits and faster downloads."
+# Sourced in a SUBSHELL that prints only the token, so no other secret in
+# ~/.fq_env leaks into the server environment and nothing is ever echoed.
+if [ -z "${HF_TOKEN:-}" ] && [ -r "$HOME/.fq_env" ]; then
+  HF_TOKEN=$( . "$HOME/.fq_env" >/dev/null 2>&1
+              printf '%s' "${HF_TOKEN:-${HUGGING_FACE_HUB_TOKEN:-}}" )
+  export HF_TOKEN
+fi
 # Segments download DURING load, so a progressive boot is legitimately slower
 # than reading a local checkpoint -- attempt 5 died on the 600 s default with
 # the load still progressing normally. Prefetch depth+width cut the wall time,
@@ -151,6 +161,13 @@ echo "    segments     : $VLLM_FQ_MANIFEST_DIR (+ HF $VLLM_FQ_SOURCES)"
 echo "    dense source : $VLLM_FQ_DENSE_SOURCE"
 echo "    apply mode   : $VLLM_FQ_APPLY_MODE   K-fallback: $VLLM_FQ_K_FALLBACK"
 echo "    encode queue : $VLLM_FQ_ENCODE_QUEUE"
+# Presence only -- never the value.
+if [ -n "${HF_TOKEN:-}" ]; then
+  echo "    hf token     : present (authenticated Hub requests)"
+else
+  echo "    hf token     : ABSENT — downloads will be rate-limited and slower"
+fi
+echo "    prefetch     : depth=$VLLM_FQ_PREFETCH_DEPTH x 2 objects, Xet hi-perf=$HF_XET_HIGH_PERFORMANCE"
 
 exec "$GG" python -m vllm.entrypoints.openai.api_server \
   --model "$VLLM_FQ_DENSE_SOURCE" \
