@@ -23,7 +23,16 @@ were mostly derivable at runtime from a 3.0 bpw base plus routing observation.
 Design, envelope arithmetic and baselines: [`convergence-demo-plan.md`](convergence-demo-plan.md).
 Reference map: [`reference-coder-quant.json`](reference-coder-quant.json) —
 all 19,456 experts resolved, 11,414 K3 + 8,042 K4, envelope 73.0187 GiB/rank,
-chance floor 0.267, human-human ceiling 0.657.
+chance floor 0.267, human-human ceiling **0.671**.
+
+> The ceiling is the **max** over the three siblings, which is what
+> `score_convergence.py` computes and what the run prints as
+> `human_human_ceiling` — 0.671024, the 3.36bpw build. The 3.40bpw non-coder
+> sibling alone is 0.657192, and 3.25bpw is 0.576126. Quote 0.671 when quoting
+> `fraction_of_human_agreement`, because that is the number it divides by.
+> (`score_convergence.py`'s own module docstring still describes the ceiling
+> as the 3.40bpw sibling; the code takes the max. Docstring drift, not a
+> scoring bug.)
 
 ## Commands
 
@@ -48,6 +57,20 @@ Everything lands in `results/<tag>/`. The script is `set -euo pipefail` and
 verifies each artifact exists before continuing; it refuses to report success
 on an empty result directory.
 
+Two things the dry run does **not** do, so plan around them:
+
+- It still runs the whole of step 0, including the port-busy and
+  `nvidia-smi` GPU-free checks. On a box with a live serve on `$FQ_PORT` or
+  anything resident on GPUs 0-3, `FQ_DRY_RUN=1` aborts before validating a
+  single input. Pass `FQ_PORT=<free port>` and, if you know the bytes on
+  GPUs 0-3 are somebody else's business, `FQ_ALLOW_BUSY_GPU=1` — the dry run
+  never boots anything, so neither check is protecting it.
+- It stops at step 3, so steps 4-12 are **unexercised by any dry run**. The
+  CLI contracts of the five scripts the runner shells out to, and the key
+  names the step-12 verdict printer reads out of `convergence.json` /
+  `replay.json`, are verified only by inspection and by
+  `test_run_demo1.py`.
+
 ### Knobs
 
 | env | default | what it does |
@@ -56,7 +79,7 @@ on an empty result directory.
 | `FQ_PORT` | 8000 | serve port; the run aborts if it is already answering |
 | `FQ_K4_DIRS` | `…/fq-primed/segments-342/expanded` | colon-separated dirs searched for K4 fragments |
 | `FQ_FILL` | 0.5 | fraction of each layer's K4 pool occupied at boot |
-| `FQ_MAX_GIB` | 8.835 | per-rank memory cap above uniform K3 (= the reference's own headroom) |
+| `FQ_MAX_GIB` | 8.8353 | per-rank memory cap above uniform K3 (= the reference's own headroom: 8042 promotions × 1,179,648 B / 2³⁰ = 8.835205 GiB — 8.835 floors to 8041, one promotion short) |
 | `FQ_INTERVAL` / `FQ_DWELL` | 200 / 250 | loop decision cadence, in engine steps |
 | `FQ_SIGNAL` | mass | ranking signal for the scorer (`mass` or `count`) |
 | `FQ_AXIS`, `FQ_LIMIT`, `FQ_CC` | — | corpus axis filter, prompt cap, replay concurrency |
@@ -68,8 +91,8 @@ on an empty result directory.
 | # | Step | Artifact | What it proves |
 |---|---|---|---|
 | 0 | preflight | `run.log` | port free, GPUs 0-3 free, signing key present, disk ≥ 20 GB |
-| 1 | seeded policy | `policy-demo1.json`, `k4-coverage.json` | every declared K4 slot is backed by a fragment that exists on disk; the budget honours both the reference cardinality and the memory cap; **and at least one covered layer has an unoccupied fragment left to promote into** (a saturated pool aborts the run before boot rather than drawing a flat line for an hour) |
-| 2 | checkpoint gate | `checkpoint-match.json` | the checkpoint physically carries the K4 slabs the policy declares — **the gate that makes promotion possible at all** |
+| 1 | seeded policy | `policy-demo1.json`, `k4-coverage.json` | every declared K4 slot is backed by a fragment that exists on disk; the budget honours both the reference cardinality and the memory cap; **and at least one covered layer has a non-zero budget AND an unoccupied fragment left to promote into** (a saturated pool — or a layer whose budget rounded down to 0, which has no K4 slab at all — aborts the run before boot rather than drawing a flat line for an hour) |
+| 2 | checkpoint gate | `checkpoint-match.json` | the checkpoint's tier bitmap **equals** the policy's, per expert: same width, no tier outside {K3, K4}, and the same K4 set — **the gate that makes promotion possible at all**. The tier check is not redundant: the published segment family is K2 × 64 + K5 × 24 and zero K4, so a checkpoint assembled from it declares K2/K5 exactly where this policy says K3, which a K4-set-only diff calls a match |
 | 3 | store hygiene | `run.log` | no stale committed policy silently overrides the boot policy |
 | 4 | boot | `serve.log` | the loop armed (`FQ loop: armed — mode=atomic …`) rather than degrading to collector-only |
 | 5 | probe | `probe.json` | the model generates coherent text, i.e. the tier layout is not mis-decoding |
@@ -233,10 +256,27 @@ cd /home/mbelleau/protensors-work/vllm-voipmonitor/research/fungible-quant/runs/
 /home/mbelleau/venvs/fq/bin/python -m pytest \
   test_make_scenario1_policy.py test_replay_mtp78.py test_score_convergence.py \
   test_run_demo1.py -q
-# 57 passed
+# 67 passed
 ```
 
-`test_run_demo1.py` executes the runner's own lines (extracted from the script, not retyped) under `set -euo pipefail`: the three places where an ordinary non-zero exit would abort the run with no message — the scraper shutdown at step 9, the pgid probe right after boot, and the fragment-substitution counter — plus the saturated-pool gate.
+`test_run_demo1.py` executes the runner's own lines and blocks (extracted from
+the script, not retyped) under `set -euo pipefail`. `set -e` is in force inside
+the `EXIT` trap too, which is where the sharpest version of the bug lives: the
+first non-zero command aborts the handler, `return $rc` never runs, and the
+shell exits with *that* status — so a run that printed `DONE` and wrote every
+artifact reported failure. On the happy path both `kill -KILL -- -$PGID` (the
+group already drained) and `pgrep -f VLLM:: | wc -l` (no worker left, and
+`pipefail` promotes pgrep's 1) hit that. Covered:
+
+- the `cleanup` trap: exit 0 on success, the real code preserved on failure,
+  and the leftover-worker warning still firing;
+- the step-2 checkpoint gate: exact match, missing K4 slab, a K2/K5 tier where
+  the policy says K3, and a wrong-width bitmap;
+- the three lines where an ordinary non-zero exit would abort the run with no
+  message — the scraper shutdown at step 9, the pgid probe right after boot,
+  and the fragment-substitution counter;
+- the saturated-pool gate, and that `FQ_MAX_GIB`'s default buys exactly the
+  reference's 8042 promotions.
 
 The policy tests pin the invariant that matters: every K4 slot the policy
 declares is backed by a fragment that exists. An unbacked slot does not fail

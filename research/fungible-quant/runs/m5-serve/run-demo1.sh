@@ -55,8 +55,14 @@ FQ_K4_DIRS=${FQ_K4_DIRS:-/home/mbelleau/fq-primed/segments-342/expanded}
 # a saturated pool has zero legal promotion targets, so the loop can never
 # trade and the demo shows a flat line that looks like a bug.
 FILL=${FQ_FILL:-0.5}
-# Per-rank memory the demo is allowed to spend above uniform K3.
-MAX_GIB=${FQ_MAX_GIB:-8.835}
+# Per-rank memory the demo is allowed to spend above uniform K3 — the
+# reference's OWN headroom, so the comparison stays a pure selection test.
+# reference-coder-quant.json: headroom_per_rank_gib 8.8352 for
+# headroom_equals_n_promotions 8042, i.e. 8042 * 1,179,648 B / 2^30 =
+# 8.835205... GiB. Truncating that to 8.835 buys 8041 promotions, one FEWER
+# than the human spent — which would quietly make the demo a slightly
+# smaller-budget experiment than the thing it is being compared against.
+MAX_GIB=${FQ_MAX_GIB:-8.8353}
 
 mkdir -p "$OUT"
 say() { echo "[$(date -u +%FT%TZ)] $*" | tee -a "$OUT/run.log"; }
@@ -176,10 +182,31 @@ for layer, bits in sorted(policy["bits_per_expert"].items(), key=lambda kv: int(
     if entry is None:
         bad.append(f"L{layer}: absent from the checkpoint's tier_bitmap")
         continue
-    have_bits = entry["bits_per_expert"] if isinstance(entry, dict) else entry
-    have = {e for e, b in enumerate(have_bits) if int(b) == 4}
+    raw_bits = entry["bits_per_expert"] if isinstance(entry, dict) else entry
+    have_bits = [int(b) for b in raw_bits]
+    have = {e for e, b in enumerate(have_bits) if b == 4}
+    # Comparing only the K4 SET is not the same as comparing the bitmap.
+    # `malaiwah/GLM-5.2-EXL3-FQ-segments` carries K2 x 64 and K5 x 24 layers
+    # and zero K4, so a checkpoint assembled from the published family
+    # declares K2 or K5 exactly where this policy declares K3 — invisible to
+    # a K4-set diff, and fatal later: swap.py MixedLayerState accepts
+    # tier_bits == (3, 4) only, and a K5 mixed tier is a hard SM120 failure
+    # (109568 > 101376, k5-shared-memory-limit.md). Once length matches and
+    # every tier is in {3, 4}, equal K4 sets DO imply equal bitmaps, so these
+    # two extra checks are what make the gate complete rather than suggestive.
+    other = sorted({b for b in have_bits} - {3, 4})
     rows.append({"layer": int(layer), "policy_k4": len(want),
-                 "checkpoint_k4": len(have), "match": want == have})
+                 "checkpoint_k4": len(have), "match": want == have and not other,
+                 "checkpoint_other_tiers": other})
+    if len(have_bits) != len(bits):
+        bad.append(f"L{layer}: checkpoint bitmap has {len(have_bits)} experts, "
+                   f"the policy has {len(bits)}")
+        continue
+    if other:
+        n_other = sum(1 for b in have_bits if b not in (3, 4))
+        bad.append(f"L{layer}: checkpoint holds tier(s) K{other} on {n_other} "
+                   f"expert(s) where the policy declares only K3/K4 — the "
+                   f"swap engine is a two-tier (3, 4) engine")
     if want != have:
         bad.append(f"L{layer}: policy wants {len(want)} K4 experts, "
                    f"checkpoint holds {len(have)} "
@@ -250,22 +277,39 @@ SERVE_PGID=$(ps -o pgid= -p "$SERVE_PID" 2>/dev/null | tr -d ' ') || SERVE_PGID=
 say "serve pid=$SERVE_PID pgid=${SERVE_PGID:-unknown}"
 
 SCRAPE_PID=""
+# Every command in here needs its own `|| true`, and the reason is the one
+# thing an EXIT trap must never do: change the exit status of a run that
+# WORKED. `set -e` is still in force inside the handler, so the first
+# non-zero command aborts the trap mid-way — the remaining kills, the
+# leftover-worker warning and `return $rc` are all skipped, and the shell
+# exits with THAT command's status instead of $rc.
+#
+# Both of the following fire on the HAPPY path, where the serve shut down
+# cleanly, which is exactly when the run must report 0:
+#
+#   * `kill -KILL -- -$PGID` after the TERM loop has already seen the group
+#     drain — ESRCH, exit 1. (Same for the TERM itself, and for the
+#     `kill -9 $SERVE_PID` fallback, when the serve is already gone.)
+#   * `pgrep -f "VLLM::" | wc -l` when no worker survives — pgrep exits 1,
+#     `pipefail` promotes that to the pipeline, and the assignment fails.
+#     Same shape as the SUBS counter at step 9: put the fallback on the
+#     assignment, never on a `$(... || echo 0)` that would yield "0\n0".
 cleanup() {
   local rc=$?
   [ -n "$SCRAPE_PID" ] && kill -INT "$SCRAPE_PID" 2>/dev/null
   say "shutting down serve pid=$SERVE_PID pgid=${SERVE_PGID:-?} (exit rc=$rc)"
   if [ -n "${SERVE_PGID:-}" ] && [ "$SERVE_PGID" != "$$" ]; then
-    kill -TERM -- "-$SERVE_PGID" 2>/dev/null
+    kill -TERM -- "-$SERVE_PGID" 2>/dev/null || true
     for _ in $(seq 1 30); do
       kill -0 -- "-$SERVE_PGID" 2>/dev/null || break
       sleep 2
     done
-    kill -KILL -- "-$SERVE_PGID" 2>/dev/null
+    kill -KILL -- "-$SERVE_PGID" 2>/dev/null || true
   else
-    kill -9 "$SERVE_PID" 2>/dev/null
+    kill -9 "$SERVE_PID" 2>/dev/null || true
   fi
   local left
-  left=$(pgrep -f "VLLM::" | wc -l)
+  left=$(pgrep -f "VLLM::" | wc -l) || left=0
   [ "$left" -gt 0 ] && say "WARN: $left VLLM worker process(es) still alive"
   return $rc
 }
@@ -430,7 +474,18 @@ policy = json.loads(Path(sys.argv[1]).read_text())
 conv = json.loads(Path(sys.argv[2]).read_text())
 prov = policy["provenance"]
 circ = prov.get("circular_layers", [])
-cov = prov.get("covered_layers", [])
+# "physically possible" is a statement about SLABS, not about fragments on
+# disk. `covered_layers` is every layer with a non-empty K4 fragment pool,
+# which includes layers whose budget rounded down to 0 — those are assembled
+# uniform K3, have no K4 slab, and can never promote. Counting them here
+# would overstate the realization claim in the one document written to keep
+# it honest. Fall back to `covered_layers` only for policies built before
+# `per_layer_coverage` existed.
+rows = prov.get("per_layer_coverage")
+if rows is None:
+    cov = prov.get("covered_layers", [])
+else:
+    cov = [int(r["layer"]) for r in rows if int(r.get("budget", 0)) > 0]
 lines = [
     "# Scope of this run",
     "",
@@ -438,6 +493,11 @@ lines = [
     "alone. Routing needs no K4 weights, so this leg is at full strength.",
     f"- Live promotion physically possible on **{len(cov)} layers**: {cov}.",
 ]
+# "Of those" has to mean "of the live-promotion layers". `circular_layers` is
+# computed from the fragment pool, so it can name a layer whose budget is 0
+# and which therefore is not in `cov` at all — printing that count under "of
+# those" reads as more circularity than the run actually has.
+circ = [l for l in circ if l in cov]
 if circ:
     lines += [
         f"- Of those, **{len(circ)} are CIRCULAR**: {circ}. Their K4 fragment "

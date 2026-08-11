@@ -184,6 +184,58 @@ def test_fill_fraction_leaves_promotion_candidates(tmp_path):
         "promotion_candidates"] == 50
 
 
+def test_a_zero_budget_layer_reports_no_promotion_candidates(tmp_path):
+    """budget == 0 means NO K4 slab, so the pool is not a set of candidates.
+
+    A promotion is a 1-for-1 trade inside a pre-allocated fixed-capacity K4
+    slab. A layer whose budget rounds down to zero is assembled uniform K3:
+    capacity 0, no slab, nothing to promote into, forever. Reporting
+    `len(pool)` candidates there told run-demo1.sh's tradability gate the
+    layer could swap, and told SCOPE.md that live promotion was "physically
+    possible" on it — both false, and both in the artifacts written
+    specifically to keep the claim honest.
+    """
+    ref = write_reference(tmp_path, {3: list(range(50)),
+                                     4: list(range(108))})
+    d = write_segment_dir(tmp_path, "segs", {3: list(range(50)),
+                                             4: list(range(108))})
+    cov, _ = mk.discover_k_coverage([d], num_experts=E)
+
+    # 1% of a 50-fragment pool floors to 0 slots; 1% of 108 floors to 1.
+    doc = mk.build(ref, E, "m", "seeded", coverage=cov, fill_fraction=0.01)
+    rows = {r["layer"]: r for r in doc["provenance"]["per_layer_coverage"]}
+    assert doc["budget"]["n_k4_per_layer"]["3"] == 0
+    assert rows[3]["fragment_pool"] == 50
+    assert rows[3]["promotion_candidates"] == 0, (
+        "a layer with no K4 slab was reported as promotable")
+    # the layer that DID get a slot keeps its real candidate count
+    assert doc["budget"]["n_k4_per_layer"]["4"] == 1
+    assert rows[4]["promotion_candidates"] == 107
+
+
+def test_a_memory_cap_that_zeroes_a_layer_also_zeroes_its_candidates(tmp_path):
+    """Same hole, reached through --max-extra-gib instead of --fill-fraction.
+
+    cap_budget scales proportionally, so a small layer's share can floor to
+    zero while larger layers keep slots.
+    """
+    ref = write_reference(tmp_path, {3: list(range(50)),
+                                     4: list(range(108))})
+    d = write_segment_dir(tmp_path, "segs", {3: list(range(50)),
+                                             4: list(range(108))})
+    cov, _ = mk.discover_k_coverage([d], num_experts=E)
+    doc = mk.build(ref, E, "m", "seeded", coverage=cov, fill_fraction=1.0,
+                   max_promotions=1)
+    budget = doc["budget"]["n_k4_per_layer"]
+    rows = {r["layer"]: r for r in doc["provenance"]["per_layer_coverage"]}
+    zeroed = [l for l in (3, 4) if budget[str(l)] == 0]
+    assert zeroed, "expected the cap to starve at least one layer"
+    for layer in zeroed:
+        assert rows[layer]["fragment_pool"] > 0
+        assert rows[layer]["promotion_candidates"] == 0, (
+            f"L{layer} has budget 0 but claims promotion candidates")
+
+
 def test_bad_fill_fraction_is_rejected(tmp_path):
     ref = write_reference(tmp_path, {4: list(range(108))})
     for bad in (0.0, -0.5, 1.5):
