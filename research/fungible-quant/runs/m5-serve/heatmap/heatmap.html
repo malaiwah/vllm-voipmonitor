@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FQ expert heatmap — 75 layers x 256 experts</title>
+<style>
+/* ------------------------------------------------------------------ tokens */
+:root{
+  --bg:#F7F7F9; --surface:#FFFFFF; --surface-2:#F0F0F4; --line:#DCDCE4;
+  --ink:#16161D; --ink-2:#4A4A57; --ink-3:#7A7A8A;
+  --accent:#54278F; --accent-ink:#FFFFFF;
+  --ok:#1B7F4B; --warn:#8A5A00; --warn-bg:#FFF4DA; --warn-line:#E3C486;
+  --err:#A32014; --err-bg:#FDECE9; --err-line:#EBB2A8;
+  --focus:#3F007D;
+  --fig-ground:#FFFFFF; --fig-ink:#16161D; --fig-ink-2:#5A5A68; --fig-line:#D2D2DC;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E0E13; --surface:#17171F; --surface-2:#1F1F29; --line:#2E2E3B;
+    --ink:#ECECF2; --ink-2:#B4B4C4; --ink-3:#83839A;
+    --accent:#BCBDDC; --accent-ink:#1A0B33;
+    --ok:#5CCB8C; --warn:#F0C061; --warn-bg:#2C2308; --warn-line:#5C4A16;
+    --err:#F09A8C; --err-bg:#2E120D; --err-line:#5E2A20;
+    --focus:#BCBDDC;
+    --fig-ground:#14141B; --fig-ink:#ECECF2; --fig-ink-2:#A0A0B4; --fig-line:#3A3A4A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E0E13; --surface:#17171F; --surface-2:#1F1F29; --line:#2E2E3B;
+  --ink:#ECECF2; --ink-2:#B4B4C4; --ink-3:#83839A;
+  --accent:#BCBDDC; --accent-ink:#1A0B33;
+  --ok:#5CCB8C; --warn:#F0C061; --warn-bg:#2C2308; --warn-line:#5C4A16;
+  --err:#F09A8C; --err-bg:#2E120D; --err-line:#5E2A20;
+  --focus:#BCBDDC;
+  --fig-ground:#14141B; --fig-ink:#ECECF2; --fig-ink-2:#A0A0B4; --fig-line:#3A3A4A;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;max-width:100%}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:14px; line-height:1.5; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1680px;margin:0 auto;padding:16px 18px 64px}
+h1{font-size:17px;font-weight:650;margin:0;letter-spacing:-0.01em}
+.sub{color:var(--ink-3);font-size:12.5px;margin:2px 0 0}
+header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+header.top .spacer{flex:1 1 auto}
+
+/* ----------------------------------------------------------------- controls */
+.bar{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;margin-bottom:10px;
+  display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;
+}
+.grp{display:flex;flex-direction:column;gap:4px;min-width:0}
+.grp>.lab{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+button,select,input[type=text],input[type=number],input[type=password]{
+  font:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);
+  border:1px solid var(--line);border-radius:7px;padding:5px 9px;
+}
+input[type=text],input[type=number],input[type=password]{background:var(--surface)}
+button{cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled){border-color:var(--ink-3)}
+button:disabled,select:disabled{opacity:.42;cursor:not-allowed}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
+button.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+button.danger{border-color:var(--err-line);color:var(--err)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+label.ck{display:inline-flex;gap:5px;align-items:center;font-size:12.5px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:var(--surface-2);padding:5px 10px}
+.seg button+button{border-left:1px solid var(--line)}
+.mono{font-family:var(--mono);font-size:12px}
+.hint{font-size:11.5px;color:var(--ink-3)}
+
+/* slot rack */
+.slots{display:flex;gap:8px;flex-wrap:wrap}
+.slot{
+  border:1px solid var(--line);border-radius:7px;background:var(--surface-2);
+  padding:4px 6px;display:flex;gap:6px;align-items:center;font-size:12px;min-width:112px;
+}
+.slot .k{font-weight:700;font-family:var(--mono)}
+.slot .d{color:var(--ink-3);font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot .x{border:0;background:transparent;padding:0 2px;color:var(--ink-3);font-size:14px;line-height:1}
+.slot.filled{border-color:var(--accent)}
+
+/* banners */
+.banner{border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:13px;display:flex;gap:9px;align-items:flex-start}
+.banner .t{font-weight:650}
+.banner.err{background:var(--err-bg);border:1px solid var(--err-line);color:var(--err)}
+.banner.warn{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn)}
+.banner code{font-family:var(--mono);font-size:11.5px}
+.hidden{display:none !important}
+
+/* figure */
+.figwrap{
+  position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:10px;overflow-x:auto;overflow-y:hidden;max-width:100%;
+}
+.figstack{position:relative;display:inline-block;line-height:0}
+canvas{display:block;max-width:none}
+canvas#overlay{position:absolute;left:0;top:0;pointer-events:none}
+.figwrap.stale canvas#fig{opacity:.55;transition:opacity .12s}
+
+#tip{
+  position:fixed;z-index:40;pointer-events:none;display:none;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  box-shadow:0 6px 22px rgba(0,0,0,.22);padding:8px 10px;font-size:12px;max-width:330px;
+}
+#tip .h{font-family:var(--mono);font-weight:700;margin-bottom:4px}
+#tip table{border-collapse:collapse;font-size:11.5px}
+#tip td{padding:1px 0}
+#tip td.k{color:var(--ink-3);padding-right:10px;white-space:nowrap}
+#tip td.v{font-family:var(--mono);text-align:right;white-space:nowrap}
+#tip .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.22)}
+
+/* panels below */
+details.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-top:10px;padding:0 12px}
+details.card>summary{cursor:pointer;padding:9px 0;font-weight:600;font-size:13px;list-style:none;display:flex;gap:8px;align-items:center}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::before{content:"\25B8";color:var(--ink-3);display:inline-block;transition:transform .12s}
+details.card[open]>summary::before{transform:rotate(90deg)}
+details.card .body{padding:0 0 12px}
+.tblwrap{overflow-x:auto;max-width:100%}
+table.data{border-collapse:collapse;font-size:12px;width:100%;min-width:640px}
+table.data th,table.data td{padding:3px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data th{color:var(--ink-3);font-weight:600;text-align:right;position:sticky;top:0;background:var(--surface)}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:12.5px}
+.kv .k{color:var(--ink-3)}
+.kv .v{font-family:var(--mono);font-size:11.5px;word-break:break-word}
+.note{font-size:12px;color:var(--ink-2);margin:6px 0}
+.note b{color:var(--ink)}
+progress{width:190px;height:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>FQ expert activation heatmap</h1>
+    <p class="sub" id="subtitle">75 layers &times; 256 experts &middot; magnitude + K tier + tier/heat mismatch</p>
+  </div>
+  <div class="spacer"></div>
+  <div class="row">
+    <span class="hint" id="conn">not connected</span>
+    <button id="btn-theme" title="Toggle light/dark page chrome (figure panels always render on their designed ground)">theme</button>
+  </div>
+</header>
+
+<!-- ================================================================ SOURCE -->
+<div class="bar" role="group" aria-label="data source">
+  <div class="grp" style="flex:1 1 320px">
+    <span class="lab">Endpoint</span>
+    <div class="row">
+      <input type="text" id="endpoint" value="http://127.0.0.1:8000" spellcheck="false"
+             style="flex:1 1 210px;min-width:180px" aria-label="serve base URL">
+      <input type="password" id="token" placeholder="X-FQ-Heatmap-Token (optional)" spellcheck="false"
+             style="flex:0 1 190px" aria-label="heatmap token">
+      <button id="btn-connect" class="primary">Connect</button>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Poll</span>
+    <div class="row">
+      <select id="poll" aria-label="poll interval">
+        <option value="1000">1 s</option>
+        <option value="2000" selected>2 s</option>
+        <option value="5000">5 s</option>
+        <option value="10000">10 s</option>
+        <option value="0">off</option>
+      </select>
+      <button id="btn-pause">Pause</button>
+      <button id="btn-once">Fetch once</button>
+    </div>
+  </div>
+  <div class="grp" style="flex:1 1 300px">
+    <span class="lab">Offline &mdash; load a stats dump</span>
+    <div class="row">
+      <input type="file" id="file" accept=".jsonl,.json,.txt" style="font-size:12px;max-width:230px">
+      <select id="record" disabled aria-label="record / interval within the dump" style="max-width:190px"></select>
+      <button id="btn-live" disabled title="stop showing the file and go back to the live sample">back to live</button>
+      <progress id="scan" class="hidden" max="100" value="0"></progress>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================================== CONTROLS -->
+<div class="bar" role="group" aria-label="view controls">
+  <div class="grp">
+    <span class="lab">Metric</span>
+    <div class="row">
+      <div class="seg" id="metric-seg">
+        <button data-metric="count" class="on">count</button>
+        <button data-metric="mass" id="btn-mass">mass</button>
+      </div>
+      <span class="hint" id="mass-note"></span>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Column order</span>
+    <div class="row">
+      <div class="seg" id="order-seg">
+        <button data-order="native" class="on">native id</button>
+        <button data-order="sorted">sorted</button>
+      </div>
+      <select id="orderref" aria-label="permutation reference" title="Which frame defines the shared column permutation">
+        <option value="pooled">ref: pooled</option>
+        <option value="live">ref: live/current</option>
+        <option value="A">ref: slot A</option>
+        <option value="B">ref: slot B</option>
+        <option value="C">ref: slot C</option>
+        <option value="D">ref: slot D</option>
+      </select>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Cell</span>
+    <div class="row">
+      <select id="cell" aria-label="cell size in pixels">
+        <option value="fit" selected>fit</option>
+        <option value="2">2 px</option>
+        <option value="3">3 px</option>
+        <option value="4">4 px</option>
+        <option value="6">6 px</option>
+        <option value="8">8 px</option>
+        <option value="12">12 px</option>
+      </select>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Panels</span>
+    <div class="row">
+      <label class="ck"><input type="checkbox" id="p-tier" checked> K-tier strip</label>
+      <label class="ck"><input type="checkbox" id="p-mismatch"> mismatch</label>
+      <label class="ck"><input type="checkbox" id="p-compare"> compare</label>
+      <label class="ck"><input type="checkbox" id="p-stack"> stack slots (flagship)</label>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Extras</span>
+    <div class="row">
+      <label class="ck"><input type="checkbox" id="p-marg" checked> marginals + gutter</label>
+      <label class="ck"><input type="checkbox" id="p-dead"> flag dead cells</label>
+      <label class="ck"><input type="checkbox" id="p-tiernative"> tier strip in native order</label>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Export</span>
+    <div class="row">
+      <button id="btn-png">PNG</button>
+      <button id="btn-csv">CSV</button>
+      <button id="btn-perm">permutation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================== SNAPSHOTS -->
+<div class="bar" role="group" aria-label="snapshots and compare">
+  <div class="grp" style="flex:1 1 460px">
+    <span class="lab">Snapshots (client-side; the server is never mutated)</span>
+    <div class="row">
+      <button id="btn-reset" class="primary" title="Mark the current frame as baseline A and show change since the mark">RESET &mdash; mark baseline</button>
+      <div class="slots" id="slots"></div>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lab">Compare</span>
+    <div class="row">
+      <select id="cmpa" aria-label="compare A"></select>
+      <span class="hint">&rarr;</span>
+      <select id="cmpb" aria-label="compare B"></select>
+      <select id="cmpmetric" aria-label="compare metric">
+        <option value="delta" selected>&Delta; share (conserving)</option>
+        <option value="symlog">symlog &Delta; (boosts weak)</option>
+        <option value="logratio">log2 ratio (warned)</option>
+      </select>
+      <select id="cmpdomain" aria-label="compare domain">
+        <option value="1">&plusmn;1</option>
+        <option value="2">&plusmn;2</option>
+        <option value="4" selected>&plusmn;4</option>
+        <option value="8">&plusmn;8</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div id="banners"></div>
+
+<!-- ================================================================= FIGURE -->
+<div class="figwrap" id="figwrap">
+  <div class="figstack">
+    <canvas id="fig" role="img" aria-label="expert activation heatmap"></canvas>
+    <canvas id="overlay" aria-hidden="true"></canvas>
+  </div>
+</div>
+<p class="hint" style="margin:6px 2px 0">
+  Hover a cell for the exact record. The figure is a canvas and is opaque to screen readers &mdash; the same
+  numbers are in the tables below and in the CSV export.
+</p>
+
+<div id="tip" role="tooltip"></div>
+
+<details class="card" id="card-layer">
+  <summary>Layer detail &mdash; table view of the hovered layer</summary>
+  <div class="body">
+    <p class="note" id="layer-note">Hover the figure to pin a layer, then click to freeze it here.</p>
+    <div class="tblwrap"><table class="data" id="tbl-layer"></table></div>
+  </div>
+</details>
+
+<details class="card" id="card-movers">
+  <summary>Top movers &mdash; compare mode (a 3&nbsp;px cell cannot be read to an expert id)</summary>
+  <div class="body">
+    <p class="note" id="movers-note">Enable compare and fill two snapshots.</p>
+    <div class="tblwrap"><table class="data" id="tbl-movers"></table></div>
+  </div>
+</details>
+
+<details class="card" id="card-prov">
+  <summary>Provenance, invariants and warnings</summary>
+  <div class="body"><div class="kv" id="prov"></div></div>
+</details>
+
+<details class="card" id="card-adv">
+  <summary>Advanced &mdash; server-side reset (mutates shared state)</summary>
+  <div class="body">
+    <p class="note">
+      The page never needs this. <b>RESET</b> above is a client-side baseline: it costs no round trip,
+      it lets you hold four baselines at once, and it cannot corrupt what the policy loop and every other
+      viewer are reading. The two controls here <b>do</b> change shared server state.
+    </p>
+    <p class="note">
+      <b>scope: heatmap</b> rebases the endpoint's own cumulative accumulator. Harmless to the policy.<br>
+      <b>scope: collector</b> zeroes <code>_count_win</code> / <code>_windows_rolled</code>. The policy loop reads
+      exactly those arrays: the next 1&ndash;2 intervals score on a zeroed window, the Jaccard router-shift guard
+      holds all proposals, and pin-forced pairs bypass hysteresis and may swap against index order rather than
+      traffic. It is gated server-side behind <code>VLLM_FQ_HEATMAP_ALLOW_COLLECTOR_ZERO=1</code>.
+    </p>
+    <div class="row">
+      <label class="ck"><input type="checkbox" id="adv-enable"> I understand &mdash; enable server-side controls</label>
+      <button id="btn-srv-heatmap" disabled>POST reset scope=heatmap</button>
+      <button id="btn-srv-collector" class="danger" disabled>POST reset scope=collector</button>
+    </div>
+    <p class="note mono" id="adv-out"></p>
+  </div>
+</details>
+
+<details class="card" id="card-help">
+  <summary>How to read this figure</summary>
+  <div class="body">
+    <p class="note"><b>Magnitude panel (purple).</b> One hue, light&rarr;dark, so it degrades to a valid grayscale
+    ramp under any colour-vision deficiency and under photocopying. The value is
+    <code>log2( E &middot; count(l,e) / &Sigma;<sub>e</sub> count(l,e) )</code> &mdash; the expert's share of its
+    layer expressed in multiples of uniform routing, log2, clipped to &plusmn;4 (1/16&times; to 16&times;).
+    The domain is <b>fixed</b> and is never auto-scaled from the data, so two frames are always comparable.
+    <code>count</code> is a &lambda;-decayed window, not a token count: the values are floats and the window
+    self-forgets on a ~640-step horizon.</p>
+    <p class="note"><b>K-tier strip (green).</b> Ordinal, one hue, four fixed steps at even L* spacing
+    (K2 lightest &rarr; K5 darkest). The mapping is by K value and is never reassigned by frequency, so two
+    runs with different tier vocabularies are still directly comparable. Tier is <i>not</i> folded into the
+    magnitude fill: at 3&nbsp;px a bivariate hue&times;lightness cell makes cross-tier magnitude comparison &mdash;
+    the only comparison that matters for re-tiering &mdash; unanswerable.</p>
+    <p class="note"><b>Mismatch panel (diverging).</b> <code>rank(heat) &minus; rank(tier)</code> within each
+    layer, both in [0,1], ties averaged. Orange = hot but under-tiered (starved, promote); blue = cold but
+    over-tiered (wasted bits, demote); neutral gray = the tier agrees with the traffic. If the policy assigns K
+    by heat this panel is gray by construction, which is the correct answer. If every cell is the same tier the
+    panel collapses to the heat rank and carries no tier information &mdash; the caption says so when it happens.</p>
+    <p class="note"><b>Compare panel (diverging).</b> <code>E&middot;share_B &minus; E&middot;share_A</code>, linear,
+    neutral gray at zero. Every row sums to zero, so the panel reads literally as traffic moving between experts
+    within a layer. Log-ratio is offered but warned: it treats 0.03&times;&rarr;0.3&times; as equal to
+    2.4&times;&rarr;24&times; and saturates about half the cells.</p>
+    <p class="note"><b>Sorted order.</b> The strong dark&rarr;light gradient a sorted panel shows <i>is the sort</i>,
+    not a finding. The permutation is computed once from a named reference and applied identically to every panel;
+    its hash is printed on the figure and every panel is asserted to carry the same one.</p>
+  </div>
+</details>
+
+</div><!-- /wrap -->
+
+<script>
+"use strict";
+/* ====================================================================== */
+/* ==FQ-HEATMAP-CONSTANTS-BEGIN==                                         */
+/* Colour + normalisation constants. DESIGN.md sections 3.1, 3.2, 3.3.    */
+/* test_heatmap_math.py parses this block: keep the literals here and     */
+/* update the test if you change one.                                     */
+var RAMP_MAG = ["#FCFBFD","#EFEDF5","#DADAEB","#BCBDDC","#9E9AC8",
+                "#807DBA","#6A51A3","#54278F","#3F007D"];          /* Purples-9, sequential  */
+var RAMP_DIV = ["#005F9D","#2D81C0","#7DA4CE","#C1C1C1",
+                "#D89067","#C85B37","#9B3925"];                    /* diverging, neutral mid */
+var TIER_COLOR = {2:"#BBEFC7", 3:"#73C189", 4:"#289352", 5:"#096231"};
+var TIERS = [2,3,4,5];
+var MAG_DOMAIN  = 4.0;    /* log2(share/uniform) clipped to +/- this      */
+var MISMATCH_DOMAIN = 1.0;
+var LUT_N = 257;          /* odd, so index 128 is exactly the midpoint    */
+var DEAD_RGB = [255,255,255];   /* never routed: off-ramp, pure white     */
+var DEAD_FLAG_RGB = [232,17,45]; /* "flag dead cells" on                  */
+var CLIP_PIP_RGB = [0,0,0];
+/* ==FQ-HEATMAP-CONSTANTS-END==                                           */
+/* ====================================================================== */
+
+/* ----------------------------------------------------------- colour maths */
+/* sRGB <-> CIELAB (D65). Ramps are interpolated in Lab, never in sRGB:
+   sRGB interpolation of a light->dark ramp bends the lightness curve and
+   invents banding that is not in the scale.                               */
+var XN=0.95047, YN=1.0, ZN=1.08883, LEPS=216/24389, LKAPPA=24389/27;
+
+function hexRgb(h){
+  h = h.charAt(0)==="#" ? h.slice(1) : h;
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function s2l(c){ c=c/255; return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }
+function l2s(c){
+  var v = c<=0.0031308 ? 12.92*c : 1.055*Math.pow(c,1/2.4)-0.055;
+  v = Math.floor(v*255+0.5);
+  return v<0?0:(v>255?255:v);
+}
+function srgbToLab(rgb){
+  var r=s2l(rgb[0]), g=s2l(rgb[1]), b=s2l(rgb[2]);
+  var x=(0.4124564*r+0.3575761*g+0.1804375*b)/XN;
+  var y=(0.2126729*r+0.7151522*g+0.0721750*b)/YN;
+  var z=(0.0193339*r+0.1191920*g+0.9503041*b)/ZN;
+  function f(t){ return t>LEPS ? Math.pow(t,1/3) : (LKAPPA*t+16)/116; }
+  var fx=f(x), fy=f(y), fz=f(z);
+  return [116*fy-16, 500*(fx-fy), 200*(fy-fz)];
+}
+function labToSrgb(lab){
+  var L=lab[0], a=lab[1], b=lab[2];
+  var fy=(L+16)/116, fx=fy+a/500, fz=fy-b/200;
+  function fi(t){ var t3=t*t*t; return t3>LEPS ? t3 : (116*t-16)/LKAPPA; }
+  var x=fi(fx)*XN;
+  var y=(L>LKAPPA*LEPS ? Math.pow((L+16)/116,3) : L/LKAPPA)*YN;
+  var z=fi(fz)*ZN;
+  return [ l2s( 3.2404542*x-1.5371385*y-0.4985314*z),
+           l2s(-0.9692660*x+1.8760108*y+0.0415560*z),
+           l2s( 0.0556434*x-0.2040259*y+1.0572252*z) ];
+}
+function makeLut(stops, n){
+  var labs=[], i;
+  for(i=0;i<stops.length;i++) labs.push(srgbToLab(hexRgb(stops[i])));
+  var m=labs.length-1, out=new Uint8Array(n*3);
+  for(i=0;i<n;i++){
+    var t=(i/(n-1))*m, k=Math.floor(t), f;
+    if(k>=m){ k=m-1; f=1; } else { f=t-k; }
+    var A=labs[k], B=labs[k+1];
+    var c=labToSrgb([A[0]+(B[0]-A[0])*f, A[1]+(B[1]-A[1])*f, A[2]+(B[2]-A[2])*f]);
+    out[i*3]=c[0]; out[i*3+1]=c[1]; out[i*3+2]=c[2];
+  }
+  return out;
+}
+var LUT_MAG = makeLut(RAMP_MAG, LUT_N);
+var LUT_DIV = makeLut(RAMP_DIV, LUT_N);
+
+/* index into a LUT for value v on the closed domain [lo,hi]; clamped. */
+function lutIndex(v, lo, hi){
+  var t=(v-lo)/(hi-lo);
+  var i=Math.floor(t*(LUT_N-1)+0.5);
+  return i<0?0:(i>LUT_N-1?LUT_N-1:i);
+}
+function lutCss(lut, i){ return "rgb("+lut[i*3]+","+lut[i*3+1]+","+lut[i*3+2]+")"; }
+
+/* nine unit-wide bands over [-4,+4]; band 0 = below -3, band 8 = at/above +4.
+   Used by the legend and by the maths test, not by the renderer.          */
+function band9(v){
+  if(!isFinite(v)) return 0;
+  var b=Math.floor(v)+4;
+  return b<0?0:(b>8?8:b);
+}
+
+/* --------------------------------------------------------------- utilities */
+function $(id){ return document.getElementById(id); }
+function clamp(x,a,b){ return x<a?a:(x>b?b:x); }
+function fmt(x, sig){
+  if(x===null||x===undefined||!isFinite(x)) return "—";
+  if(x===0) return "0";
+  sig = sig || 4;
+  var a=Math.abs(x);
+  if(a>=1e6||a<1e-4) return x.toExponential(2);
+  var s=x.toPrecision(sig);
+  if(s.indexOf(".")>=0) s=s.replace(/0+$/,"").replace(/\.$/,"");
+  return s;
+}
+function pct(x){ return (100*x).toFixed(2)+"%"; }
+function fnv(str){
+  var h=0x811c9dc5, i;
+  for(i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=(h*0x01000193)>>>0; }
+  return ("0000000"+h.toString(16)).slice(-8);
+}
+function fnvArr(arr){
+  var h=0x811c9dc5, i;
+  for(i=0;i<arr.length;i++){ h^=(arr[i]&255); h=(h*0x01000193)>>>0;
+                             h^=((arr[i]>>8)&255); h=(h*0x01000193)>>>0; }
+  return ("0000000"+h.toString(16)).slice(-8);
+}
+function nowStamp(){
+  var d=new Date(), p=function(n){ return (n<10?"0":"")+n; };
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
+}
+function timeOf(ms){
+  var d=new Date(ms), p=function(n){ return (n<10?"0":"")+n; };
+  return p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+}
+
+/* ------------------------------------------------------------ wire decoding */
+function b64bytes(s){
+  var bin=atob(s), n=bin.length, out=new Uint8Array(n), i;
+  for(i=0;i<n;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+/* bf16 is float32 with the low 16 mantissa bits dropped: the bit pattern IS
+   the top half of a float32, so the decode is a shift.                      */
+function decodeBf16(s, n){
+  var b=b64bytes(s);
+  if(b.length!==2*n) throw new Error("bf16 array is "+(b.length/2)+" cells, expected "+n);
+  var f=new Float32Array(n), u=new Uint32Array(f.buffer), i;
+  for(i=0;i<n;i++) u[i]=((b[2*i]|(b[2*i+1]<<8))<<16)>>>0;
+  return f;
+}
+function decodeF32(s, n){
+  var b=b64bytes(s);
+  if(b.length!==4*n) throw new Error("f32 array is "+(b.length/4)+" cells, expected "+n);
+  var dv=new DataView(b.buffer), f=new Float32Array(n), i;
+  for(i=0;i<n;i++) f[i]=dv.getFloat32(4*i, true);
+  return f;
+}
+function decodeU8(s, n){
+  var b=b64bytes(s);
+  if(b.length!==n) throw new Error("u8 array is "+b.length+" cells, expected "+n);
+  return b;
+}
+function decodeU32(s, n){
+  var b=b64bytes(s);
+  if(b.length!==4*n) throw new Error("u32 array is "+(b.length/4)+" cells, expected "+n);
+  var dv=new DataView(b.buffer), o=new Float64Array(n), i;
+  for(i=0;i<n;i++) o[i]=dv.getUint32(4*i, true);
+  return o;
+}
+
+/* ================================================================== FRAMES */
+/* A Frame is one sample: the raw arrays plus everything derivable from them.
+   Derived quantities are cached per metric.                                 */
+function flatten2d(a, L, E, name){
+  if(a.length!==L) throw new Error(name+" has "+a.length+" rows, expected "+L);
+  var out=new Float64Array(L*E), l, e, row;
+  for(l=0;l<L;l++){
+    row=a[l];
+    if(row.length!==E) throw new Error(name+" row "+l+" has "+row.length+" cells, expected "+E);
+    for(e=0;e<E;e++) out[l*E+e]=row[e];
+  }
+  return out;
+}
+
+/* Accepts BOTH wire shapes:
+    (1) the fq-heatmap/1 envelope (base64 bf16/f32/u8 arrays), and
+    (2) a raw VLLM_FQ_DUMP_STATS record (nested JSON arrays),
+   which is what the archived dumps and a naive endpoint both produce.       */
+function parseSample(j, label, source){
+  if(!j || typeof j!=="object") throw new Error("sample is not an object");
+  var layers = j.layers;
+  if(!layers || !layers.length) throw new Error("sample has no 'layers' array");
+  var L = layers.length;
+  var envelope = (typeof j.count === "string");
+  var E, count, mass=null, tier=null, warnings=[];
+
+  if(envelope){
+    E = j.num_experts;
+    if(!E) throw new Error("envelope has no num_experts");
+    if(j.num_layers!==undefined && j.num_layers!==L)
+      throw new Error("num_layers "+j.num_layers+" != layers.length "+L);
+    var cells = (j.cells!==undefined) ? j.cells : L*E;
+    if(cells !== L*E) throw new Error("cells "+cells+" != num_layers*num_experts "+(L*E));
+    var enc = j.encoding || {};
+    var dec = function(blob, kind){
+      if(blob===null||blob===undefined) return null;
+      var k = enc[kind] || "bf16";
+      if(k==="bf16") return decodeBf16(blob, cells);
+      if(k==="f32")  return decodeF32(blob, cells);
+      if(k==="u32")  return decodeU32(blob, cells);
+      throw new Error("unsupported encoding for "+kind+": "+k);
+    };
+    if(enc.layout && enc.layout!=="layer-major")
+      throw new Error("unsupported layout "+enc.layout+" (expected layer-major)");
+    count = dec(j.count, "count");
+    if(count) count = Float64Array.from(count);
+    mass = dec(j.mass, "mass");
+    if(mass) mass = Float64Array.from(mass);
+    if(j.tier) tier = decodeU8(j.tier, cells);
+    if(j.warnings && j.warnings.length) warnings = warnings.concat(j.warnings);
+  } else {
+    if(!j.count || !j.count.length) throw new Error("record has no 'count'");
+    E = j.count[0].length;
+    count = flatten2d(j.count, L, E, "count");
+    if(j.mass) mass = flatten2d(j.mass, L, E, "mass");
+    if(j.tier_of){
+      /* HAZARD: policy files carry 76 layer keys (3..78, incl. the MTP layer)
+         while stats carry 75 (3..77). Take tier from the sample, which is
+         already aligned to `layers`, and assert the lengths agree.          */
+      if(j.tier_of.length!==L)
+        throw new Error("tier_of has "+j.tier_of.length+" rows but layers has "+L+
+                        " (policy files carry the MTP layer; stats do not)");
+      tier=new Uint8Array(L*E);
+      for(var l=0;l<L;l++) for(var e=0;e<E;e++) tier[l*E+e]=j.tier_of[l][e];
+    }
+  }
+  if(!count) throw new Error("sample carries no count array");
+  if(count.length!==L*E) throw new Error("count decoded to "+count.length+" cells, expected "+(L*E));
+
+  /* mass_is_real is a FLAG, never an inference from array equality: a uniform
+     router legitimately produces count == mass. Absent != false.            */
+  var mir = (j.mass_is_real===undefined) ? null : !!j.mass_is_real;
+
+  var f = {
+    label: label, source: source,
+    layers: Int32Array.from(layers), L:L, E:E,
+    count: count, mass: mass, massIsReal: mir, tier: tier,
+    step: (j.step===undefined?null:j.step),
+    interval: (j.interval===undefined?null:j.interval),
+    window: j.window || null,
+    sampleId: (j.sample_id===undefined?null:j.sample_id),
+    bootId: j.server_boot_id || null,
+    policySha: j.policy_sha || null,
+    ranks: j.ranks || null,
+    sampledAt: j.sampled_at_unix_ms || Date.now(),
+    ts: Date.now(),
+    warnings: warnings,
+    _d: {}
+  };
+  if(mir===null) f.warnings = f.warnings.concat(
+    ["mass_is_real is absent from this sample — the mass panel is UNVERIFIED and may be an alias of count"]);
+  if(mir===false && mass===null) f.mass=null;
+  return f;
+}
+
+/* Per-metric derived quantities. */
+function derive(f, metric){
+  var key = metric;
+  if(f._d[key]) return f._d[key];
+  var src = (metric==="mass" && f.mass) ? f.mass : f.count;
+  var L=f.L, E=f.E, l, e, i;
+  var rowSum=new Float64Array(L), rel=new Float64Array(L*E), v=new Float32Array(L*E);
+  var entropy=new Float64Array(L), maxRel=new Float64Array(L);
+  var dead=0, clipLo=0, clipHi=0, total=0;
+  var lnE=Math.log(E);
+  for(l=0;l<L;l++){
+    var s=0;
+    for(e=0;e<E;e++) s+=src[l*E+e];
+    rowSum[l]=s; total+=s;
+    var H=0, mx=0;
+    for(e=0;e<E;e++){
+      i=l*E+e;
+      var sh = s>0 ? src[i]/s : 0;
+      var r = sh*E;
+      rel[i]=r;
+      if(sh>0) H -= sh*Math.log(sh);
+      if(r>mx) mx=r;
+      if(src[i]<=0){ dead++; v[i]=-Infinity; }
+      else {
+        var x=Math.log(r)/Math.LN2;
+        if(x < -MAG_DOMAIN){ clipLo++; x=-MAG_DOMAIN; }
+        else if(x > MAG_DOMAIN){ clipHi++; x=MAG_DOMAIN; }
+        v[i]=x;
+      }
+    }
+    entropy[l]= s>0 ? H/lnE : 0;
+    maxRel[l]=mx;
+  }
+  /* DESIGN.md 5.1: per-layer totals are identical under top-k routing, so
+     per-layer share == per-run share up to the constant L. Assert it; a shared
+     expert or a varying top_k breaks it and the figure must say so.          */
+  var dev=0;
+  if(rowSum[0]>0) for(l=0;l<L;l++) dev=Math.max(dev, Math.abs(rowSum[l]-rowSum[0])/rowSum[0]);
+  var d = { src:src, rowSum:rowSum, rel:rel, v:v, entropy:entropy, maxRel:maxRel,
+            dead:dead, clipLo:clipLo, clipHi:clipHi, total:total, rowSumDev:dev,
+            rowSumOk:(dev<1e-9),
+            /* which array was actually read — so nothing can render `count`
+               under a label that says `mass`                                */
+            metricUsed:(src===f.mass ? "mass" : "count") };
+  f._d[key]=d;
+  return d;
+}
+
+/* rank in [0,1] within a row, ties averaged */
+function rank01(vals, off, n, out){
+  var idx=new Int32Array(n), i;
+  for(i=0;i<n;i++) idx[i]=i;
+  var a=Array.prototype.slice.call(idx);
+  a.sort(function(p,q){ return vals[off+p]-vals[off+q]; });
+  i=0;
+  while(i<n){
+    var j=i;
+    while(j+1<n && vals[off+a[j+1]]===vals[off+a[i]]) j++;
+    var avg=(i+j)/2, r = n>1 ? avg/(n-1) : 0.5;
+    for(var k=i;k<=j;k++) out[a[k]]=r;
+    i=j+1;
+  }
+  return out;
+}
+
+/* ================================================================== STATE  */
+var S = {
+  endpoint:"http://127.0.0.1:8000", token:"",
+  pollMs:2000, paused:false,
+  metric:"count", order:"native", orderRef:"pooled",
+  cell:"fit", tierStrip:true, mismatch:false, compare:false, stack:false,
+  marginals:true, flagDead:false, tierNative:false,
+  cmpA:"A", cmpB:"live", cmpMetric:"delta", cmpDomain:4,
+  live:null, offline:null, slots:{A:null,B:null,C:null,D:null},
+  etag:null, fails:0, lastOk:null, lastErr:null, timer:null, inflight:false,
+  exportLight:false, pinnedLayer:null, hoverLayer:null,
+  file:null, fileOffsets:null,
+  banners:[]
+};
+try{
+  var saved=JSON.parse(localStorage.getItem("fq-heatmap-ui")||"{}");
+  ["endpoint","pollMs","metric","order","orderRef","cell","tierStrip","mismatch",
+   "compare","stack","marginals","flagDead","tierNative","cmpMetric","cmpDomain"].forEach(function(k){
+     if(saved[k]!==undefined) S[k]=saved[k];
+  });
+}catch(e){ /* file:// localStorage may be unavailable; defaults are fine */ }
+function saveUi(){
+  try{
+    var o={}; ["endpoint","pollMs","metric","order","orderRef","cell","tierStrip","mismatch",
+      "compare","stack","marginals","flagDead","tierNative","cmpMetric","cmpDomain"].forEach(function(k){o[k]=S[k];});
+    localStorage.setItem("fq-heatmap-ui", JSON.stringify(o));
+  }catch(e){}
+}
+
+function currentFrame(){ return S.offline || S.live; }
+function resolveRef(name){
+  if(name==="live") return currentFrame();
+  if(S.slots[name]) return S.slots[name];
+  return null;
+}
+function snapshot(f, label){
+  if(!f) return null;
+  var g={}, k;
+  for(k in f) if(Object.prototype.hasOwnProperty.call(f,k)) g[k]=f[k];
+  g.count=Float64Array.from(f.count);
+  g.mass=f.mass?Float64Array.from(f.mass):null;
+  g.tier=f.tier?Uint8Array.from(f.tier):null;
+  g._d={}; g.label=label; g.frozenAt=Date.now();
+  return g;
+}
+
+/* ============================================================ PERMUTATION  */
+/* One permutation, computed once from a named reference, applied identically
+   to every panel. Per-panel sorting would make every panel show the same
+   monotone gradient by construction and destroy all comparison.             */
+function buildPerm(frames){
+  var f0=frames[0];
+  var L=f0.L, E=f0.E, l, e, i;
+  var perm=[], ident=true;
+  if(S.order!=="sorted"){
+    for(l=0;l<L;l++){
+      var a=new Int32Array(E);
+      for(e=0;e<E;e++) a[e]=e;
+      perm.push(a);
+    }
+    return { perm:perm, hash:"native", ref:"native expert id", identity:true };
+  }
+  /* reference: pooled mean of rel across the named frames, or one frame */
+  var refFrames, refName;
+  if(S.orderRef==="pooled"){ refFrames=frames; refName="pooled mean of "+frames.length+" panel(s)"; }
+  else {
+    var rf=resolveRef(S.orderRef);
+    if(!rf) { refFrames=frames; refName="pooled (slot "+S.orderRef+" empty)"; }
+    else { refFrames=[rf]; refName=(S.orderRef==="live"?"live/current":"slot "+S.orderRef)+" «"+rf.label+"»"; }
+  }
+  var acc=new Float64Array(L*E);
+  for(i=0;i<refFrames.length;i++){
+    var rf2=refFrames[i];
+    if(rf2.L!==L||rf2.E!==E) continue;
+    var d=derive(rf2, S.metric);
+    for(var q=0;q<L*E;q++) acc[q]+=d.rel[q];
+  }
+  for(l=0;l<L;l++){
+    var arr=[];
+    for(e=0;e<E;e++) arr.push(e);
+    (function(off){
+      arr.sort(function(p,q){
+        var dv=acc[off+q]-acc[off+p];   /* hottest first */
+        return dv!==0 ? dv : p-q;       /* stable, deterministic */
+      });
+    })(l*E);
+    var a2=Int32Array.from(arr);
+    for(e=0;e<E;e++) if(a2[e]!==e) ident=false;
+    perm.push(a2);
+  }
+  var hs=0x811c9dc5;
+  for(l=0;l<L;l++) for(e=0;e<E;e++){ hs^=(perm[l][e]&255); hs=(hs*0x01000193)>>>0;
+                                     hs^=((perm[l][e]>>8)&255); hs=(hs*0x01000193)>>>0; }
+  return { perm:perm, hash:("0000000"+hs.toString(16)).slice(-8), ref:refName, identity:ident };
+}
+
+/* ================================================================ PANELS   */
+function buildPanels(){
+  var out=[], k, f;
+  var slotKeys=["A","B","C","D"];
+  if(S.stack){
+    for(k=0;k<slotKeys.length;k++){
+      f=S.slots[slotKeys[k]];
+      if(f) out.push({kind:"mag", frame:f, name:slotKeys[k]+" · "+f.label});
+    }
+    if(!out.length){ f=currentFrame(); if(f) out.push({kind:"mag", frame:f, name:f.label}); }
+  } else {
+    f=currentFrame();
+    if(f) out.push({kind:"mag", frame:f, name:f.label});
+  }
+  var tierFrame=null;
+  for(k=0;k<out.length;k++) if(out[k].frame.tier){ tierFrame=out[k].frame; break; }
+  if(!tierFrame){ f=currentFrame(); if(f&&f.tier) tierFrame=f; }
+  if(S.tierStrip && tierFrame) out.push({kind:"tier", frame:tierFrame, name:"K tier · "+tierFrame.label});
+  if(S.mismatch){
+    var mf = tierFrame || currentFrame();
+    if(mf && mf.tier) out.push({kind:"mismatch", frame:mf, name:"tier↔heat mismatch · "+mf.label});
+  }
+  if(S.compare){
+    var A=resolveRef(S.cmpA), B=resolveRef(S.cmpB);
+    if(A&&B&&A!==B&&A.L===B.L&&A.E===B.E)
+      out.push({kind:"diff", frame:B, a:A, b:B,
+                name:"compare · "+labelOf(S.cmpA)+" → "+labelOf(S.cmpB)});
+  }
+  return out;
+}
+function labelOf(sel){
+  var f=resolveRef(sel);
+  return (sel==="live"?"live":sel)+(f?" «"+f.label+"»":" (empty)");
+}
+
+/* ---- per-panel cell values, already permuted, as a Float64Array(L*E) ---- */
+function panelValues(p, perm){
+  var f=p.frame, L=f.L, E=f.E, l, e, i, j;
+  var out=new Float64Array(L*E);
+  var deadMask=null;
+  if(p.kind==="mag"){
+    var d=derive(f, S.metric);
+    deadMask=new Uint8Array(L*E);
+    for(l=0;l<L;l++) for(j=0;j<E;j++){
+      e=perm[l][j]; i=l*E+e;
+      out[l*E+j]=d.v[i];
+      if(d.src[i]<=0) deadMask[l*E+j]=1;
+    }
+    return {vals:out, dead:deadMask, lo:-MAG_DOMAIN, hi:MAG_DOMAIN, lut:LUT_MAG};
+  }
+  if(p.kind==="mismatch"){
+    var dm=derive(f, S.metric);
+    var zh=new Float64Array(E), zt=new Float64Array(E);
+    for(l=0;l<L;l++){
+      rank01(dm.rel, l*E, E, zh);
+      rank01(f.tier, l*E, E, zt);
+      for(j=0;j<E;j++){ e=perm[l][j]; out[l*E+j]=zh[e]-zt[e]; }
+    }
+    return {vals:out, dead:null, lo:-MISMATCH_DOMAIN, hi:MISMATCH_DOMAIN, lut:LUT_DIV};
+  }
+  if(p.kind==="diff"){
+    var da=derive(p.a, S.metric), db=derive(p.b, S.metric);
+    for(l=0;l<L;l++) for(j=0;j<E;j++){
+      e=perm[l][j]; i=l*E+e;
+      var x;
+      if(S.cmpMetric==="delta") x = db.rel[i]-da.rel[i];
+      else if(S.cmpMetric==="symlog"){
+        var dd=db.rel[i]-da.rel[i];
+        x = (dd<0?-1:1)*Math.log(1+Math.abs(dd))/Math.LN2;
+      } else {
+        x = (da.rel[i]>0 && db.rel[i]>0) ? Math.log(db.rel[i]/da.rel[i])/Math.LN2 : 0;
+      }
+      out[l*E+j]=x;
+    }
+    var dom=S.cmpDomain;
+    return {vals:out, dead:null, lo:-dom, hi:dom, lut:LUT_DIV};
+  }
+  /* tier */
+  for(l=0;l<L;l++) for(j=0;j<E;j++) out[l*E+j]=f.tier[l*E+perm[l][j]];
+  return {vals:out, dead:null, lo:0, hi:0, lut:null, tier:true};
+}
+
+/* ==FQ-HEATMAP-PURE-END==
+   Everything ABOVE this marker is DOM-free arithmetic: the colour ramps, the
+   wire decoders, parseSample/derive/rank01/buildPerm/panelValues. test_heatmap_math.py
+   slices the script at this marker and executes that prefix in QuickJS against
+   the real dumps, comparing every cell to an independent NumPy implementation.
+   Keep DOM access below the line.                                            */
+
+/* ================================================================ LAYOUT   */
+var cv=$("fig"), ctx=cv.getContext("2d");
+var ov=$("overlay"), octx=ov.getContext("2d");
+var scratch=document.createElement("canvas"), sctx=scratch.getContext("2d");
+var DPR=1;
+
+var PAD_L=58, PAD_R=8, GUT_W=104, PAD_T=12, PAD_B=12;
+var TITLE_LH=15, PANEL_LABEL_H=17, PANEL_GAP=16, MARG_H=9, XAXIS_H=16;
+
+function chooseCell(E){
+  if(S.cell!=="fit") return parseInt(S.cell,10);
+  var avail=$("figwrap").clientWidth-22-PAD_L-PAD_R-(S.marginals?GUT_W:0);
+  var c=Math.floor(avail/E);
+  return clamp(isFinite(c)?c:3, 1, 12);
+}
+
+function computeLayout(){
+  var panels=buildPanels();
+  if(!panels.length) return {panels:[], W:820, H:180, empty:true};
+  var frames=[], i;
+  for(i=0;i<panels.length;i++) if(panels[i].kind==="mag") frames.push(panels[i].frame);
+  if(!frames.length) frames=[panels[0].frame];
+  var P=buildPerm(frames);
+  var f0=panels[0].frame, E=f0.E, L=f0.L;
+  var cell=chooseCell(E);
+  var pw=E*cell;
+  var x0=PAD_L, y=PAD_T;
+
+  var head=titleLines(panels, P);
+  y += head.length*TITLE_LH + 8;
+
+  for(i=0;i<panels.length;i++){
+    var p=panels[i];
+    p.cell=cell; p.x=x0; p.w=pw;
+    p.labelY = y + 12;
+    y += PANEL_LABEL_H;
+    if(S.marginals && p.kind==="mag"){ p.margY=y; y += MARG_H+2; } else p.margY=null;
+    p.y=y; p.h=p.frame.L*cell;
+    y += p.h + PANEL_GAP;
+  }
+  y += XAXIS_H;
+  var legendY=y;
+  var legH=legendHeight(panels);
+  y += legH;
+  var capY=y+4;
+  var capLines=captionLines(panels, P, pw+ (S.marginals?GUT_W:0));
+  y = capY + capLines.length*13 + 6;
+
+  var W = PAD_L + pw + (S.marginals?GUT_W:0) + PAD_R;
+  W = Math.max(W, 900);   /* the legend row needs this much */
+  return {panels:panels, perm:P, W:W, H:y+PAD_B, head:head, legendY:legendY,
+          capY:capY, capLines:capLines, cell:cell, E:E, L:L, x0:x0, pw:pw};
+}
+
+/* ================================================================ DRAWING  */
+function ground(){ return S.exportLight ? "#FFFFFF" : cssVar("--fig-ground"); }
+function inkA(){ return S.exportLight ? "#16161D" : cssVar("--fig-ink"); }
+function inkB(){ return S.exportLight ? "#5A5A68" : cssVar("--fig-ink-2"); }
+function lineC(){ return S.exportLight ? "#D2D2DC" : cssVar("--fig-line"); }
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function txt(s,x,y,size,color,weight,align){
+  ctx.font=(weight||400)+" "+(size||12)+"px "+"ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  ctx.fillStyle=color||inkA();
+  ctx.textAlign=align||"left";
+  ctx.textBaseline="alphabetic";
+  ctx.fillText(s,x,y);
+}
+function mtxt(s,x,y,size,color,align){
+  ctx.font=(size||11)+"px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+  ctx.fillStyle=color||inkB();
+  ctx.textAlign=align||"left";
+  ctx.textBaseline="alphabetic";
+  ctx.fillText(s,x,y);
+}
+
+function titleLines(panels, P){
+  var f=panels[0].frame, d=derive(f,S.metric);
+  var L=[];
+  L.push({t:"FQ expert activation — "+f.L+" layers ("+f.layers[0]+"–"+f.layers[f.L-1]+") × "+f.E+" experts", s:14, w:650});
+  var mstate = f.massIsReal===true ? "real gate mass" :
+               (f.massIsReal===false ? "not recorded (VLLM_FQ_GATE_MASS=0)" : "unknown (mass_is_real field absent)");
+  var bits=[];
+  bits.push("metric "+d.metricUsed+
+            (d.metricUsed!==S.metric ? " ⚠ REQUESTED "+S.metric+" BUT NOT AVAILABLE" : "")+
+            (d.metricUsed==="mass"&&f.massIsReal!==true?" ⚠ UNVERIFIED":""));
+  bits.push("mass_is_real: "+mstate);
+  if(f.step!==null) bits.push("step "+f.step);
+  if(f.interval!==null) bits.push("interval "+f.interval);
+  if(f.window) bits.push("window len "+f.window.len+" stride "+f.window.stride+" decay "+f.window.decay+
+                         (f.window.rolled!==undefined?" rolled "+f.window.rolled:""));
+  bits.push("Σ assignments "+fmt(d.total,5));
+  L.push({t:bits.join("  ·  "), s:11, w:400, c:inkB()});
+  var b2=[];
+  b2.push("source: "+f.source+" «"+f.label+"»");
+  b2.push("sampled "+timeOf(f.sampledAt));
+  if(f.ranks) b2.push("ranks "+f.ranks.count+" agree="+f.ranks.agree);
+  if(f.policySha) b2.push("policy "+String(f.policySha).slice(0,12));
+  b2.push("order: "+(S.order==="sorted"?("sorted, ref "+P.ref+", perm "+P.hash):"native expert id"));
+  L.push({t:b2.join("  ·  "), s:11, w:400, c:inkB()});
+  return L;
+}
+
+function captionLines(panels, P, wide){
+  var f=panels[0].frame, d=derive(f,S.metric), out=[];
+  var E=f.E;
+  out.push("Normalisation: log2( "+E+" · "+S.metric+"(l,e) / Σₑ "+S.metric+"(l,e) ) — the expert's share of its layer in multiples of uniform routing (1/"+E+"). Domain fixed at ±4 (1/16×…16×), never auto-scaled.");
+  out.push("Row-sum invariant: max|Σₑ − Σₑ[0]| / Σₑ[0] = "+d.rowSumDev.toExponential(2)+
+           (d.rowSumOk ? "  (< 1e-9 — per-layer share equals per-run share up to the constant L)"
+                       : "  ⚠ VIOLATED — per-layer share is used and is NOT equivalent to per-run share"));
+  out.push("Clipped: "+d.clipLo+" cells ("+pct(d.clipLo/(f.L*f.E))+") below 1/16×, "+d.clipHi+" ("+pct(d.clipHi/(f.L*f.E))+") above 16×.  Dead (never routed): "+d.dead+
+           (S.flagDead?" — flagged crimson":" — drawn pure white"));
+  out.push("`"+S.metric+"` is a λ-decayed window, not a token count: the values are floats and traffic older than ~"+
+           (f.window?Math.round(f.window.stride/(1-f.window.decay)):640)+" engine steps has already decayed out.");
+  if(S.order==="sorted")
+    out.push("⚠ The dark→light gradient in a sorted panel IS THE SORT, not a finding. One permutation ("+P.hash+") from "+P.ref+" is applied identically to every panel above.");
+  var tp=null, i;
+  for(i=0;i<panels.length;i++) if(panels[i].kind==="tier"||panels[i].kind==="mismatch"){ tp=panels[i]; break; }
+  if(tp){
+    var vocab=tierVocab(tp.frame);
+    if(vocab.length<2) out.push("⚠ Tier is uniform (K"+vocab.join("/")+" everywhere): the tier strip carries no information and the mismatch panel collapses to the heat rank.");
+    else if(S.order==="sorted"&&!S.tierNative) out.push("Note: with columns sorted by heat, a heat-derived tier assignment renders as a trivial staircase. Tick ‘tier strip in native order’ to read it.");
+  }
+  for(i=0;i<panels.length;i++) if(panels[i].kind==="diff"){
+    var st=diffStats(panels[i]);
+    out.push("Compare: "+cmpMetricLabel()+", domain ±"+S.cmpDomain+". Row conservation max|Σₑ Δ| = "+st.conserve.toExponential(1)+
+             (S.cmpMetric==="delta"?"  (≡ 0: the panel reads as traffic moving between experts within a layer)":"  ⚠ this metric does not conserve"));
+    out.push("Per-layer Spearman ρ of expert heat A↔B: min "+st.rho.min.toFixed(2)+" / median "+st.rho.med.toFixed(2)+" / max "+st.rho.max.toFixed(2)+
+             "   ·   top-32 overlap median "+(100*st.ov.med).toFixed(0)+"%   ·   |Δ|>1 for "+pct(st.gt1)+", clipped "+pct(st.clip));
+  }
+  var warn=[];
+  for(i=0;i<panels.length;i++){
+    var ws=panels[i].frame.warnings||[];
+    for(var q=0;q<ws.length;q++) if(warn.indexOf(ws[q])<0) warn.push(ws[q]);
+  }
+  for(i=0;i<warn.length;i++) out.push("⚠ "+warn[i]);
+
+  /* wrap */
+  var wrapped=[], maxw=Math.max(560, wide);
+  ctx.font="11px ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  for(i=0;i<out.length;i++){
+    var words=out[i].split(" "), line="";
+    for(var w=0;w<words.length;w++){
+      var test=line?line+" "+words[w]:words[w];
+      if(ctx.measureText(test).width>maxw && line){ wrapped.push(line); line=words[w]; }
+      else line=test;
+    }
+    if(line) wrapped.push(line);
+  }
+  return wrapped;
+}
+function cmpMetricLabel(){
+  if(S.cmpMetric==="delta") return "Δ of share in units of uniform (E·share_B − E·share_A)";
+  if(S.cmpMetric==="symlog") return "symlog Δ = sign(d)·log2(1+|d|) — breaks the conservation reading";
+  return "log2(share_B / share_A) — treats 0.03×→0.3× as equal to 2.4×→24×";
+}
+function tierVocab(f){
+  if(!f.tier) return [];
+  var s={}, i, out=[];
+  for(i=0;i<f.tier.length;i++) s[f.tier[i]]=1;
+  for(i=0;i<TIERS.length;i++) if(s[TIERS[i]]) out.push(TIERS[i]);
+  for(var k in s) if(out.indexOf(+k)<0) out.push(+k);
+  out.sort(function(a,b){return a-b;});
+  return out;
+}
+
+function legendHeight(panels){
+  var h=0, kinds={};
+  for(var i=0;i<panels.length;i++) kinds[panels[i].kind]=1;
+  if(kinds.mag) h+=34;
+  if(kinds.tier) h+=30;
+  if(kinds.mismatch) h+=34;
+  if(kinds.diff) h+=34;
+  return h+4;
+}
+
+function drawRamp(x,y,w,h,lut){
+  var i, n=w;
+  for(i=0;i<n;i++){
+    var li=Math.round(i/(n-1)*(LUT_N-1));
+    ctx.fillStyle=lutCss(lut,li);
+    ctx.fillRect(x+i,y,1,h);
+  }
+  ctx.strokeStyle=lineC(); ctx.lineWidth=1;
+  ctx.strokeRect(x+0.5,y+0.5,w-1,h-1);
+}
+function rampTicks(x,y,w,h,ticks){
+  for(var i=0;i<ticks.length;i++){
+    var t=ticks[i], px=x+Math.round(t.p*(w-1));
+    ctx.fillStyle=inkB(); ctx.fillRect(px,y+h,1,3);
+    mtxt(t.l, px, y+h+13, 10, inkB(), "center");
+  }
+}
+
+function drawLegends(panels, y0){
+  var kinds={}, i;
+  for(i=0;i<panels.length;i++) kinds[panels[i].kind]=1;
+  var x=PAD_L, y=y0+2, W=240;
+  if(kinds.mag){
+    txt("magnitude — "+S.metric+" share ÷ uniform, log2, clipped", x, y+9, 11, inkA(), 600);
+    drawRamp(x+312, y, W, 11, LUT_MAG);
+    rampTicks(x+312, y, W, 11, [{p:0,l:"1/16×"},{p:0.25,l:"1/4×"},{p:0.5,l:"1× uniform"},{p:0.75,l:"4×"},{p:1,l:"16×"}]);
+    ctx.fillStyle= S.flagDead ? "rgb("+DEAD_FLAG_RGB.join(",")+")" : "rgb("+DEAD_RGB.join(",")+")";
+    ctx.fillRect(x+312+W+18, y, 11, 11);
+    ctx.strokeStyle=lineC(); ctx.strokeRect(x+312+W+18.5, y+0.5, 10, 10);
+    mtxt("dead (never routed)", x+312+W+34, y+9, 10, inkB());
+    y+=34;
+  }
+  if(kinds.tier){
+    var tf=null;
+    for(i=0;i<panels.length;i++) if(panels[i].kind==="tier"||panels[i].kind==="mismatch"){ tf=panels[i].frame; break; }
+    var present=tf?tierVocab(tf):[];
+    txt("K tier — ordinal, fixed mapping by K value", x, y+9, 11, inkA(), 600);
+    var tx=x+312;
+    for(i=0;i<TIERS.length;i++){
+      var k=TIERS[i], on=present.indexOf(k)>=0;
+      ctx.globalAlpha= on?1:0.28;
+      ctx.fillStyle=TIER_COLOR[k];
+      ctx.fillRect(tx, y, 26, 11);
+      ctx.strokeStyle=lineC(); ctx.strokeRect(tx+0.5, y+0.5, 25, 10);
+      ctx.globalAlpha=1;
+      mtxt("K"+k+(on?"":" · absent"), tx, y+23, 10, inkB(), "left");
+      tx += on?70:86;
+    }
+    y+=30;
+  }
+  if(kinds.mismatch){
+    txt("mismatch — rank(heat) − rank(tier), within layer", x, y+9, 11, inkA(), 600);
+    drawRamp(x+312, y, W, 11, LUT_DIV);
+    rampTicks(x+312, y, W, 11, [{p:0,l:"−1"},{p:0.5,l:"0 agrees"},{p:1,l:"+1"}]);
+    mtxt("← cold, over-tiered (wasted bits)   ·   hot, under-tiered (starved) →", x+312, y+27, 10, inkB());
+    y+=34;
+  }
+  if(kinds.diff){
+    txt("compare — "+(S.cmpMetric==="delta"?"Δ share (×uniform)":S.cmpMetric), x, y+9, 11, inkA(), 600);
+    drawRamp(x+312, y, W, 11, LUT_DIV);
+    var D=S.cmpDomain;
+    rampTicks(x+312, y, W, 11, [{p:0,l:"−"+D},{p:0.25,l:"−"+(D/2)},{p:0.5,l:"0"},{p:0.75,l:"+"+(D/2)},{p:1,l:"+"+D}]);
+    mtxt("← A hotter   ·   B hotter →", x+312, y+27, 10, inkB());
+    y+=34;
+  }
+}
+
+function drawPanel(p, perm){
+  var f=p.frame, L=f.L, E=f.E, cell=p.cell, l, j, i;
+  var pv=panelValues(p, perm);
+  /* build the matrix at 1 device pixel per cell, then blit with smoothing
+     off. Fractional cell widths would make the browser resample, and
+     resampling a heatmap averages neighbouring experts into colours that
+     correspond to no data point.                                          */
+  scratch.width=E; scratch.height=L;
+  var id=sctx.createImageData(E,L), dd=id.data;
+  for(l=0;l<L;l++) for(j=0;j<E;j++){
+    i=l*E+j; var o=i*4, r,g,b;
+    if(pv.tier){
+      var hexc=TIER_COLOR[pv.vals[i]];
+      if(hexc){ var c=hexRgb(hexc); r=c[0]; g=c[1]; b=c[2]; }
+      else { r=170; g=170; b=170; }
+    } else if(pv.dead && pv.dead[i]){
+      var dc = S.flagDead ? DEAD_FLAG_RGB : DEAD_RGB;
+      r=dc[0]; g=dc[1]; b=dc[2];
+    } else {
+      var li=lutIndex(pv.vals[i], pv.lo, pv.hi);
+      r=pv.lut[li*3]; g=pv.lut[li*3+1]; b=pv.lut[li*3+2];
+    }
+    dd[o]=r; dd[o+1]=g; dd[o+2]=b; dd[o+3]=255;
+  }
+  sctx.putImageData(id,0,0);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(scratch, 0,0,E,L, p.x, p.y, E*cell, L*cell);
+  ctx.imageSmoothingEnabled=true;
+  ctx.strokeStyle=lineC(); ctx.lineWidth=1;
+  ctx.strokeRect(p.x-0.5, p.y-0.5, E*cell+1, L*cell+1);
+  p._pv=pv;
+
+  /* panel label */
+  var extra="";
+  if(p.kind==="tier"){
+    var vv=tierVocab(f);
+    extra=" — K{"+vv.join(",")+"}"+((S.order==="sorted"&&S.tierNative)?" (native id order)":"");
+  }
+  txt(p.name+extra, p.x, p.labelY, 11.5, inkA(), 650);
+
+  /* layer ticks */
+  var stepEvery = cell>=6?5:(cell>=3?10:25);
+  for(l=0;l<L;l++){
+    if(l%stepEvery===0 || l===L-1){
+      mtxt("L"+f.layers[l], p.x-6, p.y+l*cell+Math.max(8,cell)-1, 9.5, inkB(), "right");
+      ctx.fillStyle=lineC(); ctx.fillRect(p.x-4, p.y+l*cell, 3, 1);
+    }
+  }
+
+  /* column-mean marginal strip */
+  if(p.margY!==null && p.kind==="mag"){
+    var mstrip=new Float64Array(E);
+    for(j=0;j<E;j++){ var s=0; for(l=0;l<L;l++) s+=pv.vals[l*E+j]; mstrip[j]=s/L; }
+    for(j=0;j<E;j++){
+      var mi=lutIndex(mstrip[j], pv.lo, pv.hi);
+      ctx.fillStyle=lutCss(LUT_MAG, mi);
+      ctx.fillRect(p.x+j*cell, p.margY, cell, MARG_H);
+    }
+    ctx.strokeStyle=lineC(); ctx.strokeRect(p.x-0.5, p.margY-0.5, E*cell+1, MARG_H+1);
+    mtxt("col mean", p.x-6, p.margY+MARG_H-1, 9, inkB(), "right");
+  }
+
+  /* right gutter: two per-layer scalars */
+  if(S.marginals){
+    var gx=p.x+E*cell+14, bw=38;
+    var g1, g2, l1, l2, r1, r2;
+    if(p.kind==="diff"){
+      var st=diffStats(p);
+      g1=st.rhoRow; l1="ρ"; r1=[-1,1];
+      g2=st.movedRow; l2="moved"; r2=[0, Math.max(1e-9, st.movedMax)];
+    } else {
+      var d=derive(f,S.metric);
+      g1=d.entropy; l1="ent"; r1=[0.5,1];
+      g2=d.maxRel; l2="max×"; r2=[1, Math.max(2, maxOf(d.maxRel))];
+    }
+    mtxt(l1, gx, p.y-3, 9, inkB());
+    mtxt(l2, gx+bw+10, p.y-3, 9, inkB());
+    for(l=0;l<f.L;l++){
+      var h=Math.max(1, cell-(cell>2?1:0));
+      var t1=clamp((g1[l]-r1[0])/(r1[1]-r1[0]),0,1);
+      ctx.fillStyle=inkB(); ctx.globalAlpha=0.55;
+      ctx.fillRect(gx, p.y+l*cell, Math.max(1,Math.round(t1*bw)), h);
+      var t2=clamp((Math.log(Math.max(1e-9,g2[l]))/Math.LN2)/(Math.log(Math.max(1e-9,r2[1]))/Math.LN2),0,1);
+      if(p.kind==="diff") t2=clamp(g2[l]/r2[1],0,1);
+      ctx.fillRect(gx+bw+10, p.y+l*cell, Math.max(1,Math.round(t2*bw)), h);
+      ctx.globalAlpha=1;
+    }
+    ctx.strokeStyle=lineC();
+    ctx.strokeRect(gx-0.5, p.y-0.5, bw+1, f.L*cell+1);
+    ctx.strokeRect(gx+bw+9.5, p.y-0.5, bw+1, f.L*cell+1);
+    mtxt(r1[0]+"–"+fmt(r1[1],2), gx, p.y+f.L*cell+10, 9, inkB());
+    mtxt(fmt(r2[0],2)+"–"+fmt(r2[1],3), gx+bw+10, p.y+f.L*cell+10, 9, inkB());
+  }
+}
+function maxOf(a){ var m=-Infinity,i; for(i=0;i<a.length;i++) if(a[i]>m) m=a[i]; return m; }
+
+/* --------------------------------------------------------- compare stats  */
+var _diffCache={};
+function diffStats(p){
+  var key=p.a.label+"|"+p.b.label+"|"+S.metric+"|"+S.cmpMetric+"|"+S.cmpDomain+"|"+
+          (p.a.frozenAt||p.a.ts)+"|"+(p.b.frozenAt||p.b.ts);
+  if(_diffCache.key===key) return _diffCache.val;
+  var A=p.a, B=p.b, L=A.L, E=A.E;
+  var da=derive(A,S.metric), db=derive(B,S.metric);
+  var rhoRow=new Float64Array(L), movedRow=new Float64Array(L), ovRow=new Float64Array(L);
+  var conserve=0, gt1=0, clip=0, movedMax=0;
+  var ra=new Float64Array(E), rb=new Float64Array(E);
+  var l,e,i;
+  var movers=[];
+  for(l=0;l<L;l++){
+    var s=0, moved=0;
+    rank01(da.rel, l*E, E, ra);
+    rank01(db.rel, l*E, E, rb);
+    var mx=0, my=0;
+    for(e=0;e<E;e++){ mx+=ra[e]; my+=rb[e]; }
+    mx/=E; my/=E;
+    var num=0, dx=0, dy=0;
+    for(e=0;e<E;e++){
+      i=l*E+e;
+      var d=db.rel[i]-da.rel[i];
+      s+=d; moved+=Math.abs(d);
+      if(Math.abs(d)>1) gt1++;
+      if(Math.abs(d)>S.cmpDomain) clip++;
+      var u=ra[e]-mx, w=rb[e]-my;
+      num+=u*w; dx+=u*u; dy+=w*w;
+      movers.push([l,e,da.rel[i],db.rel[i],d]);
+    }
+    rhoRow[l]= (dx>0&&dy>0) ? num/Math.sqrt(dx*dy) : 0;
+    movedRow[l]=moved/2;
+    if(movedRow[l]>movedMax) movedMax=movedRow[l];
+    conserve=Math.max(conserve, Math.abs(s));
+    /* top-32 overlap */
+    var ta=topK(da.rel,l*E,E,32), tb=topK(db.rel,l*E,E,32), setA={}, ov=0;
+    for(e=0;e<32;e++) setA[ta[e]]=1;
+    for(e=0;e<32;e++) if(setA[tb[e]]) ov++;
+    ovRow[l]=ov/32;
+  }
+  movers.sort(function(x,y){ return Math.abs(y[4])-Math.abs(x[4]); });
+  movers=movers.slice(0,50);
+  var val={ rhoRow:rhoRow, movedRow:movedRow, movedMax:movedMax, conserve:conserve,
+            gt1:gt1/(L*E), clip:clip/(L*E),
+            rho:stats5(rhoRow), ov:stats5(ovRow), movers:movers, A:A, B:B };
+  _diffCache={key:key, val:val};
+  return val;
+}
+function topK(arr, off, n, k){
+  var idx=[], i;
+  for(i=0;i<n;i++) idx.push(i);
+  idx.sort(function(a,b){ return arr[off+b]-arr[off+a]; });
+  return idx.slice(0,k);
+}
+function stats5(a){
+  var b=Array.prototype.slice.call(a).sort(function(x,y){return x-y;});
+  return {min:b[0], med:b[Math.floor(b.length/2)], max:b[b.length-1]};
+}
+
+/* ================================================================= RENDER  */
+var LAYOUT=null;
+function render(){
+  /* FIRST: settle which metric is actually available, so nothing downstream
+     can draw `count` under a label that says `mass`.                        */
+  updateMassGate();
+  LAYOUT=computeLayout();
+  var W=LAYOUT.W, H=LAYOUT.H;
+  DPR=Math.max(1, Math.round(window.devicePixelRatio||1));
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+  cv.style.width=W+"px"; cv.style.height=H+"px";
+  ov.width=cv.width; ov.height=cv.height;
+  ov.style.width=W+"px"; ov.style.height=H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  octx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle=ground(); ctx.fillRect(0,0,W,H);
+
+  if(LAYOUT.empty){
+    txt("No data. Connect to a serve, or load a stats .jsonl dump (offline).", PAD_L, 46, 13, inkB(), 500);
+    cv.setAttribute("aria-label","empty heatmap; no sample loaded");
+    updateSidecars();
+    return;
+  }
+  var y=PAD_T+TITLE_LH, i;
+  for(i=0;i<LAYOUT.head.length;i++){
+    var hl=LAYOUT.head[i];
+    txt(hl.t, PAD_L, y, hl.s, hl.c||inkA(), hl.w);
+    y+=TITLE_LH;
+  }
+  var perm=LAYOUT.perm.perm;
+  for(i=0;i<LAYOUT.panels.length;i++){
+    var p=LAYOUT.panels[i];
+    var usePerm = (p.kind==="tier" && S.tierNative) ? identityPerm(p.frame) : perm;
+    drawPanel(p, usePerm);
+    p._perm=usePerm;
+  }
+  /* HAZARD (DESIGN.md 7.1): a permutation mismatch between panels is silent
+     and catastrophic. Assert every magnitude/diff/mismatch panel shares one. */
+  var shared=null, bad=false;
+  for(i=0;i<LAYOUT.panels.length;i++){
+    var q=LAYOUT.panels[i];
+    if(q.kind==="tier"&&S.tierNative) continue;
+    if(shared===null) shared=q._perm;
+    else if(shared!==q._perm) bad=true;
+  }
+  if(bad) txt("⚠ INTERNAL: panels do not share one permutation — this figure is meaningless", PAD_L, LAYOUT.legendY-4, 12, "#A32014", 700);
+
+  /* x axis */
+  var last=LAYOUT.panels[LAYOUT.panels.length-1];
+  var xa=last.y+last.h+13, E=LAYOUT.E, cell=LAYOUT.cell;
+  var every = cell>=6?16:(cell>=3?32:64);
+  for(i=0;i<=E;i+=every){
+    var px=LAYOUT.x0+i*cell;
+    ctx.fillStyle=lineC(); ctx.fillRect(px, last.y+last.h+1, 1, 3);
+    mtxt(String(i), px, xa, 9.5, inkB(), "center");
+  }
+  mtxt(S.order==="sorted"?"expert rank (sorted; not expert id)":"expert id", LAYOUT.x0+E*cell/2, xa+11, 10, inkB(), "center");
+
+  drawLegends(LAYOUT.panels, LAYOUT.legendY);
+
+  for(i=0;i<LAYOUT.capLines.length;i++)
+    txt(LAYOUT.capLines[i], PAD_L, LAYOUT.capY+11+i*13, 11, inkB(), 400);
+
+  var f0=LAYOUT.panels[0].frame, d0=derive(f0,S.metric);
+  cv.setAttribute("aria-label",
+    "Expert activation heatmap, "+f0.L+" layers by "+f0.E+" experts, metric "+S.metric+
+    ", max share "+fmt(maxOf(d0.maxRel),3)+" times uniform, "+d0.dead+" never-routed cells, "+
+    (d0.clipLo+d0.clipHi)+" clipped cells. The same values are in the layer table and the CSV export.");
+  updateSidecars();
+}
+var _identCache={};
+function identityPerm(f){
+  var k=f.L+"x"+f.E;
+  if(_identCache[k]) return _identCache[k];
+  var a=[], l, e;
+  for(l=0;l<f.L;l++){ var r=new Int32Array(f.E); for(e=0;e<f.E;e++) r[e]=e; a.push(r); }
+  _identCache[k]=a;
+  return a;
+}
+
+/* ================================================================== HOVER  */
+function hitTest(mx,my){
+  if(!LAYOUT||LAYOUT.empty) return null;
+  for(var i=0;i<LAYOUT.panels.length;i++){
+    var p=LAYOUT.panels[i];
+    if(mx>=p.x && mx<p.x+p.frame.E*p.cell && my>=p.y && my<p.y+p.frame.L*p.cell){
+      var col=Math.floor((mx-p.x)/p.cell), row=Math.floor((my-p.y)/p.cell);
+      if(col<0||col>=p.frame.E||row<0||row>=p.frame.L) return null;
+      return {p:p, row:row, col:col, e:p._perm[row][col]};
+    }
+  }
+  return null;
+}
+function onMove(ev){
+  var r=cv.getBoundingClientRect();
+  var mx=ev.clientX-r.left, my=ev.clientY-r.top;
+  var h=hitTest(mx,my);
+  octx.clearRect(0,0,ov.width,ov.height);
+  if(!h){ $("tip").style.display="none"; S.hoverLayer=null; return; }
+  S.hoverLayer=h;
+  /* crosshair on the overlay: never repaint the data canvas on mousemove */
+  var p=h.p;
+  octx.strokeStyle="rgba(63,0,125,.85)"; octx.lineWidth=1;
+  octx.strokeRect(p.x+h.col*p.cell-0.5, p.y+h.row*p.cell-0.5, p.cell+1, p.cell+1);
+  octx.strokeStyle="rgba(63,0,125,.28)";
+  octx.beginPath();
+  octx.moveTo(p.x, p.y+h.row*p.cell+p.cell/2); octx.lineTo(p.x+p.frame.E*p.cell, p.y+h.row*p.cell+p.cell/2);
+  octx.moveTo(p.x+h.col*p.cell+p.cell/2, p.y); octx.lineTo(p.x+h.col*p.cell+p.cell/2, p.y+p.frame.L*p.cell);
+  octx.stroke();
+  showTip(h, ev.clientX, ev.clientY);
+  if(!S.pinnedLayer) renderLayerTable(h.p.frame, h.row);
+}
+function showTip(h, cx, cy){
+  var p=h.p, f=p.frame, E=f.E, i=h.row*E+h.e;
+  var d=derive(f,S.metric);
+  var lid=f.layers[h.row];
+  var rows=[];
+  var sw="";
+  var pv=p._pv;
+  var cellVal=pv.vals[h.row*E+h.col];
+  if(pv.tier){ sw=TIER_COLOR[cellVal]||"#AAA"; }
+  else if(pv.dead && pv.dead[h.row*E+h.col]) sw= S.flagDead?"rgb("+DEAD_FLAG_RGB.join(",")+")":"#FFF";
+  else sw=lutCss(pv.lut, lutIndex(cellVal, pv.lo, pv.hi));
+
+  rows.push(["count", fmt(f.count[i],6)]);
+  rows.push(["mass", f.mass? fmt(f.mass[i],6)+(f.massIsReal===true?"":" ⚠"): (f.massIsReal===false?"not recorded":"—")]);
+  rows.push(["share × uniform", fmt(d.rel[i],4)+"×"]);
+  rows.push(["log2 rel", (d.rel[i]>0?fmt(Math.log(d.rel[i])/Math.LN2,3):"−∞")]);
+  var rk=rankOf(d.rel, h.row*E, E, h.e);
+  rows.push(["rank in layer", (rk+1)+" / "+E]);
+  rows.push(["K tier", f.tier? ("K"+f.tier[i]) : "—"]);
+  if(p.kind==="mismatch") rows.push(["mismatch", fmt(cellVal,3)+(cellVal>0?" (hot, under-tiered)":(cellVal<0?" (cold, over-tiered)":" (agrees)"))]);
+  if(p.kind==="diff"){
+    var da=derive(p.a,S.metric), db=derive(p.b,S.metric);
+    rows.push(["A "+p.a.label, fmt(da.rel[i],4)+"×"]);
+    rows.push(["B "+p.b.label, fmt(db.rel[i],4)+"×"]);
+    rows.push(["Δ (×uniform)", (db.rel[i]-da.rel[i]>=0?"+":"")+fmt(db.rel[i]-da.rel[i],4)]);
+  }
+  if(S.order==="sorted") rows.push(["column", (h.col+1)+" of "+E+" (sorted)"]);
+  var html='<div class="h"><span class="sw" style="background:'+sw+'"></span>L'+lid+' · E'+h.e+'</div><table>';
+  for(var k=0;k<rows.length;k++) html+='<tr><td class="k">'+rows[k][0]+'</td><td class="v">'+rows[k][1]+'</td></tr>';
+  html+='</table>';
+  var t=$("tip");
+  t.innerHTML=html; t.style.display="block";
+  var w=t.offsetWidth, hh=t.offsetHeight;
+  var x=cx+16, y=cy+16;
+  if(x+w>window.innerWidth-8) x=cx-w-16;
+  if(y+hh>window.innerHeight-8) y=Math.max(8, cy-hh-16);
+  t.style.left=x+"px"; t.style.top=y+"px";
+}
+function rankOf(arr, off, n, e){
+  var v=arr[off+e], r=0;
+  for(var i=0;i<n;i++) if(arr[off+i]>v) r++;
+  return r;
+}
+cv.addEventListener("mousemove", onMove);
+cv.addEventListener("mouseleave", function(){
+  $("tip").style.display="none";
+  octx.clearRect(0,0,ov.width,ov.height);
+});
+cv.addEventListener("click", function(ev){
+  var r=cv.getBoundingClientRect();
+  var h=hitTest(ev.clientX-r.left, ev.clientY-r.top);
+  if(!h) return;
+  S.pinnedLayer = (S.pinnedLayer && S.pinnedLayer.row===h.row) ? null : {frame:h.p.frame, row:h.row};
+  if(S.pinnedLayer) renderLayerTable(S.pinnedLayer.frame, S.pinnedLayer.row, true);
+  $("card-layer").open=true;
+});
+
+/* ============================================================== SIDECARS  */
+function renderLayerTable(f, row, pinned){
+  var E=f.E, d=derive(f,S.metric), off=row*E;
+  var idx=[], e;
+  for(e=0;e<E;e++) idx.push(e);
+  idx.sort(function(a,b){ return d.rel[off+b]-d.rel[off+a]; });
+  var html="<thead><tr><th>rank</th><th>expert</th><th>count</th><th>mass</th><th>share ×uniform</th><th>log2</th><th>K</th></tr></thead><tbody>";
+  for(var k=0;k<Math.min(64,E);k++){
+    e=idx[k];
+    html+="<tr><td class='num'>"+(k+1)+"</td><td class='num'>E"+e+"</td><td class='num'>"+fmt(f.count[off+e],6)+
+          "</td><td class='num'>"+(f.mass?fmt(f.mass[off+e],6):"—")+
+          "</td><td class='num'>"+fmt(d.rel[off+e],4)+"</td><td class='num'>"+
+          (d.rel[off+e]>0?fmt(Math.log(d.rel[off+e])/Math.LN2,3):"−∞")+
+          "</td><td class='num'>"+(f.tier?("K"+f.tier[off+e]):"—")+"</td></tr>";
+  }
+  html+="</tbody>";
+  $("tbl-layer").innerHTML=html;
+  $("layer-note").textContent = "Layer "+f.layers[row]+" of «"+f.label+"» — top 64 experts by "+S.metric+" share"+
+    (pinned?" (pinned; click the same row again to unpin)":" (hover to change, click to pin)")+
+    ".  entropy "+derive(f,S.metric).entropy[row].toFixed(3)+" (normalised), max "+fmt(d.maxRel[row],3)+"× uniform.";
+}
+function renderMovers(){
+  var p=null, i;
+  if(LAYOUT&&LAYOUT.panels) for(i=0;i<LAYOUT.panels.length;i++) if(LAYOUT.panels[i].kind==="diff") p=LAYOUT.panels[i];
+  if(!p){ $("movers-note").textContent="Enable the compare panel and fill two snapshots."; $("tbl-movers").innerHTML=""; return; }
+  var st=diffStats(p);
+  $("movers-note").textContent="Top 50 cells by |Δ share| between A «"+p.a.label+"» and B «"+p.b.label+
+    "». Row conservation max|ΣₑΔ| = "+st.conserve.toExponential(1)+".";
+  var html="<thead><tr><th>#</th><th>layer</th><th>expert</th><th>A ×uniform</th><th>B ×uniform</th><th>Δ</th><th>K</th></tr></thead><tbody>";
+  for(i=0;i<st.movers.length;i++){
+    var m=st.movers[i], lid=p.a.layers[m[0]];
+    var tier=p.b.tier?("K"+p.b.tier[m[0]*p.a.E+m[1]]):"—";
+    html+="<tr><td class='num'>"+(i+1)+"</td><td class='num'>L"+lid+"</td><td class='num'>E"+m[1]+
+          "</td><td class='num'>"+fmt(m[2],4)+"</td><td class='num'>"+fmt(m[3],4)+
+          "</td><td class='num'>"+(m[4]>=0?"+":"")+fmt(m[4],4)+"</td><td class='num'>"+tier+"</td></tr>";
+  }
+  $("tbl-movers").innerHTML=html+"</tbody>";
+}
+function renderProv(){
+  var f=currentFrame(), rows=[];
+  function add(k,v){ rows.push('<div class="k">'+k+'</div><div class="v">'+v+'</div>'); }
+  add("endpoint", S.endpoint+"/fq/heatmap");
+  add("connection", S.lastOk? ("last 200 at "+timeOf(S.lastOk)+", "+S.fails+" consecutive failures") : "no successful fetch yet");
+  if(S.etag) add("ETag", S.etag);
+  if(S.lastErr) add("last error", String(S.lastErr));
+  if(f){
+    var d=derive(f,S.metric);
+    add("frame", f.source+" «"+f.label+"»");
+    add("shape", f.L+" layers ["+f.layers[0]+".."+f.layers[f.L-1]+"] × "+f.E+" experts = "+(f.L*f.E)+" cells");
+    add("tier_of aligned", f.tier? ("yes, "+(f.tier.length/f.E)+" rows == "+f.L+" layers") : "no tier array in this sample");
+    add("mass_is_real", f.massIsReal===null? "ABSENT → unknown (not false)" : String(f.massIsReal));
+    add("row-sum invariant", d.rowSumDev.toExponential(3)+(d.rowSumOk?" OK":" VIOLATED"));
+    add("per-layer total", fmt(d.rowSum[0],10));
+    add("Σ assignments", fmt(d.total,8));
+    add("clipped low / high", d.clipLo+" / "+d.clipHi);
+    add("dead cells", String(d.dead));
+    add("tier vocabulary", f.tier? ("K{"+tierVocab(f).join(",")+"}") : "—");
+    if(f.window) add("window", JSON.stringify(f.window));
+    if(f.ranks) add("ranks", JSON.stringify(f.ranks));
+    if(f.warnings&&f.warnings.length) add("sample warnings", f.warnings.join(" | "));
+  }
+  if(LAYOUT&&LAYOUT.perm) add("permutation", LAYOUT.perm.hash+" — "+LAYOUT.perm.ref);
+  $("prov").innerHTML=rows.join("");
+}
+function updateSidecars(){ renderMovers(); renderProv(); renderSlots(); }
+
+/* ================================================================ BANNERS */
+function setBanners(){
+  var h="", i;
+  for(i=0;i<S.banners.length;i++){
+    var b=S.banners[i];
+    h+='<div class="banner '+b.cls+'"><span class="t">'+b.t+'</span><span>'+b.m+'</span></div>';
+  }
+  $("banners").innerHTML=h;
+}
+function banner(cls,t,m,key){
+  var i;
+  for(i=0;i<S.banners.length;i++) if(S.banners[i].key===key){ S.banners[i]={cls:cls,t:t,m:m,key:key}; setBanners(); return; }
+  S.banners.push({cls:cls,t:t,m:m,key:key}); setBanners();
+}
+function clearBanner(key){
+  S.banners=S.banners.filter(function(b){ return b.key!==key; });
+  setBanners();
+}
+
+/* ============================================================== NETWORKING */
+function baseUrl(){
+  var u=S.endpoint.trim().replace(/\/+$/,"");
+  return u;
+}
+async function fetchOnce(){
+  var url=baseUrl()+"/fq/heatmap";
+  var headers={"Accept":"application/json"};
+  if(S.token) headers["X-FQ-Heatmap-Token"]=S.token;
+  if(S.etag) headers["If-None-Match"]=S.etag;
+  var res;
+  try{
+    res=await fetch(url,{method:"GET", headers:headers, cache:"no-store", mode:"cors"});
+  }catch(e){
+    throw new Error("network: "+e.message+
+      " — if the serve is up this is almost certainly CORS: a file:// page sends Origin: null, "+
+      "so start vLLM with --allowed-origins '*' (dev only) or open this page from the serve's own origin.");
+  }
+  if(res.status===304){ return "notmodified"; }
+  if(!res.ok){
+    var body="";
+    try{ body=await res.text(); }catch(e2){ body=""; }
+    var code="";
+    try{ var j=JSON.parse(body); if(j.error) code=j.error.code+": "+j.error.message; }catch(e3){}
+    throw new Error("HTTP "+res.status+" "+(code||body.slice(0,240)));
+  }
+  /* ETag is NOT a CORS-safelisted response header: cross-origin it is invisible
+     unless the serve sends `Access-Control-Expose-Headers: ETag`. Without it
+     every poll is a full 200 instead of a ~200 B 304 — costly, not broken.   */
+  var et=res.headers.get("ETag");
+  if(et) S.etag=et;
+  else if(!S.etagWarned){
+    S.etagWarned=true;
+    banner("warn","ETag not visible:",
+      "the revalidation path is off, so every poll transfers the full sample. "+
+      "Add <code>Access-Control-Expose-Headers: ETag</code> on the serve (or open this "+
+      "page from the serve's own origin) to get ~200 B 304s instead.","etag");
+  }
+  var j2=await res.json();
+  return parseSample(j2, "live @"+timeOf(Date.now()), "live");
+}
+async function poll(){
+  if(S.inflight) return;
+  S.inflight=true;
+  try{
+    var r=await fetchOnce();
+    S.fails=0; S.lastOk=Date.now(); S.lastErr=null;
+    $("figwrap").classList.remove("stale");
+    clearBanner("net");
+    if(r!=="notmodified"){
+      /* sample_id must be strictly increasing within a boot; if it goes
+         backwards the server restarted and any baseline is meaningless. */
+      if(S.live && r.bootId && S.live.bootId && r.bootId!==S.live.bootId){
+        banner("warn","server restarted:","server_boot_id changed — snapshots taken before the restart are not comparable.","boot");
+      } else if(S.live && r.sampleId!==null && S.live.sampleId!==null && r.sampleId<S.live.sampleId){
+        banner("warn","sample_id went backwards:","discard your baselines.","boot");
+      }
+      S.live=r;
+      if(!S.offline) render();
+    }
+    $("conn").textContent="connected · "+(r==="notmodified"?"304 not modified":"200")+" · "+timeOf(Date.now());
+  }catch(e){
+    S.fails++; S.lastErr=e.message;
+    /* Graceful: the last frame stays on screen, dimmed, and we keep retrying
+       with backoff. Never blank the figure because the network blinked.     */
+    $("figwrap").classList.add("stale");
+    banner("err","endpoint unreachable ("+S.fails+"):",
+           esc(e.message)+" — <b>keeping the last frame</b>, retrying in "+
+           Math.round(backoff()/1000)+" s.","net");
+    $("conn").textContent="error · "+S.fails+" consecutive failures";
+    renderProv();
+  }
+  S.inflight=false;
+}
+function backoff(){
+  var base=S.pollMs>0?S.pollMs:2000;
+  if(!S.fails) return base;
+  return Math.min(30000, base*Math.pow(2, Math.min(4, S.fails)));
+}
+/* setTimeout chain rather than setInterval: a slow or hanging fetch must not
+   pile up requests, and the backoff changes the period every tick.          */
+function reschedule(){
+  if(S.timer){ clearTimeout(S.timer); S.timer=null; }
+  if(S.pollMs<=0 || S.paused) return;
+  S.timer=setTimeout(async function(){
+    S.timer=null;
+    await poll();
+    reschedule();
+  }, backoff());
+}
+
+/* ============================================================= OFFLINE I/O */
+/* JSONL records are ~800 KB each and a dump can be 93 MB. Index the line
+   offsets by streaming the Blob, then parse only the selected record.      */
+async function indexFile(file){
+  var CH=8*1024*1024, offs=[0], pos=0;
+  $("scan").classList.remove("hidden");
+  while(pos<file.size){
+    var end=Math.min(file.size, pos+CH);
+    var buf=new Uint8Array(await file.slice(pos,end).arrayBuffer());
+    /* native scan: a byte-at-a-time loop over a 93 MB dump is ~100M
+       iterations of interpreted JS and visibly hangs the tab.            */
+    var i=0;
+    while(i<buf.length){
+      var k=buf.indexOf(10, i);
+      if(k<0) break;
+      offs.push(pos+k+1);
+      i=k+1;
+    }
+    pos=end;
+    $("scan").value=Math.round(100*pos/file.size);
+    await new Promise(function(r){ setTimeout(r,0); });
+  }
+  $("scan").classList.add("hidden");
+  var out=[];
+  for(var k=0;k+1<offs.length;k++) if(offs[k+1]-offs[k]>2) out.push([offs[k], offs[k+1]]);
+  var lastStart=offs[offs.length-1];
+  if(file.size-lastStart>2) out.push([lastStart, file.size]);
+  return out;
+}
+async function loadRecord(idx){
+  var r=S.fileOffsets[idx];
+  var text=await S.file.slice(r[0], r[1]).text();
+  var j=JSON.parse(text);
+  var lbl=S.file.name+" #"+idx+(j.interval!==undefined?" int"+j.interval:"");
+  var f=parseSample(j, lbl, "file");
+  S.offline=f;
+  render();
+}
+$("file").addEventListener("change", async function(ev){
+  var file=ev.target.files[0];
+  if(!file) return;
+  clearBanner("file");
+  try{
+    S.file=file;
+    S.fileOffsets=await indexFile(file);
+    var sel=$("record");
+    sel.innerHTML="";
+    for(var i=0;i<S.fileOffsets.length;i++){
+      var o=document.createElement("option");
+      o.value=String(i); o.textContent="record "+i+" of "+(S.fileOffsets.length-1);
+      sel.appendChild(o);
+    }
+    sel.disabled=false;
+    sel.value=String(S.fileOffsets.length-1);   /* final interval by default */
+    $("btn-live").disabled=false;
+    await loadRecord(S.fileOffsets.length-1);
+    banner("warn","offline mode:", "showing «"+esc(file.name)+"» ("+S.fileOffsets.length+
+      " records, scrub with the record selector). The live poll keeps running in the "+
+      "background; press <b>back to live</b> to return to it.","file");
+  }catch(e){
+    banner("err","could not load file:", esc(e.message), "file");
+  }
+});
+$("record").addEventListener("change", function(){ loadRecord(parseInt(this.value,10)); });
+$("btn-live").addEventListener("click", function(){
+  S.offline=null; S.file=null; S.fileOffsets=null;
+  $("file").value=""; $("record").innerHTML=""; $("record").disabled=true;
+  this.disabled=true;
+  clearBanner("file");
+  render();
+});
+
+/* ================================================================ EXPORTS */
+$("btn-png").addEventListener("click", function(){
+  S.exportLight=true; render();
+  var url=cv.toDataURL("image/png");
+  S.exportLight=false; render();
+  var a=document.createElement("a");
+  a.href=url; a.download="fq-heatmap-"+nowStamp()+".png"; a.click();
+});
+$("btn-csv").addEventListener("click", function(){
+  var f=currentFrame();
+  if(!f){ return; }
+  var d=derive(f,S.metric);
+  var lines=["layer,expert,count,mass,tier,share_x_uniform,log2_rel"];
+  for(var l=0;l<f.L;l++) for(var e=0;e<f.E;e++){
+    var i=l*f.E+e;
+    lines.push(f.layers[l]+","+e+","+f.count[i]+","+(f.mass?f.mass[i]:"")+","+
+      (f.tier?f.tier[i]:"")+","+d.rel[i]+","+(d.rel[i]>0?(Math.log(d.rel[i])/Math.LN2):"-inf"));
+  }
+  dl(lines.join("\n"), "text/csv", "fq-heatmap-"+nowStamp()+".csv");
+});
+$("btn-perm").addEventListener("click", function(){
+  if(!LAYOUT||!LAYOUT.perm){ return; }
+  var f=currentFrame();
+  var o={ hash:LAYOUT.perm.hash, reference:LAYOUT.perm.ref, order:S.order, metric:S.metric,
+          layers:Array.prototype.slice.call(f.layers), num_experts:f.E,
+          note:"display column j of layer row l shows expert perm[l][j]; persist this next to any figure that used it",
+          perm:LAYOUT.perm.perm.map(function(a){ return Array.prototype.slice.call(a); }) };
+  dl(JSON.stringify(o), "application/json", "fq-heatmap-perm-"+LAYOUT.perm.hash+".json");
+});
+function dl(text, mime, name){
+  var b=new Blob([text],{type:mime}), u=URL.createObjectURL(b);
+  var a=document.createElement("a"); a.href=u; a.download=name; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(u); }, 2000);
+}
+
+/* ================================================================== SLOTS */
+var _slotSig=null;
+function renderSlots(){
+  var keys=["A","B","C","D"], h="", i;
+  /* Rebuilt on every render, i.e. on every poll. Skip when nothing changed,
+     so a 2 s poll does not keep closing an open <select> under the cursor. */
+  var sig=[];
+  for(i=0;i<keys.length;i++){ var s=S.slots[keys[i]]; sig.push(s?s.label:""); }
+  var cf=currentFrame();
+  sig.push(cf?cf.label:"", S.cmpA, S.cmpB);
+  sig=sig.join("");
+  if(sig===_slotSig) return;
+  _slotSig=sig;
+
+  for(i=0;i<keys.length;i++){
+    var k=keys[i], f=S.slots[k];
+    h+='<div class="slot'+(f?" filled":"")+'"><span class="k">'+k+'</span>'+
+       (f? '<span class="d" title="'+esc(f.label)+'">'+esc(f.label)+'</span><button class="x" data-clear="'+k+'" title="clear slot '+k+'">×</button>'
+         : '<button data-mark="'+k+'">mark</button>')+
+       '</div>';
+  }
+  $("slots").innerHTML=h;
+  var opts="", keys2=["live","A","B","C","D"];
+  for(i=0;i<keys2.length;i++){
+    var kk=keys2[i], ff=resolveRef(kk);
+    opts+='<option value="'+kk+'"'+(ff?"":" disabled")+'>'+kk+(ff?" «"+esc(ff.label)+"»":" (empty)")+'</option>';
+  }
+  $("cmpa").innerHTML=opts; $("cmpb").innerHTML=opts;
+  $("cmpa").value=S.cmpA; $("cmpb").value=S.cmpB;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+$("slots").addEventListener("click", function(ev){
+  var m=ev.target.getAttribute("data-mark"), c=ev.target.getAttribute("data-clear");
+  if(m){
+    var f=currentFrame();
+    if(!f){ banner("warn","nothing to mark:","connect or load a dump first.","mark"); return; }
+    S.slots[m]=snapshot(f, f.label+" @"+timeOf(Date.now()));
+    render();
+  }
+  if(c){ S.slots[c]=null; render(); }
+});
+$("btn-reset").addEventListener("click", function(){
+  var f=currentFrame();
+  if(!f){ banner("warn","nothing to mark:","connect or load a dump first.","mark"); return; }
+  S.slots.A=snapshot(f, "baseline "+timeOf(Date.now())+(f.step!==null?" step"+f.step:""));
+  S.cmpA="A"; S.cmpB="live"; S.compare=true; $("p-compare").checked=true;
+  banner("warn","baseline marked (client-side):",
+    "the server was not touched. This view is <b>change since the mark</b>, not ‘traffic since reset’: "+
+    "count is a λ-decayed window, so the difference can be negative and converges back to the plain current "+
+    "value once the baseline has decayed out (~640 engine steps).","mark");
+  saveUi(); render();
+});
+
+/* ================================================== server-side reset (adv) */
+$("adv-enable").addEventListener("change", function(){
+  $("btn-srv-heatmap").disabled=!this.checked;
+  $("btn-srv-collector").disabled=!this.checked;
+});
+async function srvReset(scope){
+  var msg = scope==="collector"
+    ? "Zero the COLLECTOR accumulators on every rank?\n\nThe policy loop reads exactly these arrays. The next 1-2 intervals will score on a zeroed window, the Jaccard router-shift guard will hold all proposals, and pin-forced pairs bypass hysteresis and may swap against index order rather than traffic.\n\nThis affects every other viewer and the running policy."
+    : "Rebase the endpoint's own cumulative accumulator on every rank?\n\nThe collector window and the policy are untouched, but every other viewer's cumulative view restarts.";
+  if(!window.confirm(msg)) return;
+  var headers={"Content-Type":"application/json"};
+  if(S.token) headers["X-FQ-Heatmap-Token"]=S.token;
+  try{
+    var res=await fetch(baseUrl()+"/fq/heatmap/reset",{method:"POST",headers:headers,
+      body:JSON.stringify({scope:scope, reason:"operator heatmap page"})});
+    var t=await res.text();
+    $("adv-out").textContent="HTTP "+res.status+" — "+t.slice(0,600);
+  }catch(e){ $("adv-out").textContent="failed: "+e.message; }
+}
+$("btn-srv-heatmap").addEventListener("click", function(){ srvReset("heatmap"); });
+$("btn-srv-collector").addEventListener("click", function(){ srvReset("collector"); });
+
+/* ================================================================ CONTROLS */
+function segBind(id, key){
+  $(id).addEventListener("click", function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest("button") : null;
+    if(!b || b.disabled) return;
+    var v=b.getAttribute("data-"+key);
+    if(!v) return;
+    S[key]=v;
+    var bs=this.querySelectorAll("button");
+    for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on", bs[i]===b);
+    saveUi(); render();
+  });
+}
+segBind("metric-seg","metric");
+segBind("order-seg","order");
+
+function ck(id, key){
+  var el=$(id);
+  el.checked=!!S[key];
+  el.addEventListener("change", function(){ S[key]=this.checked; saveUi(); render(); });
+}
+ck("p-tier","tierStrip"); ck("p-mismatch","mismatch"); ck("p-compare","compare");
+ck("p-stack","stack"); ck("p-marg","marginals"); ck("p-dead","flagDead");
+ck("p-tiernative","tierNative");
+
+$("cell").value=S.cell;
+$("cell").addEventListener("change", function(){ S.cell=this.value; saveUi(); render(); });
+$("orderref").value=S.orderRef;
+$("orderref").addEventListener("change", function(){ S.orderRef=this.value; saveUi(); render(); });
+$("cmpa").addEventListener("change", function(){ S.cmpA=this.value; render(); });
+$("cmpb").addEventListener("change", function(){ S.cmpB=this.value; render(); });
+$("cmpmetric").value=S.cmpMetric;
+$("cmpmetric").addEventListener("change", function(){
+  S.cmpMetric=this.value; saveUi();
+  if(this.value==="logratio") banner("warn","log-ratio selected:",
+    "it treats 0.03×→0.3× as equal to 2.4×→24× and saturates about half the cells. "+
+    "Use it only for ‘which experts switched on or off’.","cmp");
+  else if(this.value==="symlog") banner("warn","symlog selected:",
+    "weak differences are boosted and the panel no longer conserves — orange area is no longer balanced by blue within a layer.","cmp");
+  else clearBanner("cmp");
+  render();
+});
+$("cmpdomain").value=String(S.cmpDomain);
+$("cmpdomain").addEventListener("change", function(){ S.cmpDomain=parseFloat(this.value); saveUi(); render(); });
+
+$("poll").value=String(S.pollMs);
+$("poll").addEventListener("change", function(){ S.pollMs=parseInt(this.value,10); saveUi(); reschedule(); });
+$("btn-pause").addEventListener("click", function(){
+  S.paused=!S.paused;
+  this.textContent=S.paused?"Resume":"Pause";
+  this.classList.toggle("on", S.paused);
+  reschedule();
+});
+$("btn-once").addEventListener("click", function(){ poll(); });
+$("endpoint").value=S.endpoint;
+$("btn-connect").addEventListener("click", function(){
+  S.endpoint=$("endpoint").value; S.token=$("token").value;
+  S.etag=null; S.fails=0; saveUi(); clearBanner("net");
+  fetchMeta(); poll(); reschedule();
+});
+$("btn-theme").addEventListener("click", function(){
+  var cur=document.documentElement.getAttribute("data-theme");
+  var next = cur==="dark" ? "light" : (cur==="light" ? null : "dark");
+  if(next) document.documentElement.setAttribute("data-theme", next);
+  else document.documentElement.removeAttribute("data-theme");
+  render();
+});
+
+/* mass availability gate: never show count under a label that says mass */
+function updateMassGate(){
+  var f=currentFrame();
+  var btn=$("btn-mass"), note=$("mass-note");
+  if(!f){ btn.disabled=true; note.textContent=""; return; }
+  if(f.massIsReal===false || (!f.mass)){
+    btn.disabled=true;
+    note.textContent = f.massIsReal===false ? "mass: not recorded (VLLM_FQ_GATE_MASS=0)" : "mass: not provided in this sample";
+    if(S.metric==="mass"){ S.metric="count"; syncMetricSeg(); }
+  } else if(f.massIsReal===null){
+    btn.disabled=false;
+    note.textContent="mass: unknown — mass_is_real absent, may alias count";
+  } else {
+    btn.disabled=false; note.textContent="mass: real gate mass";
+  }
+}
+function syncMetricSeg(){
+  var bs=$("metric-seg").querySelectorAll("button");
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on", bs[i].getAttribute("data-metric")===S.metric);
+}
+syncMetricSeg();
+
+/* meta probe: shape + gates before paying for a sample */
+async function fetchMeta(){
+  try{
+    var headers={};
+    if(S.token) headers["X-FQ-Heatmap-Token"]=S.token;
+    var res=await fetch(baseUrl()+"/fq/heatmap/meta",{headers:headers, cache:"no-store"});
+    if(!res.ok) return;
+    var j=await res.json();
+    if(j.mass_is_real===false) $("mass-note").textContent="mass: not recorded (VLLM_FQ_GATE_MASS=0)";
+  }catch(e){ /* meta is an optimisation; the sample path reports the error */ }
+}
+
+/* re-fit on resize */
+var _rt=null;
+window.addEventListener("resize", function(){
+  if(S.cell!=="fit") return;
+  if(_rt) clearTimeout(_rt);
+  _rt=setTimeout(function(){ render(); }, 140);
+});
+
+/* ==================================================================== BOOT */
+renderSlots();
+render();
+fetchMeta();
+poll().then(reschedule);
+</script>
+</body>
+</html>
