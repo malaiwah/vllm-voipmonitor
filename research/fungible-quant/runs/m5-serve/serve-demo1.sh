@@ -12,8 +12,11 @@
 set -eu
 BASE=/home/mbelleau/protensors-work/vllm-voipmonitor/research/fungible-quant
 RUN=$BASE/runs/m5-serve
-POLICY=${1:?usage: serve-demo1.sh <policy.json> [port]}
+POLICY=${1:?usage: serve-demo1.sh <policy.json> [port] [extra vllm args...]}
 PORT=${2:-8000}
+# Consume both, or they leak into "$@" and vLLM's argparse rejects the port as
+# an unrecognized positional.
+shift $(( $# >= 2 ? 2 : 1 ))
 
 GG=$BASE/runs/gg-env/gg-run.sh
 
