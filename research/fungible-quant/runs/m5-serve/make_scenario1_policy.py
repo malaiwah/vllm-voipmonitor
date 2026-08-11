@@ -236,7 +236,17 @@ def build(reference: Path, num_experts: int, manifest: str | None,
                 "n_k4_reference": int(sets[str(layer)]["n_k4"]),
                 "fragment_pool": len(pool),
                 "budget": n,
-                "promotion_candidates": max(len(pool) - n, 0),
+                # A promotion needs somewhere to land. `budget == 0` means the
+                # layer is assembled uniform-K3 with NO K4 slab at all, so an
+                # unoccupied fragment on disk is not a promotion candidate —
+                # it is a fragment for a slab that does not exist. Reporting
+                # `len(pool)` there told run-demo1.sh's tradability gate that
+                # a permanently-frozen layer could swap, which is the exact
+                # flat-line-that-looks-like-a-bug the gate exists to refuse.
+                # Reachable whenever fill_fraction or the --max-extra-gib cap
+                # rounds a layer's share down to zero (e.g. --fill-fraction
+                # 0.01 on a 50-fragment layer).
+                "promotion_candidates": max(len(pool) - n, 0) if n > 0 else 0,
                 "pool_in_reference_k4": in_ref,
             })
 
