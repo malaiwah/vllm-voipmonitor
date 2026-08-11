@@ -252,7 +252,7 @@ neutral swatch.
 
 ```bash
 cd research/fungible-quant/runs/m5-serve/heatmap
-/home/mbelleau/venvs/fq/bin/python -m pytest test_heatmap_math.py -q   # 47 passed
+/home/mbelleau/venvs/fq/bin/python -m pytest test_heatmap_math.py -q   # 49 passed
 /home/mbelleau/venvs/fq/bin/python test_heatmap_math.py                # same, no pytest
 ```
 
@@ -297,6 +297,15 @@ What the suite actually does:
   are taken from the data; a row-sum violation is surfaced; a truncated bf16 blob
   is refused rather than shifted; one permutation is shared across all panels and
   the reference demonstrably changes it.
+* **Interop with the real endpoint** — the pure encoders are lifted out of
+  `gg-vllm`'s `exl3_fungible/heatmap.py` by AST (no `import vllm`, so no built
+  `vllm._C` is needed), an envelope is built with the **endpoint's own** bf16
+  encoder, and the **page's own** parser decodes it. The two decoders agree
+  bit-for-bit; worst error against the f32 source is **0.38868 %**, matching the
+  0.38898 % the spec measured. On the colour ramp that quantum moves 1,276 of
+  19,200 cells by **at most one** 257-step LUT index — which is the entire
+  justification for bf16, checked rather than asserted. Skipped when `gg-vllm`
+  is not in the tree.
 * **Corroboration** — the page's own compare code recomputes `DESIGN.md` §5.4's
   measured statistics from scratch: Spearman median **0.366** (doc: 0.37),
   top-32 overlap median **0.281** (doc: 28 %), row conservation **4.4e-13**
