@@ -109,7 +109,7 @@ export VLLM_FQ_PREFETCH_DEPTH=${VLLM_FQ_PREFETCH_DEPTH:-3}
 # Keep whole downloaded layer objects so a later K3->K4 promotion slices from
 # a local file instead of re-fetching ~2.5 GB. Off by default: this trades
 # bounded-by-depth footprint for bounded-by-model (hundreds of GB).
-export VLLM_FQ_KEEP_LAYERS=${VLLM_FQ_KEEP_LAYERS:-0}
+export VLLM_FQ_KEEP_LAYERS=${VLLM_FQ_KEEP_LAYERS:-1}
 export VLLM_FQ_ENCODE_QUEUE=${VLLM_FQ_ENCODE_QUEUE:-$RUN/results/demo1/encode-queue.jsonl}
 mkdir -p "$(dirname "$VLLM_FQ_ENCODE_QUEUE")"
 
@@ -149,6 +149,40 @@ export TORCHINDUCTOR_CACHE_DIR=/home/mbelleau/cache/jit-m5/inductor
 mkdir -p "$CUDA_CACHE_PATH" "$TRITON_CACHE_DIR" "$TORCHINDUCTOR_CACHE_DIR"
 export CUDA_MODULE_LOADING=EAGER
 export VLLM_SERVER_DEV_MODE=1
+
+# --- FQ_FAST=1: loader-iteration mode ------------------------------------
+# Trades serving throughput for turnaround. When the thing under test is the
+# LOADER, ~9 min of CUDA JIT plus inductor compilation plus CUDA-graph capture
+# is pure tax on every experiment -- and every one of those minutes is spent
+# after the part we are trying to observe. Eager mode is 2-3x slower to decode
+# and boots minutes sooner; that is the right trade until the loader is good.
+#
+# Deliberately NOT touched: the JIT caches (they only help) and the fragment
+# cache (BT-2 needs it warm).
+FQ_FAST=${FQ_FAST:-0}
+FAST_ARGS=""
+if [ "$FQ_FAST" = 1 ]; then
+  FAST_ARGS="--enforce-eager -O0"
+  # EAGER module loading was an M2 mitigation for a cuBLAS status-14 flake
+  # that only appeared while the encoder campaign hammered GPUs 4-7. With the
+  # campaign paused, LAZY skips loading kernels we never call.
+  export CUDA_MODULE_LOADING=${CUDA_MODULE_LOADING_FAST:-LAZY}
+  export VLLM_FQ_TABLE_EVERY_INTERVALS=${FQ_TABLE:-1}
+  echo "    MODE         : FAST — eager, no inductor, no graph capture."
+  echo "                   Decode throughput is NOT comparable to a normal run."
+fi
+
+# --- memory preflight -----------------------------------------------------
+# Hand the loader the same utilization the engine will use, so its projection
+# is the engine's arithmetic and not a guess that can drift out of sync.
+export VLLM_FQ_BUDGET_UTIL=${FQ_GPUMEM:-0.92}
+export VLLM_FQ_BUDGET_MIN_KV=${FQ_MIN_KV:-4g}
+# Eager mode skips graph capture, so it leaves less residue to reserve for.
+if [ "$FQ_FAST" = 1 ]; then
+  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-4.5g}
+else
+  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-5.5g}
+fi
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export VLLM_USE_B12X_MOE=1
@@ -194,4 +228,5 @@ exec "$GG" python -m vllm.entrypoints.openai.api_server \
   --kv-cache-dtype fp8_ds_mla \
   --hf-overrides "$OV" \
   --worker-extension-cls fq_reload.FqReloadWorker \
+  $FAST_ARGS \
   "$@"
