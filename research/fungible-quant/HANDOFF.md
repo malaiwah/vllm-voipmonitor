@@ -1,13 +1,22 @@
 # Fungible Quant / Progressive Tensors — start-here handoff
 
-**Written 2026-08-11 ~20:05Z**, on the instance that replaced the one pre-empted
-at 19:31Z.
+**Written 2026-08-11, last updated ~20:30Z**, on the instance that replaced the
+one pre-empted at 19:31Z.
 
 This assumes **you know nothing** about this project. Read §1–§4 before running
 anything. §7 (Sharp edges) is the highest-value section — most of the time lost
 here was lost to failures that looked exactly like success.
 
 Every path below is absolute.
+
+**Where the last session left it:** BT-6c passed — the live re-tiering loop now
+installs swaps repeatedly under load with zero errors, which is the core claim
+of the whole project and it had never held before tonight. Two bugs were fixed
+to get there, both on code paths that only execute *after* a successful install,
+which is why each hid the next. The binding constraint has moved from
+correctness to **memory and IO**: ~229 GiB per rank is stuck in the glibc heap
+(#73), and swap staging runs at ~10.5 MB/s of small random reads (#74). Start at
+§8's "START HERE".
 
 ---
 
@@ -467,14 +476,17 @@ the useful part.
 
 ## 8. Where we are right now
 
-### Live
+### Live (as of 2026-08-11 ~20:30Z)
 
-- **demo1** — GPUs 0–3, port 8100, **CUDA graphs + JIT**, policy
-  `/home/…/runs/m5-serve/policy-demo1-graphs32.json`, live apply on. Loading.
-  First graphs boot to clear the memory preflight.
 - **demo2** — GPUs 4–7, port 8200, eager, policy `policy-demo1-fitted.json`,
-  live apply on. Restarting after a worker death. Log
-  `/home/…/results/demo2/serve-bt6c3.log`.
+  live apply on. **HEALTHY and serving under load**, 76/76 layers, 4 installs,
+  `invalid swap` = 0. Log `/home/…/results/demo2/serve-bt6c3.log`.
+  It is running code from BEFORE the last four commits — the instrumentation,
+  heap trim and membership diff only take effect on the next boot.
+- **demo1** — GPUs 0–3, **down on purpose**. Its graphs boot was OOM-killed at
+  19:57 and must not be retried until OOM-1 (#73) is settled: there is only
+  ~113 GiB of cgroup headroom. Policy ready at
+  `/home/…/runs/m5-serve/policy-demo1-graphs32.json`.
 - **Encode campaign** — complete, not stalled: K2 75/75, K4 75/75, K5 24/75
   (deprioritised, SM120 shared-memory limit, see
   `/home/…/runs/m5-serve/k5-shared-memory-limit.md`). Publish done.
@@ -483,8 +495,31 @@ the useful part.
 - **tmux** — session `fq`; windows `claude campaign fragprune demo1 pause
   serve13 bt6 heatmap serve2`. **Never kill session `fq` or window 0.**
 
+### START HERE — the one measurement that unblocks the most
+
+`a0a1fd8c7` added a `malloc_trim(0)` host-heap reclaim after load, and **it has
+never run** — the live serve predates it. On the next boot the log prints:
+
+```
+FQ host heap trim: RSS X -> Y GiB, freed Z GiB (malloc_trim returned N)
+```
+
+If Z is large (~200 GiB/rank), OOM-1 (#73) is solved, the two-instance workflow
+comes back, and demo1's graphs boot (#65) is unblocked. If Z is ~0, the bytes
+are live objects rather than allocator retention and #73's investigation list
+takes over. **Do not claim the fix works until that number is in a log** — this
+project already retracted one "reclaim" that measured 0.00 GiB, sixteen times.
+
 ### Proven, with artifact evidence
 
+- **BT-6c sustained live re-tiering** (`results/bt/BT-6C-SUSTAINED.md`):
+  4 install events over ~20 min under load, all 4 ranks each, **`invalid swap`
+  = 0** across 70+ intervals, no worker deaths. Verified by diffing the
+  committed policy against the BOOT POLICY FILE — 256 experts moved across 44
+  layers after two installs, K4 cardinality 2658 → 2658 preserved, exactly
+  2 × 64 swaps × 2 experts. *Scope: this verifies membership bookkeeping, not
+  that bytes moved on silicon (M4 showed that separately; #70 would close it),
+  and says nothing about quality (BT-7, #51).*
 - **BT-1 cold boot from segments**: 79.08 GiB resident vs 79.06 projected,
   KV +3.67 GiB, 1616 s to serve, coherent output.
 - **BT-2 warm restart**: **0.0 GiB fetched** vs 295.8 cold, identical posture
@@ -517,36 +552,45 @@ The live task list is **session-only and dies with the Claude session**, so it i
 reproduced here in full. 39 open items. IDs match the in-session task list while
 it exists. Grouped by kind; roughly priority-ordered within each group.
 
-#### A. In flight right now
+#### A. Next up — in priority order
 
-- **#64 — BT-6c: sustained installs under load.** *In progress.* Pass bar:
-  installs **repeat** across intervals with **zero** `invalid swap`. One install
-  is not enough — BT-6 already showed one. Two bugs were fixed to get here
-  (`40b6f5e8a` one-engine + publish, `505ffaa7b` the `NameError`); neither is
-  verified live yet. Run on demo2, eager, `VLLM_FQ_LIVE_APPLY=1`, with
-  `swap_evidence.py both --phase math:1800 --concurrency 8`.
+- **#73 — OOM-1: ~229 GiB per rank stuck in the glibc `[heap]`.** *The blocker
+  for everything involving a second instance.* Measured per TP worker while
+  SERVING: `[heap]` 228.7 GiB, Anonymous 230.3, Private_Dirty 232.0, against a
+  66.92 GiB GPU footprint — ×4 ranks = ~924 GiB of a 1280 GiB cgroup, 113 GiB
+  headroom. It is retention, not a leak: RSS is flat, and glibc only shrinks
+  the heap from the top, so one live allocation near the boot high-water mark
+  pins everything beneath it. `a0a1fd8c7` adds `malloc_trim(0)` in
+  `gpu_worker._fq_reclaim_after_load()`; **run a boot and read the number.**
+  If it fails, the next levers are `MALLOC_MMAP_THRESHOLD_` (so large
+  transients go to mmap and return on free), `MALLOC_ARENA_MAX`, and
+  `tracemalloc` to name the live allocation site.
+  Two earlier diagnoses of this are recorded as REFUTED in the task — page
+  cache/mmaps (file_mapped is only 13.2 GiB) and `VLLM_FQ_KEEP_LAYERS` (which
+  is on-disk only and allocates no host RAM; the code says so and Michel
+  caught it).
 
-- **#73 — OOM-1: concurrent boots hit the 1280 GiB cgroup ceiling.** Rule now in
-  force: **serve concurrently, load serially**. But a *single* load reached
-  671 GiB at 47/76 layers (~14.3 GiB/layer → ~1085 GiB extrapolated), and
-  `memory.events` shows `oom 16` for only 2 kills, which means much of it is
-  **not reclaimable** — likely mmap references to segment files held open for
-  the whole boot. Investigate in order: (1) sample
-  `/sys/fs/cgroup/memory.stat` for `file_mapped` vs `inactive_file` across a
-  boot; (2) if confirmed, munmap/`MADV_DONTNEED`/O_DIRECT in the segment read
-  path — a 79 GiB resident model should not need ~1 TB of page cache;
-  (3) test `VLLM_FQ_PREFETCH_DEPTH` first, it is free; (4) make
-  `serve-demo1.sh` refuse to boot while a peer is loading, as it already does
-  for busy GPUs; (5) add `memory.events`/`memory.current` to
-  `runs/health/sweep.sh`.
+- **#74 — PERF-1: staging is per-expert random IO at ~10.5 MB/s.** Now the
+  binding constraint on convergence: 45 s warm / 229 s cold for 64 swaps, so
+  ~1 install per 1–2 minutes while the loop proposes 64 every ~18 s. A batch is
+  ~2,300 small ranged reads over ~40 segment files, ~1.2 GB. **This project
+  already measured the same asymmetry for the LOADER — 142–149 MiB/s
+  whole-segment vs ~0.75 MiB/s per-expert, ~190× — which is exactly why the
+  loader prefers whole segments. The swap engine never got that treatment.**
+  Hypothesis: slice from the already-cached whole segment (299 GB on disk) or
+  hold it mmap'd for the batch. Could take installs from minutes to seconds,
+  which is a headline PR number rather than a footnote.
+  Instrumentation for it landed in `27774a6ac` (staging MiB/s + quiesce window,
+  logged and exported) — the numbers above had to be recovered by differencing
+  log timestamps, which is what that commit prevents recurring.
 
-- **#65 — DEMO2-GRAPHS: a CUDA-graphs instance has never served.** Four attempts;
-  none crashed — the **memory preflight refused them all**. Graphs cost ~1.9 GiB
-  of device budget (88.32 vs 90.22 GiB), squeezing projected KV to 0.95 GiB
-  against the 2.00 GiB floor. `policy-demo1-graphs32.json` (K4 capped at
-  32/layer, 2,658 → 1,530 experts, +1.24 GiB → 2.19 GiB projected KV) clears it
-  and was loading past layer 33 when the OOM killed it. Retry after #64, on an
-  idle box.
+- **#65 — DEMO2-GRAPHS: no CUDA-graphs instance has ever served.** Four earlier
+  attempts never crashed — the **memory preflight refused them**, correctly:
+  graphs cost ~1.9 GiB of device budget (88.32 vs 90.22 GiB), squeezing
+  projected KV to 0.95 GiB against a 2.00 GiB floor.
+  `policy-demo1-graphs32.json` (K4 capped at 32/layer, 2,658 → 1,530 experts,
+  +1.24 GiB → 2.19 GiB projected KV) clears it and had loaded past layer 33
+  before the OOM. **Blocked on #73**, not on anything graph-related.
 
 #### B. Correctness and observability debt
 
