@@ -20,6 +20,16 @@ shift $(( $# >= 2 ? 2 : 1 ))
 
 GG=$BASE/runs/gg-env/gg-run.sh
 
+# FQ_TAG separates two concurrent instances. Everything WRITTEN gets the tag;
+# the segment cache is deliberately SHARED, because it is read-mostly and a
+# second copy would cost another 299 GB and defeat the warm-restart property
+# instance 1 just proved. Defined HERE, above every use, including the GPU
+# pre-flight — which must check the cards THIS instance will take, not the
+# ones the other instance is already using.
+FQ_TAG=${FQ_TAG:-demo1}
+FQ_DEVICES_ENV=${FQ_DEVICES_ENV:-0,1,2,3}
+mkdir -p "$RUN/results/$FQ_TAG"
+
 # PRE-FLIGHT: refuse to boot onto occupied cards.
 # A TP4 serve killed by signalling its process group can leave all four
 # workers alive holding ~14.7 GiB each -- observed: four orphans still
@@ -27,7 +37,7 @@ GG=$BASE/runs/gg-env/gg-run.sh
 # top of them. Starting anyway either OOMs at KV sizing or silently halves
 # the cache. Check the DEVICES WE WILL USE, not the whole box: GPUs 4-7 are
 # the campaign's and are expected to be busy.
-FQ_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1,2,3}
+FQ_DEVICES=$FQ_DEVICES_ENV
 _busy=$(nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits \
         -i "$FQ_DEVICES" 2>/dev/null | awk -F', *' '$2 > 1024 {printf "%s(%sMiB) ", $1, $2}')
 if [ -n "$_busy" ] && [ "${FQ_REAP_STALE:-1}" = 1 ]; then
@@ -110,7 +120,7 @@ export VLLM_FQ_PREFETCH_DEPTH=${VLLM_FQ_PREFETCH_DEPTH:-3}
 # a local file instead of re-fetching ~2.5 GB. Off by default: this trades
 # bounded-by-depth footprint for bounded-by-model (hundreds of GB).
 export VLLM_FQ_KEEP_LAYERS=${VLLM_FQ_KEEP_LAYERS:-1}
-export VLLM_FQ_ENCODE_QUEUE=${VLLM_FQ_ENCODE_QUEUE:-$RUN/results/demo1/encode-queue.jsonl}
+export VLLM_FQ_ENCODE_QUEUE=${VLLM_FQ_ENCODE_QUEUE:-$RUN/results/${FQ_TAG:-demo1}/encode-queue.jsonl}
 mkdir -p "$(dirname "$VLLM_FQ_ENCODE_QUEUE")"
 
 # --- trust ---------------------------------------------------------------
@@ -133,19 +143,19 @@ export VLLM_FQ_INTERVAL_STEPS=${FQ_INTERVAL:-100}
 export VLLM_FQ_DWELL_STEPS=${FQ_DWELL:-1}
 export VLLM_FQ_GATE_MASS=${VLLM_FQ_GATE_MASS:-0}
 export VLLM_FQ_TABLE_EVERY_INTERVALS=${FQ_TABLE:-3}
-export VLLM_FQ_ARTIFACT_DIR=$RUN/results/demo1/artifacts
-export VLLM_FQ_CACHE_ROOT=$RUN/results/demo1/fq-cache
-export VLLM_FQ_DUMP_STATS=${VLLM_FQ_DUMP_STATS:-$RUN/results/demo1/stats.jsonl}
+export VLLM_FQ_ARTIFACT_DIR=$RUN/results/$FQ_TAG/artifacts
+export VLLM_FQ_CACHE_ROOT=$RUN/results/$FQ_TAG/fq-cache
+export VLLM_FQ_DUMP_STATS=${VLLM_FQ_DUMP_STATS:-$RUN/results/$FQ_TAG/stats.jsonl}
 mkdir -p "$VLLM_FQ_ARTIFACT_DIR" "$VLLM_FQ_CACHE_ROOT"
 
 # --- runtime -------------------------------------------------------------
-export PROMETHEUS_MULTIPROC_DIR=/home/mbelleau/fq-0c/fq-prom-demo1
+export PROMETHEUS_MULTIPROC_DIR=/home/mbelleau/fq-0c/fq-prom-$FQ_TAG
 rm -rf "$PROMETHEUS_MULTIPROC_DIR"; mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
 # Private JIT caches: sharing them with the encoder campaign killed every M2
 # boot with an illegal memory access, including the FQ-disabled arm.
-export CUDA_CACHE_PATH=/home/mbelleau/cache/jit-m5/cuda
-export TRITON_CACHE_DIR=/home/mbelleau/cache/jit-m5/triton
-export TORCHINDUCTOR_CACHE_DIR=/home/mbelleau/cache/jit-m5/inductor
+export CUDA_CACHE_PATH=/home/mbelleau/cache/jit-$FQ_TAG/cuda
+export TRITON_CACHE_DIR=/home/mbelleau/cache/jit-$FQ_TAG/triton
+export TORCHINDUCTOR_CACHE_DIR=/home/mbelleau/cache/jit-$FQ_TAG/inductor
 mkdir -p "$CUDA_CACHE_PATH" "$TRITON_CACHE_DIR" "$TORCHINDUCTOR_CACHE_DIR"
 export CUDA_MODULE_LOADING=EAGER
 export VLLM_SERVER_DEV_MODE=1
@@ -205,7 +215,7 @@ if [ "$FQ_FAST" = 1 ]; then
 else
   export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-8.2g}
 fi
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=${FQ_DEVICES_ENV:-0,1,2,3}
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export VLLM_USE_B12X_MOE=1
 export VLLM_USE_B12X_SPARSE_INDEXER=1
