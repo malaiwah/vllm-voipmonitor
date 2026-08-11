@@ -2,8 +2,9 @@
 
 Status as of 2026-08-11 02:50 UTC: **the scoring leg is runnable today; the
 live-promotion leg is blocked on one missing artifact** (a mixed K3/K4
-checkpoint) and, even once unblocked, is currently limited to 8 of 76 layers
-whose only available K4 weights were cut from the reference itself. Read
+checkpoint) and, even once unblocked, is currently limited to 8 of the 75
+promotable layers (3-77), whose only available K4 weights were cut from the
+reference itself. Read
 [What this demo cannot show](#what-this-demo-cannot-show) before quoting any
 number from it.
 
@@ -67,7 +68,7 @@ on an empty result directory.
 | # | Step | Artifact | What it proves |
 |---|---|---|---|
 | 0 | preflight | `run.log` | port free, GPUs 0-3 free, signing key present, disk ≥ 20 GB |
-| 1 | seeded policy | `policy-demo1.json`, `k4-coverage.json` | every declared K4 slot is backed by a fragment that exists on disk; the budget honours both the reference cardinality and the memory cap |
+| 1 | seeded policy | `policy-demo1.json`, `k4-coverage.json` | every declared K4 slot is backed by a fragment that exists on disk; the budget honours both the reference cardinality and the memory cap; **and at least one covered layer has an unoccupied fragment left to promote into** (a saturated pool aborts the run before boot rather than drawing a flat line for an hour) |
 | 2 | checkpoint gate | `checkpoint-match.json` | the checkpoint physically carries the K4 slabs the policy declares — **the gate that makes promotion possible at all** |
 | 3 | store hygiene | `run.log` | no stale committed policy silently overrides the boot policy |
 | 4 | boot | `serve.log` | the loop armed (`FQ loop: armed — mode=atomic …`) rather than degrading to collector-only |
@@ -118,9 +119,9 @@ Set `FQ_LIMIT=2000` for a ~15 min end-to-end smoke run.
 
 | Item | State | Detail |
 |---|---|---|
-| K4 fragment coverage | **8 of 76 layers** | Layers 3-10 only, and only as human-derived pools: `/home/mbelleau/fq-primed/segments-342/expanded` (50 experts for L3, 108 for L4-L10) and `/home/mbelleau/fq-primed/segments-336` (50 / 96). |
+| K4 fragment coverage | **8 of 75 layers** | Layers 3-10 only, and only as human-derived pools: `/home/mbelleau/fq-primed/segments-342/expanded` (50 experts for L3, 108 for L4-L10) and `/home/mbelleau/fq-primed/segments-336` (50 / 96). |
 | Our own K4 encode | **not published** | `/home/mbelleau/fq-0c/work-k4-tr3` holds `layer-003…012.done.json` + TR3 tails, but no publishable `layer-NNN.k4.safetensors` + `index-k4.json`. The campaign supervisor's tier order is `2 5 4` and it is presently on **K2 window 67-74**, so K4 is the *last* tier it will reach. |
-| K5 | **24 of 76 layers, and unusable** | Serving K5 as a mixed tier exceeds the SM120 shared-memory limit (109,568 > 101,376). See [`k5-shared-memory-limit.md`](k5-shared-memory-limit.md). K3+K4 is the viable ladder. |
+| K5 | **24 of 75 layers, and unusable** | Serving K5 as a mixed tier exceeds the SM120 shared-memory limit (109,568 > 101,376). See [`k5-shared-memory-limit.md`](k5-shared-memory-limit.md). K3+K4 is the viable ladder. |
 
 ### Absent — these block the live-promotion leg
 
@@ -153,7 +154,7 @@ So the honest phrasing is:
 `run-demo1.sh` writes this split into `results/<tag>/SCOPE.md` from the run's
 own policy, so the caveat travels with the numbers rather than living only here.
 
-### 2. Live promotion is demonstrated on 8 layers, not 76
+### 2. Live promotion is demonstrated on 8 layers, not 75
 
 Layers 11-77 stay uniform K3 with a zero budget. They contribute routing to the
 convergence score and nothing to the promotion evidence. Closing the gap means
@@ -230,9 +231,12 @@ mechanism demonstration (8 layers, live), and those are two different claims.
 ```bash
 cd /home/mbelleau/protensors-work/vllm-voipmonitor/research/fungible-quant/runs/m5-serve
 /home/mbelleau/venvs/fq/bin/python -m pytest \
-  test_make_scenario1_policy.py test_replay_mtp78.py test_score_convergence.py -q
-# 41 passed
+  test_make_scenario1_policy.py test_replay_mtp78.py test_score_convergence.py \
+  test_run_demo1.py -q
+# 57 passed
 ```
+
+`test_run_demo1.py` executes the runner's own lines (extracted from the script, not retyped) under `set -euo pipefail`: the three places where an ordinary non-zero exit would abort the run with no message — the scraper shutdown at step 9, the pgid probe right after boot, and the fragment-substitution counter — plus the saturated-pool gate.
 
 The policy tests pin the invariant that matters: every K4 slot the policy
 declares is backed by a fragment that exists. An unbacked slot does not fail

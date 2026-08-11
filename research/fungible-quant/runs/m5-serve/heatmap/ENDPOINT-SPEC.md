@@ -5,6 +5,8 @@ Status: **design, ready to implement**. No code written. Author: design pass
 Companion surface: `../admin-api-spec.md` (shipped) — this spec deliberately
 reuses its gating, worker-plumbing and cross-rank conventions so an operator
 sees one `/fq` API, not two.
+Companion visual design: `./DESIGN.md` — this spec is the data contract behind
+it. The two agree everywhere except the Reset control; §7.7 reconciles that.
 
 The ask: a read-only endpoint the operator's heatmap page can poll to see
 **which experts are actually being routed to, right now**, per layer, with the
@@ -971,6 +973,39 @@ the ranks' policy inputs disagree, and T6 cross-rank decision agreement
 `count` array, labels the view "change since mark", and never issues a
 mutating call; the "reset for everyone" button calls `scope: "heatmap"` and the
 `collector` scope is not wired to any UI control at all.
+
+### 7.7 Divergence from `DESIGN.md` §6.2 — reconcile before implementing
+
+The sibling visual design (`./DESIGN.md`, commit `585289afd`) specifies the
+live view's Reset control as "**zeroes the collector accumulators**… it is
+destructive and affects any concurrent consumer of the stats", with a
+confirmation dialog. That is this spec's `scope: "collector"`, which §7.5
+argues against and puts behind a third env gate.
+
+The two documents agree on the *hazard* — `DESIGN.md` names the concurrent
+consumer explicitly — and differ only on the default. Everything else in
+`DESIGN.md` §6.2 is served better by `scope: "client"` / `scope: "heatmap"`
+than by a collector zero:
+
+* "stamp the figure with *window since `<timestamp>` / `<n>` intervals*" — the
+  envelope already carries `sampled_at_unix_ms`, `interval`,
+  `window.rolled` and (with `scope: "heatmap"`) `cum_since_step`, so the stamp
+  is exact without destroying anything.
+* "the picture immediately after reset is pale and converges as traffic
+  accumulates, which correctly communicates low confidence" — this is
+  *precisely* what `include=cum` after `scope: "heatmap"` gives: the cumulative
+  starts at literal zero and fills in. A collector zero gives the same
+  visual while also blinding the policy for two intervals (§7.5).
+* The compare-mode metric `256·share_B − 256·share_A` (`DESIGN.md` §5.4) is a
+  difference of two samples, i.e. the client-side baseline of §7.2 — it needs
+  no reset at all, and a destructive reset actively removes the ability to
+  hold more than one baseline.
+
+**Recommendation:** `DESIGN.md` §6.2's Reset should bind to `scope: "heatmap"`
+(with `include=cum`), keeping its confirmation dialog and its
+"do not rescale the colour domain" rule, both of which stand unchanged. If the
+operator still wants the collector zero, it stays available behind
+`VLLM_FQ_HEATMAP_ALLOW_COLLECTOR_ZERO=1` and is not a UI control.
 
 ---
 
