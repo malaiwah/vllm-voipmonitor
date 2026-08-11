@@ -177,11 +177,14 @@ fi
 # is the engine's arithmetic and not a guess that can drift out of sync.
 export VLLM_FQ_BUDGET_UTIL=${FQ_GPUMEM:-0.92}
 export VLLM_FQ_BUDGET_MIN_KV=${FQ_MIN_KV:-4g}
-# Eager mode skips graph capture, so it leaves less residue to reserve for.
+# MEASURED on attempt 15, not guessed: budget 90.81 - weights 79.08 - KV 3.67
+# = 8.06 GiB of real non-weight overhead at util 0.95 / eager / 8192 ctx. An
+# earlier 5.27 GiB figure was inferred from a flat-K3 run at a different
+# context length with graph capture on, and did not transfer.
 if [ "$FQ_FAST" = 1 ]; then
-  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-4.5g}
+  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-8.1g}
 else
-  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-5.5g}
+  export VLLM_FQ_BUDGET_OVERHEAD=${FQ_OVERHEAD:-8.6g}
 fi
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export VLLM_WORKER_MULTIPROC_METHOD=spawn

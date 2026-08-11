@@ -76,8 +76,11 @@ def extract(path: Path) -> dict:
     reclaimed = 0.0
     substitutions: list[str] = []
 
+    last_ts = None
     for line in path.read_text(errors="replace").splitlines():
         t = _ts(line)
+        if t:
+            last_ts = t
         if t and first_ts is None:
             first_ts = t
         if READY in line:
@@ -118,9 +121,12 @@ def extract(path: Path) -> dict:
         if m := RE_RECLAIM.search(line):
             reclaimed = max(reclaimed, float(m.group(1)) - float(m.group(2)))
 
-    ttfs = None
-    if first_ts and ready_ts:
-        ttfs = (ready_ts - first_ts).total_seconds()
+    # uvicorn's ready line carries no timestamp, so fall back to the last
+    # timestamped line: the ready marker is the final thing a boot prints, and
+    # reporting None for the headline metric of a run that clearly served is
+    # worse than a sub-second approximation.
+    end_ts = ready_ts or (last_ts if ready_seen else None)
+    ttfs = (end_ts - first_ts).total_seconds() if (first_ts and end_ts) else None
 
     return {
         "log": str(path),

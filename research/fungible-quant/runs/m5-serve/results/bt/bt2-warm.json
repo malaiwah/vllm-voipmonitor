@@ -1,16 +1,16 @@
 {
-  "allocator_reclaimed_gib": 0.39,
-  "gib_fetched": 295.8,
+  "allocator_reclaimed_gib": 0.0,
+  "gib_fetched": 0.0,
   "kv_cache_gib": 3.67,
   "layers_loaded": 76,
-  "log": "results/demo1/serve-attempt14-fast.log",
-  "mib_s_avg": 543.0,
+  "log": "results/demo1/serve-attempt15-warm.log",
+  "mib_s_avg": 0.0,
   "model_gib": 79.08,
-  "model_load_s": 1616.772726,
-  "segments_from_cache": 0,
+  "model_load_s": 318.758369,
+  "segments_from_cache": 84,
   "segments_local_no_fetch": 40,
-  "segments_prefetched_remote": 23,
-  "segments_shared_across_ranks": 61,
+  "segments_prefetched_remote": 0,
+  "segments_shared_across_ranks": 0,
   "served": true,
   "substitutions": [],
   "tier_digest": "ef47a340835a33ff",
@@ -92,5 +92,5 @@
     "77": "((3,",
     "78": "((3,"
   },
-  "time_to_serve_s": 2129.0
+  "time_to_serve_s": 394.0
 }
