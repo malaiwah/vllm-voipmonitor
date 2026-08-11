@@ -86,6 +86,16 @@ done
 # Progress signal for a boot still loading: bytes delivered, not liveness.
 if [ -n "${M5LOG:-}" ]; then
   _dl=$(grep -E "FQ downloads" "$M5LOG" 2>/dev/null | tail -1 | sed 's/^.*\] //')
+  # A WARM boot emits no "FQ downloads" line at all — nothing is downloaded.
+  # Without a substitute the progress signal vanished exactly when restarts
+  # became fast enough to be the normal case, leaving a loading serve
+  # indistinguishable from a stuck one.
+  if [ -z "$_dl" ]; then
+    _cached=$(grep -c "FQ progressive L[0-9]*: cached" "$M5LOG" 2>/dev/null)
+    _local=$(grep -c "no fetch" "$M5LOG" 2>/dev/null)
+    [ "${_cached:-0}" -gt 0 ] || [ "${_local:-0}" -gt 0 ] && \
+      _dl="warm boot: ${_cached} segments from cache, ${_local} local (0 fetched)"
+  fi
   # DISTINCT layers on ONE rank. Counting matched lines sums across all four
   # TP ranks and reports "248/76", which reads as either nonsense or done.
   _ly=$(grep "Worker_TP0" "$M5LOG" 2>/dev/null | grep -oE "FQ progressive layer [0-9]+" | sort -u | wc -l)
