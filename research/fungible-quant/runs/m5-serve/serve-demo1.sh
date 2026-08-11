@@ -20,6 +20,24 @@ shift $(( $# >= 2 ? 2 : 1 ))
 
 GG=$BASE/runs/gg-env/gg-run.sh
 
+# PRE-FLIGHT: refuse to boot onto occupied cards.
+# A TP4 serve killed by signalling its process group can leave all four
+# workers alive holding ~14.7 GiB each -- observed: four orphans still
+# resident 46 minutes after the kill, while a fresh boot tried to start on
+# top of them. Starting anyway either OOMs at KV sizing or silently halves
+# the cache. Check the DEVICES WE WILL USE, not the whole box: GPUs 4-7 are
+# the campaign's and are expected to be busy.
+FQ_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1,2,3}
+_busy=$(nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits \
+        -i "$FQ_DEVICES" 2>/dev/null | awk -F', *' '$2 > 1024 {printf "%s(%sMiB) ", $1, $2}')
+if [ -n "$_busy" ]; then
+  echo "FATAL: GPUs still occupied: $_busy" >&2
+  echo "  Stale workers from a previous serve? Check:" >&2
+  echo "    nvidia-smi --query-compute-apps=pid,used_memory --format=csv" >&2
+  echo "  Then kill them and retry. Set FQ_IGNORE_BUSY_GPUS=1 to override." >&2
+  [ "${FQ_IGNORE_BUSY_GPUS:-0}" = 1 ] || exit 5
+fi
+
 # DEPLOY FIRST. The serve loads exl3_fungible from the extracted rootfs, NOT
 # from the source tree, so editing and committing code has no effect on the
 # next boot -- silently. That has now cost three boots: one without the histc
