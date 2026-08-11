@@ -61,6 +61,34 @@ report publish    "publish_window[.]py"         "$RUNS/0c-campaign/publish-auto.
 # write, and globbing only serve.log silently pinned this to a dead run --
 # reporting "quiet" for hours while a healthy boot streamed beside it.
 M5LOG=$(ls -t "$RUNS"/m5-serve/results/*/serve*.log 2>/dev/null | head -1)
+
+# TWO instances now run concurrently (GPUs 0-3 and 4-7). Reporting only the
+# newest log makes the sweep blind to whichever stack was started first --
+# which is exactly the one that has been running long enough to be
+# interesting. Report each instance separately, by results dir.
+report_instance() {
+  local tag=$1 port=$2
+  local log
+  log=$(ls -t "$RUNS"/m5-serve/results/$tag/serve*.log 2>/dev/null | head -1)
+  [ -n "$log" ] || return 0
+  local ly dl up
+  ly=$(grep "Worker_TP0" "$log" 2>/dev/null | grep -oE "FQ progressive layer [0-9]+" | sort -u | wc -l)
+  dl=$(grep -E "FQ downloads" "$log" 2>/dev/null | tail -1 | sed 's/^.*\] //')
+  if [ -z "$dl" ]; then
+    local c l
+    c=$(grep -c "FQ progressive L[0-9]*: cached" "$log" 2>/dev/null)
+    l=$(grep -c "no fetch" "$log" 2>/dev/null)
+    dl="warm: ${c} cached, ${l} local (0 fetched)"
+  fi
+  up=down
+  curl -fsS -m 3 "http://127.0.0.1:$port/health" >/dev/null 2>&1 && up=HEALTHY
+  # The two lines that say whether the LIVE APPLY path is doing anything.
+  local bound applied
+  bound=$(grep -c "live apply BOUND" "$log" 2>/dev/null)
+  applied=$(grep -c "swap(s) INSTALLED" "$log" 2>/dev/null)
+  echo "  [$tag :$port $up] ${ly}/76 layers | $dl"
+  echo "      apply bound on ${bound} rank(s), ${applied} interval(s) INSTALLED swaps"
+}
 report m5-serve   "vllm.*api_server"            "${M5LOG:-/nonexistent}"
 
 # Tier coverage is the actual deliverable; process liveness is only a proxy.
@@ -101,6 +129,8 @@ if [ -n "${M5LOG:-}" ]; then
   _ly=$(grep "Worker_TP0" "$M5LOG" 2>/dev/null | grep -oE "FQ progressive layer [0-9]+" | sort -u | wc -l)
   [ -n "$_dl" ] && echo "  m5-serve load: ${_ly}/76 layers | $_dl"
 fi
+report_instance demo1 8100
+report_instance demo2 8200
 if [ -n "$M5UP" ]; then
   echo "  m5-serve :$M5UP HEALTHY"
 else
