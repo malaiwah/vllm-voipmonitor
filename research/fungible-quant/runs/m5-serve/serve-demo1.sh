@@ -20,6 +20,16 @@ shift $(( $# >= 2 ? 2 : 1 ))
 
 GG=$BASE/runs/gg-env/gg-run.sh
 
+# DEPLOY FIRST. The serve loads exl3_fungible from the extracted rootfs, NOT
+# from the source tree, so editing and committing code has no effect on the
+# next boot -- silently. That has now cost three boots: one without the histc
+# fix, one without the composition table, and one 97-hour load that ran the
+# pre-prefetch fetch path. Never trust that the rootfs matches; make it match.
+"$BASE/runs/gg-env/deploy-fq.sh" || {
+  echo "FATAL: deploy-fq.sh failed — refusing to boot possibly-stale code" >&2
+  exit 4
+}
+
 # --- fragment sources, in resolution order -------------------------------
 # Local segment dirs always resolve first; the HF repo is the fallback so a
 # layer we have not encoded locally is a ranged fetch, not a failure.
