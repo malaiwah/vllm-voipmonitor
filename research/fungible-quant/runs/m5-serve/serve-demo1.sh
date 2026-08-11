@@ -106,6 +106,10 @@ export VLLM_ENGINE_READY_TIMEOUT_S=${VLLM_ENGINE_READY_TIMEOUT_S:-5400}
 # Layers ahead to prefetch, x2 concurrent objects each. Footprint stays
 # bounded because release_layer() drops each layer once it hits the GPU.
 export VLLM_FQ_PREFETCH_DEPTH=${VLLM_FQ_PREFETCH_DEPTH:-3}
+# Keep whole downloaded layer objects so a later K3->K4 promotion slices from
+# a local file instead of re-fetching ~2.5 GB. Off by default: this trades
+# bounded-by-depth footprint for bounded-by-model (hundreds of GB).
+export VLLM_FQ_KEEP_LAYERS=${VLLM_FQ_KEEP_LAYERS:-0}
 export VLLM_FQ_ENCODE_QUEUE=${VLLM_FQ_ENCODE_QUEUE:-$RUN/results/demo1/encode-queue.jsonl}
 mkdir -p "$(dirname "$VLLM_FQ_ENCODE_QUEUE")"
 
@@ -168,6 +172,11 @@ else
   echo "    hf token     : ABSENT — downloads will be rate-limited and slower"
 fi
 echo "    prefetch     : depth=$VLLM_FQ_PREFETCH_DEPTH x 2 objects, Xet hi-perf=$HF_XET_HIGH_PERFORMANCE"
+if [ "${VLLM_FQ_KEEP_LAYERS}" = 1 ]; then
+  echo "    keep layers  : ON — whole layers retained for local re-tiering (disk grows to model size)"
+else
+  echo "    keep layers  : off — layers released after load (footprint O(prefetch depth))"
+fi
 
 exec "$GG" python -m vllm.entrypoints.openai.api_server \
   --model "$VLLM_FQ_DENSE_SOURCE" \
