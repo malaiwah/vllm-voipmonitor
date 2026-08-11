@@ -75,3 +75,17 @@ two humans reach with each other**, at **1.48x** the chance floor. The
 selection signal is real and it is in the traffic — which is the premise the
 whole fungible-quant argument rests on: if the runtime can find these experts,
 a separate full download per bitrate is moving bytes nobody needed to move.
+
+## Raw artifacts
+
+The per-interval routing dumps are large (89 / 40 / 10 MB) and belong on HF,
+not in git — GitHub warned on the 89 MB file before I moved them.
+
+| file | sha256 (first 16) | size | location |
+|---|---|---|---|
+| `stats-synthetic.jsonl` | `22c478914b96832b` | 89 MB | `malaiwah/GLM-5.2-EXL3-FQ-segments` → `evidence/routing-stats/` |
+| `stats.jsonl` (full corpus) | `8b20323ac86c4f44` | 40 MB | same |
+| `stats-code-axis.jsonl` | `bb58a4b2e1ef4791` | 10 MB | same |
+
+The derived `convergence-*.json` scores stay in git — they are small and are
+what the claims above are read from.
