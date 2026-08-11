@@ -84,10 +84,16 @@ report_instance() {
   curl -fsS -m 3 "http://127.0.0.1:$port/health" >/dev/null 2>&1 && up=HEALTHY
   # The two lines that say whether the LIVE APPLY path is doing anything.
   local bound applied
+  # Both are logged once PER RANK, so a raw line count reports 4 for a single
+  # event — the same fourfold inflation the layer counter had. Count distinct
+  # timestamps instead: one install is one moment, however many ranks say so.
   bound=$(grep -c "live apply BOUND" "$log" 2>/dev/null)
-  applied=$(grep -c "swap(s) INSTALLED" "$log" 2>/dev/null)
+  applied=$(grep "swap(s) INSTALLED" "$log" 2>/dev/null \
+            | grep -oE "[0-9]{2}:[0-9]{2}:[0-9]{2}" | sort -u | wc -l)
+  swapped=$(grep "swap(s) INSTALLED" "$log" 2>/dev/null | tail -1 \
+            | grep -oE "[0-9]+ swap" | head -1 | grep -oE "[0-9]+")
   echo "  [$tag :$port $up] ${ly}/76 layers | $dl"
-  echo "      apply bound on ${bound} rank(s), ${applied} interval(s) INSTALLED swaps"
+  echo "      apply bound on ${bound} rank(s), ${applied} install(s), last ${swapped:-0} swaps"
 }
 report m5-serve   "vllm.*api_server"            "${M5LOG:-/nonexistent}"
 
