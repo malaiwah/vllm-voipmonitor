@@ -27,32 +27,36 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import threading
 import time
 import urllib.request
 from pathlib import Path
 
-HARNESS = Path(__file__).parent / "harness" / "load_mtp78_corpus.py"
+HARNESS_DIR = Path(__file__).parent / "harness"
+sys.path.insert(0, str(HARNESS_DIR))
+import load_mtp78_corpus as corpus  # noqa: E402
 
 
 def load_corpus(axis: str | None, limit: int | None) -> tuple[list[str], dict]:
-    """Shell out to the harness loader so there is ONE corpus reader."""
-    cmd = [sys.executable, str(HARNESS), "--json"]
-    if axis:
-        cmd += ["--axis", axis]
-    if limit:
-        cmd += ["--limit", str(limit)]
-    meta = json.loads(subprocess.run(cmd, capture_output=True, text=True,
-                                     check=True).stdout)
-    cmd_show = [sys.executable, str(HARNESS), "--show"]
-    if axis:
-        cmd_show += ["--axis", axis]
-    if limit:
-        cmd_show += ["--limit", str(limit)]
-    out = subprocess.run(cmd_show, capture_output=True, text=True, check=True)
-    prompts = [l for l in out.stdout.splitlines() if l.strip()]
+    """Read the corpus through the harness loader — ONE corpus reader.
+
+    Imported, not shelled out to. The CLI's ``--show`` is a human display
+    mode: it prefixes every row with ``[line_no] axis source`` and truncates
+    the text to 160 characters, and its non-``--json`` summary block is
+    printed to the same stdout. Scraping those lines replayed mangled,
+    metadata-polluted 160-char stubs plus a handful of summary lines as if
+    they were prompts — which silently defeats the entire premise of
+    replaying the exact reference bytes. (It also inflated counts: the
+    earlier code-axis run reported 3,063 prompts for an axis holding 3,057
+    rows.) ``iter_prompts`` yields the raw ``text`` the capture run used.
+    """
+    meta = corpus.verify()
+    prompts = [p.text for p in corpus.iter_prompts(axis=axis,
+                                                   limit=limit or 0)]
+    meta = dict(meta)
+    meta["corpus"] = "reap_recall_calib.jsonl"
+    meta["items_yielded"] = len(prompts)
     if not prompts:
         raise SystemExit("corpus loader yielded no prompts — refusing to "
                          "replay an empty corpus")
