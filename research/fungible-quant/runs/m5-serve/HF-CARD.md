@@ -202,34 +202,6 @@ not arithmetic. A 250-item subsample carries ±2% stderr, so a 1–2 point
 difference against a future re-tiered run would be inside the noise.
 Report: `runs/m5-serve/results/axes/GSM8K-BASELINE.md`.
 
-### Routing recovers 63% of human–human agreement
-
-Which experts *should* be promoted? Four traffic corpora replayed against a
-live serve with real gate mass recorded, scored against a human-built 3.42bpw
-Coder reference. 3,057 prompts per axis; **12,228 issued, 12,228 succeeded,
-0 failed**; 75/75 layers scored in every row. Chance floor 0.2652, human–human
-ceiling 0.6710 (the same author's 3.40bpw sibling from identical calibration).
-
-| axis | score | vs chance | vs human ceiling |
-|---|---:|---:|---:|
-| **axis2_legal** | **0.4240** | **1.60x** | **63%** |
-| axis3_code_agentic | 0.4210 | 1.59x | 63% |
-| axis4_reasoning_termination | 0.4223 | 1.59x | 63% |
-| axis1_general | 0.3988 | 1.50x | 59% |
-
-Two findings ran against expectation. The **code axis is not special** — legal,
-reasoning-termination and code sit within 0.003 of each other; only `general`
-trails. What separates them is not subject matter but *distinctiveness*. And
-**volume is nearly irrelevant**: `axis4` scored 0.4223 on 202k tokens in 127 s,
-while `axis1_general` scored 0.3988 on 3.58M tokens in 1233 s — 18x the tokens,
-10x the wall clock, a worse result. Operationally: a warm-up should be pointed,
-not long.
-
-**Not established:** that any of this improves output quality. These runs
-observe and score selection overlap; no expert was promoted and no eval was run
-against a re-tiered model.
-Report: `runs/m5-serve/results/axes/FOUR-AXIS-RESULTS.md`.
-
 ## How to use it
 
 ```bash
@@ -450,12 +422,11 @@ has been run against a re-tiered model.
 
 ## Evidence
 
-Every number in this card comes from a committed report on the research branch:
-[`malaiwah/vllm-voipmonitor`](https://github.com/malaiwah/vllm-voipmonitor/tree/claude/gg-overview-exploration-jchgd3/research/fungible-quant)
-under `research/fungible-quant/runs/m5-serve/` —
-`assembly-report.md`, `m0-boot-gate.md`, `results/axes/GSM8K-BASELINE.md`,
-`results/axes/FOUR-AXIS-RESULTS.md`, `topology-neutrality.md`,
-`k5-shared-memory-limit.md`, `loader-compatibility.md`.
+Every number in this card is measured, not estimated: the boot gate and
+throughput from a TP4 serve of a checkpoint assembled out of these segments,
+the GSM8K score from `lm-eval` against that serve, the bit-exactness from a
+tensor-by-tensor comparison against the source quant, and the TP4 and K5
+limits from direct measurement on SM120 hardware.
 
 Full upstream attribution — base model, every source quant, the EXL3 format and
 the tooling, each pinned by revision — is in [`NOTICE`](NOTICE). The licence
