@@ -149,6 +149,19 @@ export TORCHINDUCTOR_CACHE_DIR=/home/mbelleau/cache/jit-m5/inductor
 mkdir -p "$CUDA_CACHE_PATH" "$TRITON_CACHE_DIR" "$TORCHINDUCTOR_CACHE_DIR"
 export CUDA_MODULE_LOADING=EAGER
 export VLLM_SERVER_DEV_MODE=1
+# Forced re-tiering (POST /fq/retier) and the read-only activation matrix
+# (GET /fq/heatmap). Both are doubly gated -- dev mode plus their own env --
+# so neither can appear on a serve by accident. Enabled here because the
+# admin path is the ONLY way to prove the swap engine installs weights before
+# the automatic loop is allowed to drive it: BT-6 showed the loop deciding 64
+# swaps and applying none, and the honest order is to verify the mechanism by
+# hand first, under a plan we chose, rather than debug it through a policy.
+export VLLM_FQ_ADMIN_API=${VLLM_FQ_ADMIN_API:-1}
+export VLLM_FQ_HEATMAP=${VLLM_FQ_HEATMAP:-1}
+# A pair whose fragments no source can supply drops out of the batch instead
+# of failing the whole interval; both experts keep their tier so per-layer K4
+# cardinality (D1) is preserved and the promotion simply pends.
+export VLLM_FQ_ON_UNAVAILABLE=${VLLM_FQ_ON_UNAVAILABLE:-drop}
 
 # --- FQ_FAST=1: loader-iteration mode ------------------------------------
 # Trades serving throughput for turnaround. When the thing under test is the
