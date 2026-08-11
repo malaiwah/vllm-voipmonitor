@@ -78,6 +78,11 @@ def main(argv=None) -> int:
     ap.add_argument("--layer", type=int, required=True)
     ap.add_argument("--expert", type=int, required=True)
     ap.add_argument("--k", type=int, default=4)
+    ap.add_argument("--demote", type=int, default=None,
+                    help="expert to move the other way. Fixed cardinality "
+                         "makes a promotion meaningless without one: the API "
+                         "answers 409 cardinality_unbalanced. Omit to let "
+                         "the coldest K4 resident be chosen automatically.")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--skip-generate", action="store_true")
     a = ap.parse_args(argv)
@@ -91,10 +96,32 @@ def main(argv=None) -> int:
               f"pick one at a different tier")
         return 2
 
+    # Pick the eviction ourselves when not told: the coldest K4 resident is
+    # what the policy engine would displace anyway, and picking by score
+    # keeps the hand-driven test honest against the automatic one.
+    demote = a.demote
+    if demote is None and a.k == 4:
+        doc, _ = _req(f"{a.base}/fq/layer/{a.layer}")
+        k4 = [e for e in doc["experts"] if int(e["k"]) == 4
+              and int(e["expert"]) != a.expert]
+        if not k4:
+            print("no K4 resident available to displace")
+            return 2
+        coldest = min(k4, key=lambda e: (float(e.get("score", 0.0)),
+                                         int(e["expert"])))
+        demote = int(coldest["expert"])
+        print(f"  displacing coldest K4 resident e{demote} "
+              f"(score {coldest.get('score')})")
+
+    items = [{"layer": a.layer, "expert": a.expert, "k": a.k}]
+    if demote is not None:
+        items.append({"layer": a.layer, "expert": demote,
+                      "k": 3 if a.k == 4 else 4})
+
     text_before = "" if a.skip_generate else generate(a.base, a.model)
 
     resp, status = _req(a.base + "/fq/retier", {
-        "items": [{"layer": a.layer, "expert": a.expert, "k": a.k}],
+        "items": items,
         "mode": "strict_pair",
         "dry_run": bool(a.dry_run),
         "actor": "verify_retier",
