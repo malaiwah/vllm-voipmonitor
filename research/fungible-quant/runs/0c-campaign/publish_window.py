@@ -69,9 +69,25 @@ def capture_fingerprint() -> str | None:
         return None
 
 
-def stage_and_repack(k: int, fp: str) -> int:
+def stage_and_repack(k: int, fp: str, already: set[str] | None = None) -> int:
     work = Path(f"/home/mbelleau/glm52-work-k{k}")
     shards = sorted(work.glob("tr3-layer-*.safetensors"))
+    # Skip layers already published. Local segments are a cache, not the
+    # deliverable, and they get pruned to reclaim disk — without this check
+    # the next publish sees "segment file missing" and regenerates the whole
+    # back catalogue (observed: ~236 GB of rework queued behind a 56-layer
+    # K2 pass, on a box with 250 GB free and an assembly running).
+    if already:
+        keep = []
+        for f in shards:
+            layer = int(f.stem.replace("tr3-layer-", ""))
+            if f"layer-{layer:03d}.k{k}.safetensors" not in already:
+                keep.append(f)
+        skipped = len(shards) - len(keep)
+        if skipped:
+            print(f"K{k}: {skipped} layers already on HF — not regenerating",
+                  flush=True)
+        shards = keep
     if not shards:
         return 0
     with tempfile.TemporaryDirectory(prefix=f"fqstage-k{k}-") as tmp:
@@ -168,9 +184,19 @@ def rebuild_remote_manifest(api: HfApi) -> dict:
 def main() -> int:
     fp = capture_fingerprint()
     OUT.mkdir(parents=True, exist_ok=True)
+    # Ask the remote what it already has BEFORE doing any repack work.
+    # Costs one API call; saves regenerating hundreds of GB.
+    already: set[str] = set()
+    try:
+        already = {f for f in HfApi().list_repo_files(REPO)
+                   if f.endswith(".safetensors") and "/" not in f}
+        print(f"remote already holds {len(already)} segments", flush=True)
+    except Exception as exc:  # noqa: BLE001 - offline is not fatal
+        print(f"could not list remote ({exc}); will repack everything",
+              flush=True)
     total = 0
     for k in KS:
-        n = stage_and_repack(k, fp)
+        n = stage_and_repack(k, fp, already)
         if n:
             fixed = reattest_encode_of(k, fp)
             print(f"K{k}: {n} layers, {fixed} attestations re-emitted as encode-of",
