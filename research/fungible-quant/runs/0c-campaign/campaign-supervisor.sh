@@ -104,7 +104,17 @@ while true; do
         log "disk ${FREEGB}G < ${MIN_FREE_GB}G — publishing/pruning before more work"
         $PY "$CAMP/publish_window.py" >> "$CAMP/publish-auto.log" 2>&1 && \
           find "$CAPTURE" -maxdepth 1 -name 'layer_*' -mmin +120 -exec rm -rf {} + 2>/dev/null
-        sleep 120; continue
+        # WAIT on this window, do not advance past it. `continue` steps the
+        # INNER loop to the NEXT window, so a sustained low-disk period walks
+        # silently through the whole work list and resumes at an arbitrary
+        # point. Observed: K2 was 72/76 with only window 75-78 left; the guard
+        # fired for ~10 minutes, skipped that window and every K4 window, and
+        # the campaign came back up encoding K5 -- the tier the operator had
+        # explicitly deprioritised.
+        sleep 120
+        FREEGB=$(df --output=avail -BG /home | tail -1 | tr -dc 0-9)
+        [ "${FREEGB:-0}" -lt "$MIN_FREE_GB" ] && continue   # still low: re-check
+        log "disk recovered to ${FREEGB}G — resuming window $START-$END"
       fi
 
       # -- capture (skipped when this window's layers are already present)
