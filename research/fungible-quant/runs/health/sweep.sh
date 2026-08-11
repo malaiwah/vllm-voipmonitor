@@ -147,3 +147,30 @@ echo "--- GPUs:"; nvidia-smi --query-gpu=index,utilization.gpu,memory.used --for
 FREE=$(df --output=avail -BG /home | tail -1 | tr -dc 0-9)
 printf -- "--- disk: %sG free%s\n" "$FREE" \
   "$([ "$FREE" -lt 180 ] && echo '  *** BELOW CAMPAIGN FLOOR (180G) ***')"
+
+# HOST MEMORY. `free -g` is useless here: it reports the HOST, while the limit
+# that actually kills us is the CGROUP. Two workers were OOM-killed while
+# `free` showed ~1 TB available, and the cause went misdiagnosed twice for want
+# of these four numbers. anon is the one that matters — it is unreclaimable,
+# and ~229 GiB per rank of it lives in the glibc [heap] after a progressive
+# load (see OOM-1).
+if [ -r /sys/fs/cgroup/memory.current ] && [ -r /sys/fs/cgroup/memory.max ]; then
+  MCUR=$(cat /sys/fs/cgroup/memory.current)
+  MMAX=$(cat /sys/fs/cgroup/memory.max)
+  MANON=$(awk '/^anon /{print $2}' /sys/fs/cgroup/memory.stat 2>/dev/null)
+  OOMK=$(awk '/^oom_kill /{print $2}' /sys/fs/cgroup/memory.events 2>/dev/null)
+  case "$MMAX" in
+    max) HEAD="(no limit)" ;;
+    *)   HEAD=$(awk -v c="$MCUR" -v m="$MMAX" \
+                'BEGIN{printf "%.0f GiB headroom", (m-c)/2^30}') ;;
+  esac
+  awk -v c="$MCUR" -v m="$MMAX" -v a="${MANON:-0}" -v h="$HEAD" -v k="${OOMK:-0}" \
+    'BEGIN{printf "--- cgroup mem: %.0f", c/2^30;
+           if (m != "max") printf "/%.0f", m/2^30;
+           printf " GiB, anon %.0f GiB, %s, oom_kill=%s%s\n", a/2^30, h, k,
+                  (k+0 > 0 ? "  *** OOM KILLS SEEN ***" : "")}'
+  # Per-worker RSS: 4 TP ranks x ~240 GiB is what fills the cgroup.
+  ps -eo rss,args --no-headers 2>/dev/null \
+    | awk '$1 > 20*1024*1024 {n++; s+=$1}
+           END {if (n) printf "    %d process(es) over 20 GiB RSS, %.0f GiB total\n", n, s/2^20}'
+fi
