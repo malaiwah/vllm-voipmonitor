@@ -32,10 +32,18 @@ report() { # label pattern logfile
   # renders "0\n0" and wrecks the column alignment.
   alive=$(pgrep -fc "$2" 2>/dev/null | head -1); alive=${alive:-0}
   delta=$(grew "$3")
-  # A live process whose log is flat is not necessarily stuck: the supervisor
-  # only logs every 120s while waiting. Distinguish it from a dead-but-queued
-  # job so "STALLED" keeps meaning something worth investigating.
-  [ "$delta" = STALLED ] && [ "$alive" -gt 0 ] && delta="quiet"
+  # Label honestly, because a sweep that cries wolf gets ignored:
+  #   alive + growing -> +NB      (working)
+  #   alive + flat    -> quiet    (e.g. supervisor logs only every 120s)
+  #   dead  + grew    -> exited   (finished since the last sweep)
+  #   dead  + flat    -> idle     (not running; NOT the same as stuck)
+  # Nothing here can tell "idle" from "should be running but isn't" — that
+  # needs the tier-coverage lines below, which show whether work remains.
+  if [ "$delta" = STALLED ]; then
+    [ "$alive" -gt 0 ] && delta="quiet" || delta="idle"
+  elif [ "$alive" -eq 0 ] && [ "${delta#+}" != "$delta" ]; then
+    delta="exited"
+  fi
   tail=""; [ -f "$3" ] && tail=$(tr '\r' '\n' < "$3" | grep -vE '^$' | tail -1 | cut -c1-62)
   printf "%-13s alive=%-3s %-11s | %s\n" "$1" "$alive" "$delta" "$tail"
 }
