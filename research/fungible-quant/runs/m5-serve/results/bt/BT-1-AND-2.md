@@ -69,9 +69,12 @@ FQ reclaim (post process_weights_after_loading):
 (`max_model_len` 32768 vs 8192, graph capture on vs off), not in allocator
 behaviour. 5.27 GiB was never a constant of this system.
 
-Measured overhead, at util 0.95 / eager / 8192 context:
-`90.81 − 79.08 − 3.67 = 8.06 GiB`. That is now the preflight's default, and a
+Measured overhead, at util 0.95 / eager / 8192 context, against the DEVICE
+budget the loader sees rather than nvidia-smi's card total:
+`90.22 − 79.08 − 3.67 = 7.47 GiB`. That is the preflight's default, and a
 known-answer test pins the projection to the 3.67 GiB the engine reported.
+(An 8.06 GiB figure appeared here first; it used nvidia-smi's 90.81 GiB and
+over-charged by 0.6 GiB.)
 
 The relocated hook still earns its place, for the *other* thing it does: it
 measures the true footprint and writes the **dense calibration (11.40 GiB per
