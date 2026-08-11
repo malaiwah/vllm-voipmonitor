@@ -1,0 +1,635 @@
+{
+ "schema": "fq-convergence/1",
+ "reference": {
+  "repo_id": "willfalco/GLM-5.2-EXL3-TR3-3.42bpw",
+  "revision": "ae68c65947efa90bea37308e15421872f124c46d",
+  "revision_note": "Repo main has since moved to a350292cb2038f2c31732569a711a89e5d72fd46; tier_bitmap.json is BYTE-IDENTICAL at both revisions (sha256 3f7b93f8db5d2e4f9d87537f2d604a52..., 922664 B), so either pin yields the same expert map. ae68c659 is used because its safetensors headers were already byte-verified.",
+  "is_coder_variant": true,
+  "coder_evidence": [
+   "README.md H1: 'GLM-5.2 EXL3 TR3 3.42 bpw Coder'",
+   "README.md: 'with Coding expert allignments from 3.25bpw/NF3' (willfalco/GLM-5.2-EXL3-TR3-3.25bpw, madeby561/GLM-5.2-MXFP8-NVFP4-NF3-Hybrid)",
+   "Sibling 3.40bpw README: '3.42bpw is Coder version, inheriting less busier Coder experts at higher bpw'",
+   "Sibling 3.36bpw README: 'superseded by 3.42bpw Coder version'"
+  ],
+  "architecture": "GlmMoeDsaForCausalLM",
+  "layout": "shared_h_v1",
+  "tp": 4,
+  "exllamav3_version": "0.0.43",
+  "mcg_multiplier": 3417055213,
+  "k_plan_sha256": "b6f298c541ec8631eabb0baa61712773efc814f85766cb05f31b30c0c13e7afa",
+  "recipe_fingerprint": "574adba6f65c775bfd99623b0a04db6577f4d4409a22dd6107f259cf1facd387"
+ },
+ "signal": "mass",
+ "intervals": "last",
+ "layers_scored": 75,
+ "layers_skipped": [],
+ "mean_per_layer_jaccard": 0.411935,
+ "pooled_jaccard": 0.411001,
+ "chance_floor_expected": 0.265205,
+ "chance_floor_sampled": 0.264071,
+ "human_human_ceiling": 0.671024,
+ "lift_over_chance": 1.553,
+ "fraction_of_human_agreement": 0.614,
+ "per_layer": [
+  {
+   "layer": 3,
+   "n_k4": 50,
+   "jaccard": 0.16279069767441862,
+   "jaccard_random_draw": 0.0989010989010989,
+   "jaccard_chance_expected": 0.10822510822510822,
+   "overlap": 14
+  },
+  {
+   "layer": 4,
+   "n_k4": 108,
+   "jaccard": 0.44,
+   "jaccard_random_draw": 0.3170731707317073,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 66
+  },
+  {
+   "layer": 5,
+   "n_k4": 108,
+   "jaccard": 0.3670886075949367,
+   "jaccard_random_draw": 0.2857142857142857,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 58
+  },
+  {
+   "layer": 6,
+   "n_k4": 108,
+   "jaccard": 0.42105263157894735,
+   "jaccard_random_draw": 0.22727272727272727,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 64
+  },
+  {
+   "layer": 7,
+   "n_k4": 108,
+   "jaccard": 0.3416149068322981,
+   "jaccard_random_draw": 0.2857142857142857,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 55
+  },
+  {
+   "layer": 8,
+   "n_k4": 108,
+   "jaccard": 0.2934131736526946,
+   "jaccard_random_draw": 0.2342857142857143,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 49
+  },
+  {
+   "layer": 9,
+   "n_k4": 108,
+   "jaccard": 0.3670886075949367,
+   "jaccard_random_draw": 0.32515337423312884,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 58
+  },
+  {
+   "layer": 10,
+   "n_k4": 108,
+   "jaccard": 0.3090909090909091,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 51
+  },
+  {
+   "layer": 11,
+   "n_k4": 108,
+   "jaccard": 0.3170731707317073,
+   "jaccard_random_draw": 0.3090909090909091,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 52
+  },
+  {
+   "layer": 12,
+   "n_k4": 108,
+   "jaccard": 0.2781065088757396,
+   "jaccard_random_draw": 0.2857142857142857,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 47
+  },
+  {
+   "layer": 13,
+   "n_k4": 108,
+   "jaccard": 0.3416149068322981,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 55
+  },
+  {
+   "layer": 14,
+   "n_k4": 108,
+   "jaccard": 0.3090909090909091,
+   "jaccard_random_draw": 0.2857142857142857,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 51
+  },
+  {
+   "layer": 15,
+   "n_k4": 108,
+   "jaccard": 0.38461538461538464,
+   "jaccard_random_draw": 0.2857142857142857,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 60
+  },
+  {
+   "layer": 16,
+   "n_k4": 108,
+   "jaccard": 0.4025974025974026,
+   "jaccard_random_draw": 0.22033898305084745,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 62
+  },
+  {
+   "layer": 17,
+   "n_k4": 108,
+   "jaccard": 0.3333333333333333,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 54
+  },
+  {
+   "layer": 18,
+   "n_k4": 108,
+   "jaccard": 0.44966442953020136,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 67
+  },
+  {
+   "layer": 19,
+   "n_k4": 108,
+   "jaccard": 0.3584905660377358,
+   "jaccard_random_draw": 0.2934131736526946,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 57
+  },
+  {
+   "layer": 20,
+   "n_k4": 108,
+   "jaccard": 0.3416149068322981,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 55
+  },
+  {
+   "layer": 21,
+   "n_k4": 108,
+   "jaccard": 0.3935483870967742,
+   "jaccard_random_draw": 0.2934131736526946,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 61
+  },
+  {
+   "layer": 22,
+   "n_k4": 108,
+   "jaccard": 0.3584905660377358,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 57
+  },
+  {
+   "layer": 23,
+   "n_k4": 108,
+   "jaccard": 0.3333333333333333,
+   "jaccard_random_draw": 0.2631578947368421,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 54
+  },
+  {
+   "layer": 24,
+   "n_k4": 108,
+   "jaccard": 0.3670886075949367,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 58
+  },
+  {
+   "layer": 25,
+   "n_k4": 108,
+   "jaccard": 0.38461538461538464,
+   "jaccard_random_draw": 0.2631578947368421,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 60
+  },
+  {
+   "layer": 26,
+   "n_k4": 108,
+   "jaccard": 0.35,
+   "jaccard_random_draw": 0.2558139534883721,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 56
+  },
+  {
+   "layer": 27,
+   "n_k4": 108,
+   "jaccard": 0.4025974025974026,
+   "jaccard_random_draw": 0.2558139534883721,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 62
+  },
+  {
+   "layer": 28,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.30120481927710846,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 29,
+   "n_k4": 108,
+   "jaccard": 0.4304635761589404,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 65
+  },
+  {
+   "layer": 30,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 31,
+   "n_k4": 108,
+   "jaccard": 0.4594594594594595,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 68
+  },
+  {
+   "layer": 32,
+   "n_k4": 108,
+   "jaccard": 0.44966442953020136,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 67
+  },
+  {
+   "layer": 33,
+   "n_k4": 108,
+   "jaccard": 0.42105263157894735,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 64
+  },
+  {
+   "layer": 34,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 35,
+   "n_k4": 108,
+   "jaccard": 0.5,
+   "jaccard_random_draw": 0.2558139534883721,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 72
+  },
+  {
+   "layer": 36,
+   "n_k4": 108,
+   "jaccard": 0.4594594594594595,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 68
+  },
+  {
+   "layer": 37,
+   "n_k4": 108,
+   "jaccard": 0.5104895104895105,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 73
+  },
+  {
+   "layer": 38,
+   "n_k4": 108,
+   "jaccard": 0.4794520547945205,
+   "jaccard_random_draw": 0.3090909090909091,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 70
+  },
+  {
+   "layer": 39,
+   "n_k4": 108,
+   "jaccard": 0.44,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 66
+  },
+  {
+   "layer": 40,
+   "n_k4": 108,
+   "jaccard": 0.42105263157894735,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 64
+  },
+  {
+   "layer": 41,
+   "n_k4": 108,
+   "jaccard": 0.5,
+   "jaccard_random_draw": 0.3170731707317073,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 72
+  },
+  {
+   "layer": 42,
+   "n_k4": 108,
+   "jaccard": 0.4304635761589404,
+   "jaccard_random_draw": 0.2558139534883721,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 65
+  },
+  {
+   "layer": 43,
+   "n_k4": 108,
+   "jaccard": 0.5428571428571428,
+   "jaccard_random_draw": 0.2934131736526946,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 76
+  },
+  {
+   "layer": 44,
+   "n_k4": 108,
+   "jaccard": 0.4794520547945205,
+   "jaccard_random_draw": 0.2558139534883721,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 70
+  },
+  {
+   "layer": 45,
+   "n_k4": 108,
+   "jaccard": 0.46938775510204084,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 69
+  },
+  {
+   "layer": 46,
+   "n_k4": 108,
+   "jaccard": 0.5211267605633803,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 74
+  },
+  {
+   "layer": 47,
+   "n_k4": 108,
+   "jaccard": 0.4794520547945205,
+   "jaccard_random_draw": 0.2342857142857143,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 70
+  },
+  {
+   "layer": 48,
+   "n_k4": 108,
+   "jaccard": 0.44966442953020136,
+   "jaccard_random_draw": 0.2342857142857143,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 67
+  },
+  {
+   "layer": 49,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 50,
+   "n_k4": 108,
+   "jaccard": 0.4594594594594595,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 68
+  },
+  {
+   "layer": 51,
+   "n_k4": 108,
+   "jaccard": 0.3935483870967742,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 61
+  },
+  {
+   "layer": 52,
+   "n_k4": 108,
+   "jaccard": 0.4594594594594595,
+   "jaccard_random_draw": 0.2342857142857143,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 68
+  },
+  {
+   "layer": 53,
+   "n_k4": 108,
+   "jaccard": 0.4304635761589404,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 65
+  },
+  {
+   "layer": 54,
+   "n_k4": 108,
+   "jaccard": 0.46938775510204084,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 69
+  },
+  {
+   "layer": 55,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 56,
+   "n_k4": 108,
+   "jaccard": 0.44966442953020136,
+   "jaccard_random_draw": 0.2631578947368421,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 67
+  },
+  {
+   "layer": 57,
+   "n_k4": 108,
+   "jaccard": 0.35,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 56
+  },
+  {
+   "layer": 58,
+   "n_k4": 108,
+   "jaccard": 0.42105263157894735,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 64
+  },
+  {
+   "layer": 59,
+   "n_k4": 108,
+   "jaccard": 0.4304635761589404,
+   "jaccard_random_draw": 0.22727272727272727,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 65
+  },
+  {
+   "layer": 60,
+   "n_k4": 108,
+   "jaccard": 0.4304635761589404,
+   "jaccard_random_draw": 0.3333333333333333,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 65
+  },
+  {
+   "layer": 61,
+   "n_k4": 108,
+   "jaccard": 0.3935483870967742,
+   "jaccard_random_draw": 0.3090909090909091,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 61
+  },
+  {
+   "layer": 62,
+   "n_k4": 108,
+   "jaccard": 0.44966442953020136,
+   "jaccard_random_draw": 0.2934131736526946,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 67
+  },
+  {
+   "layer": 63,
+   "n_k4": 108,
+   "jaccard": 0.3416149068322981,
+   "jaccard_random_draw": 0.27058823529411763,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 55
+  },
+  {
+   "layer": 64,
+   "n_k4": 108,
+   "jaccard": 0.5104895104895105,
+   "jaccard_random_draw": 0.2631578947368421,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 73
+  },
+  {
+   "layer": 65,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 66,
+   "n_k4": 108,
+   "jaccard": 0.5,
+   "jaccard_random_draw": 0.2342857142857143,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 72
+  },
+  {
+   "layer": 67,
+   "n_k4": 108,
+   "jaccard": 0.5,
+   "jaccard_random_draw": 0.2631578947368421,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 72
+  },
+  {
+   "layer": 68,
+   "n_k4": 108,
+   "jaccard": 0.3935483870967742,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 61
+  },
+  {
+   "layer": 69,
+   "n_k4": 108,
+   "jaccard": 0.4896551724137931,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 71
+  },
+  {
+   "layer": 70,
+   "n_k4": 108,
+   "jaccard": 0.4304635761589404,
+   "jaccard_random_draw": 0.22727272727272727,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 65
+  },
+  {
+   "layer": 71,
+   "n_k4": 108,
+   "jaccard": 0.4117647058823529,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 63
+  },
+  {
+   "layer": 72,
+   "n_k4": 108,
+   "jaccard": 0.3584905660377358,
+   "jaccard_random_draw": 0.2342857142857143,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 57
+  },
+  {
+   "layer": 73,
+   "n_k4": 108,
+   "jaccard": 0.44966442953020136,
+   "jaccard_random_draw": 0.2413793103448276,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 67
+  },
+  {
+   "layer": 74,
+   "n_k4": 108,
+   "jaccard": 0.3935483870967742,
+   "jaccard_random_draw": 0.3333333333333333,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 61
+  },
+  {
+   "layer": 75,
+   "n_k4": 108,
+   "jaccard": 0.46938775510204084,
+   "jaccard_random_draw": 0.2781065088757396,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 69
+  },
+  {
+   "layer": 76,
+   "n_k4": 108,
+   "jaccard": 0.38461538461538464,
+   "jaccard_random_draw": 0.2558139534883721,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 60
+  },
+  {
+   "layer": 77,
+   "n_k4": 108,
+   "jaccard": 0.4025974025974026,
+   "jaccard_random_draw": 0.24855491329479767,
+   "jaccard_chance_expected": 0.26732673267326734,
+   "overlap": 62
+  }
+ ]
+}

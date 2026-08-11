@@ -1,0 +1,14 @@
+{
+ "schema": "fq-corpus-replay/1",
+ "corpus": "reap_recall_calib.jsonl",
+ "corpus_sha256": "cf247acc7c5da9f0600c7d6ab3b7c2fcfc54ec30b794e3b6047559285fa44df4",
+ "axis": "axis1_general",
+ "prompts": 3057,
+ "ok": 3057,
+ "failed": 0,
+ "wall_seconds": 1232.6,
+ "prompt_tokens": 3581199,
+ "completion_tokens": 24456,
+ "concurrency": 16,
+ "max_tokens": 8
+}
