@@ -11,7 +11,10 @@
 # Deliberately fail-loud: if the serve does not come up, or the probe returns
 # nonsense, the script stops rather than producing an empty-but-plausible
 # result directory.
-set -uo pipefail
+# -e matters here: without it the script exits 0 after ANY post-probe
+# failure, because its last command is `ls | tee`. That produces exactly
+# the empty-but-plausible result directory this header claims to prevent.
+set -euo pipefail
 BASE=/home/mbelleau/protensors-work/vllm-voipmonitor/research/fungible-quant
 RUN=$BASE/runs/m5-serve
 PY=/home/mbelleau/venvs/fq/bin/python
@@ -28,15 +31,35 @@ say() { echo "[$(date -u +%FT%TZ)] $*" | tee -a "$OUT/run.log"; }
 
 # ---------------------------------------------------------------- boot
 say "booting serve mode=$MODE ckpt=$CKPT tag=$TAG"
-FQ_MODEL=$CKPT FQ_PORT=$PORT "$RUN/serve-glm52.sh" "$MODE" \
-  > "$OUT/serve.log" 2>&1 &
+# setsid: put the serve in its OWN process group so cleanup can signal the
+# whole tree. Killing only the parent leaves the four TP workers alive holding
+# ~76 GiB of GPU memory each, which then blocks every later run on this box.
+# It must be a NEW group: without job control the script shares its own pgid
+# with the child, so `kill -- -$$` would take out the script itself.
+setsid env FQ_MODEL="$CKPT" FQ_PORT="$PORT" \
+  "$RUN/serve-glm52.sh" "$MODE" > "$OUT/serve.log" 2>&1 &
 SERVE_PID=$!
+sleep 1
+SERVE_PGID=$(ps -o pgid= -p "$SERVE_PID" 2>/dev/null | tr -d ' ')
+say "serve pid=$SERVE_PID pgid=${SERVE_PGID:-unknown}"
 cleanup() {
-  say "shutting down serve pid=$SERVE_PID"
-  kill "$SERVE_PID" 2>/dev/null
-  # the API server spawns TP workers; give them a chance to exit cleanly
-  for _ in $(seq 1 30); do kill -0 "$SERVE_PID" 2>/dev/null || break; sleep 2; done
-  kill -9 "$SERVE_PID" 2>/dev/null
+  local rc=$?
+  say "shutting down serve pid=$SERVE_PID pgid=${SERVE_PGID:-?} (exit rc=$rc)"
+  if [ -n "${SERVE_PGID:-}" ] && [ "$SERVE_PGID" != "$$" ]; then
+    kill -TERM -- "-$SERVE_PGID" 2>/dev/null
+    for _ in $(seq 1 30); do
+      kill -0 -- "-$SERVE_PGID" 2>/dev/null || break
+      sleep 2
+    done
+    kill -KILL -- "-$SERVE_PGID" 2>/dev/null
+  else
+    kill -9 "$SERVE_PID" 2>/dev/null
+  fi
+  # Verify, do not assume: a surviving worker silently poisons the next run.
+  local left
+  left=$(pgrep -f "VLLM::" | wc -l)
+  [ "$left" -gt 0 ] && say "WARN: $left VLLM worker process(es) still alive"
+  return $rc
 }
 trap cleanup EXIT
 
@@ -110,12 +133,28 @@ grep -aiE "FQ (interval|resolve|swap)|swap|rollback" "$OUT/serve.log" \
 say "fq log lines captured: $(wc -l < "$OUT/fq-lines.log" 2>/dev/null || echo 0)"
 
 # ---------------------------------------------------------------- eval
-if [ "${FQ_SKIP_EVAL:-0}" != 1 ] && [ -x "$RUN/harness/run-gpqa.sh" ]; then
-  say "quality eval (GPQA Diamond)"
-  "$RUN/harness/run-gpqa.sh" "$BASE_URL" "$OUT/gpqa.json" \
-    2>&1 | tee -a "$OUT/run.log"
+# GSM8K by default, not GPQA: cost is tokens, not items. GPQA Diamond's 198
+# graduate items run ~4000 tokens each; a 250-item GSM8K subsample runs ~800,
+# making it roughly 4x cheaper. GPQA is opt-in via FQ_EVAL=gpqa.
+EVAL=${FQ_EVAL:-gsm8k}
+EVAL_SH=$RUN/harness/eval_${EVAL}.sh
+if [ "${FQ_SKIP_EVAL:-0}" = 1 ]; then
+  say "eval skipped by request (FQ_SKIP_EVAL=1)"
+elif [ ! -x "$EVAL_SH" ]; then
+  # Fail LOUD. The previous guard looked for run-gpqa.sh while the harness
+  # ships eval_gpqa.sh, so the campaign logged "skipping eval" and produced
+  # zero quality numbers while still exiting 0 — a silent hole in the very
+  # evidence the run exists to gather.
+  say "FATAL: eval script $EVAL_SH not found or not executable"
+  ls -la "$RUN/harness/" | sed 's/^/    /' | tee -a "$OUT/run.log"
+  exit 4
 else
-  say "skipping eval (FQ_SKIP_EVAL=${FQ_SKIP_EVAL:-0}, harness present=$([ -x "$RUN/harness/run-gpqa.sh" ] && echo yes || echo no))"
+  say "quality eval ($EVAL) via $EVAL_SH"
+  if "$EVAL_SH" "$BASE_URL" "$OUT/eval-$EVAL" 2>&1 | tee -a "$OUT/run.log"; then
+    say "eval completed"
+  else
+    say "WARN: eval exited non-zero — results may be partial"
+  fi
 fi
 
 # ---------------------------------------------------------------- charts
@@ -125,5 +164,11 @@ $PY "$RUN/make_charts.py" "$OUT/timeline-main.jsonl" \
   --title "Live expert re-tiering under load — $TAG" \
   2>&1 | tee -a "$OUT/run.log"
 
-say "DONE — artifacts in $OUT"
-ls -la "$OUT" | sed 's/^/    /' | tee -a "$OUT/run.log"
+ls -la "$OUT" | sed 's/^/    /' | tee -a "$OUT/run.log" || true
+# Assert the run actually produced evidence before claiming success.
+rows=$(cat "$OUT"/timeline-*.jsonl 2>/dev/null | wc -l)
+if [ "$rows" -lt 5 ]; then
+  say "FATAL: only $rows timeline rows — refusing to report success"
+  exit 5
+fi
+say "DONE — artifacts in $OUT ($rows timeline rows)"
