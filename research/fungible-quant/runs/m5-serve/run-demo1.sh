@@ -116,18 +116,36 @@ $PY "$RUN/make_scenario1_policy.py" \
   2>&1 | tee -a "$OUT/run.log"
 have "$POLICY"; have "$COVERAGE"
 
-read -r N_SLOTS N_COVERED MANIFEST <<< "$($PY - "$POLICY" <<'PYEOF'
+read -r N_SLOTS N_COVERED N_TRADABLE MANIFEST <<< "$($PY - "$POLICY" <<'PYEOF'
 import json, sys
 d = json.load(open(sys.argv[1]))
 b = d["budget"]["n_k4_per_layer"]
-print(sum(b.values()), len(d["provenance"]["covered_layers"]), d["manifest"])
+prov = d["provenance"]
+# A layer can only trade if its budget leaves at least one unoccupied
+# fragment to promote INTO: swaps are 1-for-1 inside a fixed-capacity K4
+# slab, so budget == pool means zero legal targets forever.
+rows = prov.get("per_layer_coverage", [])
+tradable = sum(1 for r in rows if int(r.get("promotion_candidates", 0)) > 0)
+print(sum(b.values()), len(prov["covered_layers"]), tradable, d["manifest"])
 PYEOF
 )"
-say "policy: $N_SLOTS K4 slots over $N_COVERED covered layers, manifest ${MANIFEST:0:16}"
+say "policy: $N_SLOTS K4 slots over $N_COVERED covered layers ($N_TRADABLE
+    tradable), manifest ${MANIFEST:0:16}"
 [ "$N_SLOTS" -gt 0 ] || die "the policy declares zero K4 slots — with no K4
       fragments on disk there is nothing to promote. Point FQ_K4_DIRS at a
       dir holding layer-NNN.k4.safetensors + index-k4.json, or run the
       observe-mode experiment instead (see demo1-README.md)."
+# Header gate 1 restated in numbers: a saturated pool has no legal promotion
+# target, so the loop shows a flat line for the whole run and the operator
+# reads it as a bug. Refuse before spending an hour of GPU on it.
+[ "$N_TRADABLE" -gt 0 ] || die "every K4-covered layer saturates its fragment
+      pool (budget == pool size), so the loop has ZERO legal promotion
+      targets and can never swap. Lower FQ_FILL (currently $FILL) or widen
+      FQ_K4_DIRS."
+[ "$N_TRADABLE" -eq "$N_COVERED" ] || say "WARNING: only $N_TRADABLE of
+    $N_COVERED covered layer(s) have promotion candidates; the rest saturate
+    their fragment pool and cannot swap"
+# ---- policy gate end (test_run_demo1.py extracts the block above)
 
 # --------------------------------------- 2. checkpoint matches the policy
 say "--- step 2: verify the checkpoint physically carries the declared K4 slabs"
@@ -223,7 +241,12 @@ setsid env \
   "$RUN/serve-glm52.sh" live > "$OUT/serve.log" 2>&1 &
 SERVE_PID=$!
 sleep 1
-SERVE_PGID=$(ps -o pgid= -p "$SERVE_PID" 2>/dev/null | tr -d ' ')
+# `|| SERVE_PGID=""` is load-bearing: under `set -o pipefail` a serve that
+# died inside the first second makes `ps` exit 1, the assignment fails, and
+# `set -e` kills this script BEFORE the EXIT trap below is installed and
+# before the readiness loop can tail serve.log. Empty is a state cleanup
+# already handles (it falls back to killing SERVE_PID directly).
+SERVE_PGID=$(ps -o pgid= -p "$SERVE_PID" 2>/dev/null | tr -d ' ') || SERVE_PGID=""
 say "serve pid=$SERVE_PID pgid=${SERVE_PGID:-unknown}"
 
 SCRAPE_PID=""
@@ -331,7 +354,12 @@ fi
 
 # ------------------------------------------------------------- 9. snapshot
 say "--- step 9: dump stats and loop state"
-kill -INT "$SCRAPE_PID" 2>/dev/null; wait "$SCRAPE_PID" 2>/dev/null || true
+# `|| true` on the kill, not just the wait: the scraper exits on its own once
+# --duration (FQ_SCRAPE_MAX, default 4 h) elapses, and killing a process that
+# is already gone returns 1 — which under `set -e` would abort the run HERE,
+# after the whole experiment, before scoring and charts.
+kill -INT "$SCRAPE_PID" 2>/dev/null || true
+wait "$SCRAPE_PID" 2>/dev/null || true
 SCRAPE_PID=""
 curl -sf -m 15 "$BASE_URL/metrics" > "$OUT/metrics-final.txt" 2>/dev/null \
   || say "WARN: could not scrape final /metrics"
@@ -352,7 +380,12 @@ say "stats intervals recorded: $ROWS"
 [ "$ROWS" -ge 2 ] || die "only $ROWS stats interval(s) — too little traffic to
       rank experts. Raise FQ_LIMIT or lower FQ_INTERVAL."
 
-SUBS=$(grep -aic "substitut" "$OUT/fq-lines.log" 2>/dev/null || echo 0)
+# `grep -c` prints 0 AND exits 1 when nothing matches, so the obvious
+# `$(grep -c ... || echo 0)` yields the two-line string "0\n0", `[ -eq ]`
+# then errors with "integer expression expected", and the || branch fires —
+# printing the fallback-bitrate WARNING on every clean run. Put the fallback
+# on the assignment instead, where it only replaces a genuinely empty value.
+SUBS=$(grep -aic "substitut" "$OUT/fq-lines.log" 2>/dev/null) || SUBS=0
 [ "$SUBS" -eq 0 ] || say "WARNING: $SUBS fragment substitution line(s) — some
     promotions were served at a FALLBACK bitrate (VLLM_FQ_K_FALLBACK=3), so
     the occupancy table overstates what is physically loaded"
