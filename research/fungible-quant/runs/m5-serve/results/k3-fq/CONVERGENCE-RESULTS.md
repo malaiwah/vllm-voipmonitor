@@ -1,3 +1,25 @@
+# RETRACTED — the corpus rows in this table are INVALID
+
+**Do not cite the MTP78 numbers below.** The replay driver scraped the corpus
+loader's `--show` output, which is a HUMAN DISPLAY mode: it prefixes each row
+with `[line_no] axis source`, TRUNCATES the text to 160 characters, and prints
+a summary footer to the same stdout. So the "corpus" runs replayed mangled
+160-character stubs with metadata glued to the front, plus a few footer lines
+counted as prompts.
+
+Two tells that were visible in the recorded evidence and that I did not catch:
+
+* **909,790 prompt tokens / 12,237 prompts = 74 tokens each.** Real rows are
+  2,616 and 4,832 characters (~650+ tokens). A 9x shortfall.
+* The code-axis run reported **3,063 prompts for an axis holding 3,057 rows** —
+  the 6 extras were the summary footer.
+
+The SYNTHETIC rows (0.3603 at 18 records, 0.3789 at 117) are unaffected: they
+never went through the corpus loader. Everything below is kept verbatim for
+the audit trail; corrected numbers replace it in a later section.
+
+---
+
 # Convergence: does live routing rediscover a human's expert choices?
 
 Measured on the real GLM-5.2 (not the proxy), from a live TP4 serve of a
