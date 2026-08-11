@@ -548,6 +548,14 @@ def test_wrap_never_drops_a_word():
     assert got.split() == s.split()
 
 
+def test_compact_rows_round_trip():
+    payload = {"a": 1, "permutation": [[3, 1, 2], [0, 2, 1]], "z": "x"}
+    text = M.dumps_with_compact_rows(payload, "permutation")
+    assert json.loads(text) == payload          # still valid JSON
+    assert "[3,1,2]" in text                    # ... on one line per row
+    assert len(text.splitlines()) < 12
+
+
 def test_human_readable_magnitudes():
     assert M.human(5.05e8) == "505.00M"
     assert M.human(0) == "0"

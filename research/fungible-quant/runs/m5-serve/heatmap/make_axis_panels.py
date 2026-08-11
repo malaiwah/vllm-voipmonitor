@@ -979,6 +979,24 @@ def svg_bytes(fig: Figure) -> str:
     return svg
 
 
+def dumps_with_compact_rows(payload: dict, key: str) -> str:
+    """``json.dumps(indent=1)`` but with one matrix row per line.
+
+    The permutation is 75x256 integers. Indented, that is 19,200 lines of
+    digits in a 200-line document — unreadable and a nuisance in every diff.
+    Rows are pure ints, so the placeholder can never collide with real
+    content; assert it anyway rather than trusting that.
+    """
+    rows = payload[key]
+    compact = [json.dumps(r, separators=(",", ":")) for r in rows]
+    marks = [f"@@ROW{i}@@" for i in range(len(rows))]
+    text = json.dumps({**payload, key: marks}, indent=1)
+    for mark, row in zip(marks, compact):
+        assert '"' not in row and "\\" not in row, "row is not plain data"
+        text = text.replace(f'"{mark}"', row)
+    return text
+
+
 def synthetic_path(out: Path) -> Path:
     """Force '.SYNTHETIC' into the filename of a placeholder figure."""
     if "SYNTHETIC" in out.name:
@@ -1164,7 +1182,7 @@ def main(argv: list[str] | None = None) -> int:
         }
         jout = synthetic_path(a.json) if fig.is_synthetic else a.json
         jout.parent.mkdir(parents=True, exist_ok=True)
-        jout.write_text(json.dumps(payload, indent=1))
+        jout.write_text(dumps_with_compact_rows(payload, "permutation"))
         print(f"wrote {jout}")
     return 0
 
