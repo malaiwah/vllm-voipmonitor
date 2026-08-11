@@ -1,0 +1,58 @@
+{
+ "range": "73-78",
+ "shards": [
+  {
+   "shard": "model-embed.safetensors",
+   "assembled_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "source_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-head.safetensors",
+   "assembled_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "source_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-073.safetensors",
+   "assembled_sha256": "c1bf842b788c0be1e00a7512a28093ee6936fca3d361ae9f3c8cf236142e4689",
+   "source_sha256": "c1bf842b788c0be1e00a7512a28093ee6936fca3d361ae9f3c8cf236142e4689",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-074.safetensors",
+   "assembled_sha256": "78658d1192e76b9aad29a8c3075060e9e824d9f853483e6bb185ae2e063505ba",
+   "source_sha256": "78658d1192e76b9aad29a8c3075060e9e824d9f853483e6bb185ae2e063505ba",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-075.safetensors",
+   "assembled_sha256": "6007a4f45ba0145498ff52a15e92cd8ca62c876a18729bb7b5e44c88d72cd7cd",
+   "source_sha256": "6007a4f45ba0145498ff52a15e92cd8ca62c876a18729bb7b5e44c88d72cd7cd",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-076.safetensors",
+   "assembled_sha256": "03e2a24e48a4b78e2f0c3808f99f76d48ac2fce865778fee0f7d87998d744222",
+   "source_sha256": "03e2a24e48a4b78e2f0c3808f99f76d48ac2fce865778fee0f7d87998d744222",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-077.safetensors",
+   "assembled_sha256": "5d23706f97c9b5fbcdf551c808db585b8f391f78ecc343e943f2f2a085d0ac46",
+   "source_sha256": "5d23706f97c9b5fbcdf551c808db585b8f391f78ecc343e943f2f2a085d0ac46",
+   "bit_exact": true
+  },
+  {
+   "shard": "model-layer-078.safetensors",
+   "assembled_sha256": "5448b63a32e394e8cbff5a4737fb50b40fc53c6c3c41305f1a7ee540c4d9a6e3",
+   "source_sha256": "5448b63a32e394e8cbff5a4737fb50b40fc53c6c3c41305f1a7ee540c4d9a6e3",
+   "bit_exact": true
+  }
+ ],
+ "segments_verified": 6,
+ "trusted_signers": [
+  "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525"
+ ],
+ "mode": "verified"
+}

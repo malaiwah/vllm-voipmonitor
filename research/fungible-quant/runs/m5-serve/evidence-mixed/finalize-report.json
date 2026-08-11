@@ -1,0 +1,290 @@
+{
+ "mode": "mixed",
+ "out": "/home/mbelleau/glm52-mixed-k3k5",
+ "k_values": [
+  3,
+  5
+ ],
+ "metadata_installed": [
+  "LICENSE",
+  "README.md",
+  "RELEASE_TEST_SUITE.md",
+  "calibration_manifest.json",
+  "chat_template.jinja",
+  "config.json",
+  "docker-compose.yml",
+  "generation_config.json",
+  "server.sh",
+  "tier_bitmap.json",
+  "tokenizer.json",
+  "tokenizer_config.json"
+ ],
+ "fragments_signature_verified": 88,
+ "fragments_signature_failed": [],
+ "batches": [
+  {
+   "range": "0-2",
+   "shards": 5,
+   "segments_verified": 0,
+   "mode": "verified"
+  },
+  {
+   "range": "15-20",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "21-26",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "27-32",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "3-8",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "33-34",
+   "shards": 4,
+   "segments_verified": 2,
+   "mode": "verified"
+  },
+  {
+   "range": "35-37",
+   "shards": 5,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "38-40",
+   "shards": 5,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "41-43",
+   "shards": 5,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "44-46",
+   "shards": 5,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "47-52",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "53-58",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "59-64",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "65-70",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "71-76",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  },
+  {
+   "range": "77-78",
+   "shards": 4,
+   "segments_verified": 2,
+   "mode": "verified"
+  },
+  {
+   "range": "9-14",
+   "shards": 8,
+   "segments_verified": 6,
+   "mode": "verified"
+  }
+ ],
+ "shards_checked": 113,
+ "shards_differing_from_source": [
+  {
+   "shard": "model-layer-035.safetensors",
+   "assembled_sha256": "87d298c2dbc5f1db8cff7e4393f87020a147d25d7c9b4dfd1777b786a86ef3e1",
+   "source_sha256": "9417b1aa875c8633ab7569d5ba772d4bc4cddba910763cbfc35ae0c4c9a358c6"
+  },
+  {
+   "shard": "model-layer-036.safetensors",
+   "assembled_sha256": "c1be007ed49d424157d54d66a822fefc51be03bcb5ade628a0e929d48d6251a9",
+   "source_sha256": "26c86c37a0c561a8603177a509a3a2288352d316d23b1f9a5726ecc0932906d2"
+  },
+  {
+   "shard": "model-layer-037.safetensors",
+   "assembled_sha256": "813c1c3555960b8e2bb1d75956bbd052db6bdf5b3c9bef0d7c8c7cc757ab4b26",
+   "source_sha256": "e52412112253e360cf3e5e43b91979ce6136ef008b63772580e97a3d7ce762e9"
+  },
+  {
+   "shard": "model-layer-038.safetensors",
+   "assembled_sha256": "f60815f5735609c69314dc167a8419985c92102548f6253ceb5251537b20fbab",
+   "source_sha256": "2f67a05706fee1928d9a78d646bb142a25e27ee3ddee474d7d77957c3833ee8f"
+  },
+  {
+   "shard": "model-layer-039.safetensors",
+   "assembled_sha256": "7fee264b736d4af33ec9076c32f9756667c1c53a8a82a11352bafde73b3f89c8",
+   "source_sha256": "094d89de92d782f785ff88e615d63e8d77a58a00593c6726d065dd76d7c02da5"
+  },
+  {
+   "shard": "model-layer-040.safetensors",
+   "assembled_sha256": "bcb026bb2bed3bfad5d18b639def1c44ba24f1e68628995f01a81aa7f4104418",
+   "source_sha256": "8bea80bae6506ec0ecc7634ef647e485657f17a64648116b35e878dbc3750373"
+  },
+  {
+   "shard": "model-layer-041.safetensors",
+   "assembled_sha256": "fdecf245da65e36e038f512d34ede922b0c9148fdabe18ed203c1ef8657a87b8",
+   "source_sha256": "42aa35c5472a18b6f136fadf75f70941efd7c521829b682407d8ec543ec3adbe"
+  },
+  {
+   "shard": "model-layer-042.safetensors",
+   "assembled_sha256": "f1cc1a4dcb15c67d75af187ceb9a34fb058ce454736e769566adf574971e3112",
+   "source_sha256": "fe887f998754bedf1ff76e508052615c21af3944ef82bd089691fbbbf542ee89"
+  },
+  {
+   "shard": "model-layer-043.safetensors",
+   "assembled_sha256": "a35133d7b88aca431633aaebfa5e2142c080d6a27c2c0e595865ecb63004d6b8",
+   "source_sha256": "4f3caa432c6183b97481aa3dcd2a8d1aa1b6c8f7132588c6cd0d7c23a0485f7f"
+  },
+  {
+   "shard": "model-layer-044.safetensors",
+   "assembled_sha256": "99ced2df31e3058390d8aed5699814666b349ec43c3d13026a794d0459a830ef",
+   "source_sha256": "31634aaaf0464d06e539ddd8ec5e8141bb4837f44a4781a5fae69446fba14027"
+  },
+  {
+   "shard": "model-layer-045.safetensors",
+   "assembled_sha256": "f5aa49cecc70365be7635b8f04005ebb9f547921306401a2fb9fde5e10e0b743",
+   "source_sha256": "34ea3df0f3d97323c86df4f92193b0b870ee716eeefb0e388690df5a11c9ee2b"
+  },
+  {
+   "shard": "model-layer-046.safetensors",
+   "assembled_sha256": "7ac95264b5c02397357ca64d7275f791c8dad7eabefcaa595dd9b3035463eebd",
+   "source_sha256": "0e98220bd9c653b9e6fe8364fbefd7112b5edcde2f8cb8c1b0601e561cf1aab5"
+  }
+ ],
+ "shards_identical_to_source": 101,
+ "tensor_count": {
+  "assembled": 935105,
+  "source": 935105,
+  "equal": true
+ },
+ "tensor_names_equal": true,
+ "tensor_placement_equal": true,
+ "param_count": {
+  "assembled": 161776023552,
+  "source": 158152144896,
+  "equal": false,
+  "delta": 3623878656
+ },
+ "tensor_bytes": {
+  "assembled": 323552552960,
+  "source": 316304795648,
+  "delta": 7247757312
+ },
+ "tp4_memory": {
+  "expert_bytes_per_rank": 71442862080,
+  "expert_bytes_all_ranks": 285771448320,
+  "non_expert_bytes_total": 37781104640,
+  "per_rank_bytes": 80888138240,
+  "per_rank_GiB": 75.33,
+  "pct_of_95.6GiB": 78.8,
+  "model": "expert bytes exact per rank + non-expert/4; excludes KV cache, activations, CUDA graphs and the small genuinely-replicated tensors (norms)"
+ },
+ "index": {
+  "entries": 935105,
+  "dangling_shard_refs": [],
+  "tensors_missing_from_index": [],
+  "total_size": 323552552960,
+  "total_size_matches_headers": true,
+  "self_consistent": true
+ },
+ "file_set": {
+  "shards_present": 81,
+  "shards_expected": 81,
+  "missing": [],
+  "unexpected": []
+ },
+ "config": {
+  "hybrid_tr3_tail.bits": "mixed",
+  "hybrid_tr3_tail.k_values": [
+   3,
+   5
+  ],
+  "hybrid_tr3_tail.bits_per_expert": "tier_bitmap.json:bits_per_expert",
+  "quantization_config.quant_method": "exl3",
+  "quantization_config.bits": "mixed",
+  "quantization_config.codebook": "mcg",
+  "stale_modelopt_fields": [
+   "config_groups",
+   "producer",
+   "quant_algo"
+  ]
+ },
+ "mixed_contract": {
+  "bits_is_mixed": true,
+  "k_values": true,
+  "bits_per_expert_is_file_ref": true,
+  "referenced_file": "tier_bitmap.json",
+  "referenced_file_exists": true,
+  "layers_with_wrong_bitmap": [],
+  "quantization_config_bits_mixed": true,
+  "quant_method_exl3": true,
+  "all_ok": true
+ },
+ "k5_allocation": {
+  "covered_layers": [
+   35,
+   36,
+   37,
+   38,
+   39,
+   40,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46
+  ],
+  "experts_per_layer": [
+   64
+  ],
+  "total_k5_experts": 768
+ },
+ "boot_files_present": {
+  "config.json": true,
+  "generation_config.json": true,
+  "tokenizer.json": true,
+  "tokenizer_config.json": true,
+  "chat_template.jinja": true,
+  "tier_bitmap.json": true,
+  "model.safetensors.index.json": true,
+  "MANIFEST.sha256": true
+ }
+}

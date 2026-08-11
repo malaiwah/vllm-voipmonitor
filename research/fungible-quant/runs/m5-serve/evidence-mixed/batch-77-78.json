@@ -1,0 +1,42 @@
+{
+ "range": "77-78",
+ "shards": [
+  {
+   "shard": "model-embed.safetensors",
+   "assembled_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "source_sha256": "c83b92fcb91e1fe5c2ce10114685e91f768f4447b5c88b0fe8e2dee795001903",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 1903165584
+  },
+  {
+   "shard": "model-head.safetensors",
+   "assembled_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "source_sha256": "cd55f37f1aa08e1aa191da6a47594061ce340e75663cc770fdd26b57d0829a32",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 1903177952
+  },
+  {
+   "shard": "model-layer-077.safetensors",
+   "assembled_sha256": "5d23706f97c9b5fbcdf551c808db585b8f391f78ecc343e943f2f2a085d0ac46",
+   "source_sha256": "5d23706f97c9b5fbcdf551c808db585b8f391f78ecc343e943f2f2a085d0ac46",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4075018864
+  },
+  {
+   "shard": "model-layer-078.safetensors",
+   "assembled_sha256": "5448b63a32e394e8cbff5a4737fb50b40fc53c6c3c41305f1a7ee540c4d9a6e3",
+   "source_sha256": "5448b63a32e394e8cbff5a4737fb50b40fc53c6c3c41305f1a7ee540c4d9a6e3",
+   "identical_to_source": true,
+   "materialized": "reflink-from-source",
+   "bytes": 4244751352
+  }
+ ],
+ "segments_verified": 2,
+ "trusted_signers": [
+  "a58b7bb79ba5845716aa6fee7d54e714ef243c2875f23a617e1ef3247c565525"
+ ],
+ "mode": "verified"
+}

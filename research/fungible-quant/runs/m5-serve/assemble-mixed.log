@@ -1,0 +1,181 @@
+=== start 2026-08-11T01:04:18Z ===
+[disk] free=221 GB
+--- batch 0-2 2026-08-11T01:04:18Z ---
+[disk] free=221 GB
+segments: 0 checked, none needed
+assembled 0 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 0 segments)
+batch 0-2: 5 shards (0 genuinely mixed, 5 identical->reflink)
+[disk] free=215 GB
+--- batch 3-8 2026-08-11T01:04:35Z ---
+[disk] free=217 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer   3: {3: 12288, 'reflinked': 12288}
+layer   4: {3: 12288, 'reflinked': 12288}
+layer   5: {3: 12288, 'reflinked': 12288}
+layer   6: {3: 12288, 'reflinked': 12288}
+layer   7: {3: 12288, 'reflinked': 12288}
+layer   8: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 3-8: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=217 GB
+--- batch 9-14 2026-08-11T01:05:19Z ---
+[disk] free=217 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer   9: {3: 12288, 'reflinked': 12288}
+layer  10: {3: 12288, 'reflinked': 12288}
+layer  11: {3: 12288, 'reflinked': 12288}
+layer  12: {3: 12288, 'reflinked': 12288}
+layer  13: {3: 12288, 'reflinked': 12288}
+layer  14: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 9-14: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=215 GB
+--- batch 15-20 2026-08-11T01:06:02Z ---
+[disk] free=217 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  15: {3: 12288, 'reflinked': 12288}
+layer  16: {3: 12288, 'reflinked': 12288}
+layer  17: {3: 12288, 'reflinked': 12288}
+layer  18: {3: 12288, 'reflinked': 12288}
+layer  19: {3: 12288, 'reflinked': 12288}
+layer  20: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 15-20: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=217 GB
+--- batch 21-26 2026-08-11T01:06:45Z ---
+[disk] free=217 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  21: {3: 12288, 'reflinked': 12288}
+layer  22: {3: 12288, 'reflinked': 12288}
+layer  23: {3: 12288, 'reflinked': 12288}
+layer  24: {3: 12288, 'reflinked': 12288}
+layer  25: {3: 12288, 'reflinked': 12288}
+layer  26: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 21-26: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=215 GB
+--- batch 27-32 2026-08-11T01:07:29Z ---
+[disk] free=217 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  27: {3: 12288, 'reflinked': 12288}
+layer  28: {3: 12288, 'reflinked': 12288}
+layer  29: {3: 12288, 'reflinked': 12288}
+layer  30: {3: 12288, 'reflinked': 12288}
+layer  31: {3: 12288, 'reflinked': 12288}
+layer  32: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 27-32: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=219 GB
+--- batch 33-34 2026-08-11T01:08:17Z ---
+[disk] free=221 GB
+segments: 2 checked, signed by a58b7bb79ba58457…
+layer  33: {3: 12288, 'reflinked': 12288}
+layer  34: {3: 12288, 'reflinked': 12288}
+assembled 2 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 2 segments)
+batch 33-34: 4 shards (0 genuinely mixed, 4 identical->reflink)
+[disk] free=221 GB
+--- batch 47-52 2026-08-11T01:08:33Z ---
+[disk] free=221 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  47: {3: 12288, 'reflinked': 12288}
+layer  48: {3: 12288, 'reflinked': 12288}
+layer  49: {3: 12288, 'reflinked': 12288}
+layer  50: {3: 12288, 'reflinked': 12288}
+layer  51: {3: 12288, 'reflinked': 12288}
+layer  52: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 47-52: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=221 GB
+--- batch 53-58 2026-08-11T01:09:16Z ---
+[disk] free=221 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  53: {3: 12288, 'reflinked': 12288}
+layer  54: {3: 12288, 'reflinked': 12288}
+layer  55: {3: 12288, 'reflinked': 12288}
+layer  56: {3: 12288, 'reflinked': 12288}
+layer  57: {3: 12288, 'reflinked': 12288}
+layer  58: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 53-58: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=221 GB
+--- batch 59-64 2026-08-11T01:09:59Z ---
+[disk] free=221 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  59: {3: 12288, 'reflinked': 12288}
+layer  60: {3: 12288, 'reflinked': 12288}
+layer  61: {3: 12288, 'reflinked': 12288}
+layer  62: {3: 12288, 'reflinked': 12288}
+layer  63: {3: 12288, 'reflinked': 12288}
+layer  64: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 59-64: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=221 GB
+--- batch 65-70 2026-08-11T01:10:43Z ---
+[disk] free=221 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  65: {3: 12288, 'reflinked': 12288}
+layer  66: {3: 12288, 'reflinked': 12288}
+layer  67: {3: 12288, 'reflinked': 12288}
+layer  68: {3: 12288, 'reflinked': 12288}
+layer  69: {3: 12288, 'reflinked': 12288}
+layer  70: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 65-70: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=221 GB
+--- batch 71-76 2026-08-11T01:11:26Z ---
+[disk] free=221 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  71: {3: 12288, 'reflinked': 12288}
+layer  72: {3: 12288, 'reflinked': 12288}
+layer  73: {3: 12288, 'reflinked': 12288}
+layer  74: {3: 12288, 'reflinked': 12288}
+layer  75: {3: 12288, 'reflinked': 12288}
+layer  76: {3: 12288, 'reflinked': 12288}
+assembled 6 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 71-76: 8 shards (0 genuinely mixed, 8 identical->reflink)
+[disk] free=221 GB
+--- batch 77-78 2026-08-11T01:12:09Z ---
+[disk] free=221 GB
+segments: 2 checked, signed by a58b7bb79ba58457…
+layer  77: {3: 12288, 'reflinked': 12288}
+layer  78: {3: 12288, 'reflinked': 12288}
+assembled 2 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 2 segments)
+batch 77-78: 4 shards (0 genuinely mixed, 4 identical->reflink)
+[disk] free=219 GB
+--- batch 35-37 2026-08-11T01:12:25Z ---
+[disk] free=221 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  35: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  36: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  37: {3: 9216, 'reflinked': 12288, 5: 3072}
+assembled 3 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 35-37: 5 shards (3 genuinely mixed, 2 identical->reflink)
+[disk] free=207 GB
+--- batch 38-40 2026-08-11T01:13:40Z ---
+[disk] free=207 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  38: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  39: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  40: {3: 9216, 'reflinked': 12288, 5: 3072}
+assembled 3 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 38-40: 5 shards (3 genuinely mixed, 2 identical->reflink)
+[disk] free=191 GB
+--- batch 41-43 2026-08-11T01:14:55Z ---
+[disk] free=193 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  41: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  42: {5: 3072, 'reflinked': 12288, 3: 9216}
+layer  43: {3: 9216, 'reflinked': 12288, 5: 3072}
+assembled 3 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 41-43: 5 shards (3 genuinely mixed, 2 identical->reflink)
+[disk] free=177 GB
+--- batch 44-46 2026-08-11T01:16:18Z ---
+[disk] free=178 GB
+segments: 6 checked, signed by a58b7bb79ba58457…
+layer  44: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  45: {3: 9216, 'reflinked': 12288, 5: 3072}
+layer  46: {3: 9216, 'reflinked': 12288, 5: 3072}
+assembled 3 MoE layers -> /home/mbelleau/glm52-mixed-stage (verified, 6 segments)
+batch 44-46: 5 shards (3 genuinely mixed, 2 identical->reflink)
+[disk] free=162 GB
+=== batches done 2026-08-11T01:17:36Z ===
