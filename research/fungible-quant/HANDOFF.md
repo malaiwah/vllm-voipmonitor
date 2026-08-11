@@ -511,45 +511,226 @@ the useful part.
 - **Quality delta** (BT-7). Nobody has measured whether the converged posture
   actually improves output. This is what reviewers will attack first.
 
-### Open, ranked
+### Open work — the complete register
 
-1. **#64 BT-6c.** Pass bar: installs **repeat** with **zero** `invalid swap`.
-2. **demo2 worker death — undiagnosed.** 19:50Z, 26 s after staging 64 swaps,
-   `VllmWorker-0` died with `exit code: None` and **no Python traceback** — so
-   native, not an exception (the loop catches those). Only **one of four**
-   workers died, which rules out global exhaustion. Host RAM fine (1 TB free),
-   `ulimit -l` unlimited, `_bind_apply_fn` runs once so the new engine code is
-   not leaking. demo1 was in its heavy segment-load phase at that moment, so
-   contention is a live but unproven hypothesis. **If it reproduces at the same
-   point, it is real — get a core dump.**
-3. **#70 OBS-2** — device-truth surface (§7.2).
-4. **#65 graphs.** The four earlier graphs boots never crashed; the **preflight
-   refused them**. Graphs cost ~1.9 GiB of device budget (88.32 vs 90.22 GiB),
-   squeezing projected KV to 0.95 GiB against a 2.00 GiB floor.
-   `policy-demo1-graphs32.json` (K4 capped at 32/layer, 2,658 → 1,530 experts,
-   +1.24 GiB → 2.19 GiB KV) is the honest fix, loading now.
-5. **#72 K2-BOOT** (Michel's idea, strongest version of the story). All-K2
-   experts = 43.48 GiB/rank vs all-K3 64.85 → **21.4 GiB less before first
-   token** (33%). K2 fully encoded and on HF; the loop already prices it.
-   Blocked only by the `swap.py:560` guard.
-   **Shape it as per-layer tier pairs, not as N tiers** (§7.6): a layer's bit
-   budget is conserved, so a within-layer ladder is a memory-growth problem, not
-   a tier-count one. `(2,3)` and `(2,4)` pairs work, and `(3,5)` has already
-   shipped in `glm52-mixed-k3k5`.
-6. **#58–60 GROW-1/2/3** — growth reserve both directions, counted in the
-   preflight, unpaired promotions. A literal `tiers=((3,256),)` boot **cannot
-   grow** today: zero K4 slots and the engine never reallocates.
-7. **#51 BT-7 quality delta** — the unmeasured claim.
-8. **#47/#48/#52/#53** — BT-3 offline restart, BT-4 degraded boot, BT-8 restart
-   after convergence, BT-9 kill -9 mid-swap.
-9. **#39** — one cheap offline experiment left: two equal-byte checkpoints
-   (A = 26 experts × 3 projections; B = proxy-optimal FC1/FC2 split), one KLD
-   eval each. `slice_nmse` and `slice_proxy_err` disagree in **sign** about
-   `down_proj` and predict opposite winners (B/A = 1.169 proxy vs 0.795 nmse),
-   so the result cannot be ambiguous.
-10. **#18 HUMAN (Michel)** — post the RFC #49702 comment before **2026-08-18**.
+The live task list is **session-only and dies with the Claude session**, so it is
+reproduced here in full. 39 open items. IDs match the in-session task list while
+it exists. Grouped by kind; roughly priority-ordered within each group.
 
----
+#### A. In flight right now
+
+- **#64 — BT-6c: sustained installs under load.** *In progress.* Pass bar:
+  installs **repeat** across intervals with **zero** `invalid swap`. One install
+  is not enough — BT-6 already showed one. Two bugs were fixed to get here
+  (`40b6f5e8a` one-engine + publish, `505ffaa7b` the `NameError`); neither is
+  verified live yet. Run on demo2, eager, `VLLM_FQ_LIVE_APPLY=1`, with
+  `swap_evidence.py both --phase math:1800 --concurrency 8`.
+
+- **#73 — OOM-1: concurrent boots hit the 1280 GiB cgroup ceiling.** Rule now in
+  force: **serve concurrently, load serially**. But a *single* load reached
+  671 GiB at 47/76 layers (~14.3 GiB/layer → ~1085 GiB extrapolated), and
+  `memory.events` shows `oom 16` for only 2 kills, which means much of it is
+  **not reclaimable** — likely mmap references to segment files held open for
+  the whole boot. Investigate in order: (1) sample
+  `/sys/fs/cgroup/memory.stat` for `file_mapped` vs `inactive_file` across a
+  boot; (2) if confirmed, munmap/`MADV_DONTNEED`/O_DIRECT in the segment read
+  path — a 79 GiB resident model should not need ~1 TB of page cache;
+  (3) test `VLLM_FQ_PREFETCH_DEPTH` first, it is free; (4) make
+  `serve-demo1.sh` refuse to boot while a peer is loading, as it already does
+  for busy GPUs; (5) add `memory.events`/`memory.current` to
+  `runs/health/sweep.sh`.
+
+- **#65 — DEMO2-GRAPHS: a CUDA-graphs instance has never served.** Four attempts;
+  none crashed — the **memory preflight refused them all**. Graphs cost ~1.9 GiB
+  of device budget (88.32 vs 90.22 GiB), squeezing projected KV to 0.95 GiB
+  against the 2.00 GiB floor. `policy-demo1-graphs32.json` (K4 capped at
+  32/layer, 2,658 → 1,530 experts, +1.24 GiB → 2.19 GiB projected KV) clears it
+  and was loading past layer 33 when the OOM killed it. Retry after #64, on an
+  idle box.
+
+#### B. Correctness and observability debt
+
+- **#70 — OBS-2: `/fq/layer` and `/fq/state` report the LOOP's view.** Both
+  resolve through `_loop_state(worker) → state.tier_of`, not the engine's
+  `MixedLayerState.tier1_globals` that the kernel indexes. When they diverge the
+  endpoint actively misleads. Add a device-truth RPC returning `tier1_globals`
+  per layer, exposed as `/fq/layer/{n}?source=device` or a parallel field, so a
+  mismatch is visible instead of silently resolved in the loop's favour.
+  **Every past verification that used `/fq/layer` as an "independent surface"
+  needs re-reading in this light**, including the M4 by-hand swap proof and the
+  BT-6 install proof.
+
+- **#66 — TUNE-1: exercise `POST /fq/tune` against a live serve.** The endpoint
+  and `worker_tune()` exist and are unit-tested; they have never been driven
+  against a running model. Confirm a tunable actually changes loop behaviour
+  mid-run (e.g. `jaccard_floor`, `dwell_steps`) and that all four ranks agree
+  afterwards.
+
+- **#43 — M5-O: report the borrowed-buffer loader hazard upstream.** EXL3 quant
+  methods retain every loaded tensor until `process_weights_after_loading`, and
+  their two "copies" are identity ops (`t.contiguous() is t`;
+  `t.to(t.device) is t`). So **any** borrowed-buffer loader corrupts an EXL3
+  checkpoint, with or without FQ: `fastsafetensors` with `world_size>1` is
+  incompatible — that is every TP serve — and `instanttensor` with
+  `INSTANTTENSOR_COPY=0` likewise. Worst in mixed-bitrate, where
+  `create_weights` drops trellis from the copy set. This is an upstream GG/EXL3
+  bug and deserves its own report, separate from our PR.
+
+#### C. Memory and growth
+
+- **#58 — GROW-1: one-slot reserve per layer, BOTH directions, one op in
+  flight.** Michel's choice: reserve only the buffer needed to grow **one**
+  expert to the maximum K the constraints allow, limit to one growth at a time,
+  and work out what (if anything) must be reserved for shrinking too.
+- **#59 — GROW-2: count the reserve in the memory preflight.** The preflight
+  models steady state; a growth reserve and a re-prepare transient are both
+  invisible to it today.
+- **#60 — GROW-3: apply unpaired promotions, refuse beyond the reserve.** Today
+  every swap is paired (K3↔K4) so cardinality is fixed. Growth means an
+  *unpaired* promotion, which is the only way a layer's bit budget can rise.
+  Must fail closed once the reserve is spent.
+
+- **#72 — K2-BOOT: per-layer tier pairs so the model boots small and upgrades
+  live.** *Michel's idea; strongest version of the progressive story.* All-K2
+  experts are 43.48 GiB/rank vs all-K3 64.85 — **21.4 GiB less to move before
+  first token (33%)**, and that same 21 GiB is what squeezes KV for #65. K2 is
+  fully encoded (75/75 on HF) and the loop already prices it. **Shape it as
+  per-layer PAIRS, not N tiers** — see §7.6: a layer's bit budget is conserved,
+  so a within-layer ladder is a growth problem (#58–60), not a tier-count one.
+  Work: (1) `swap.py:561-563` replace the `(K3,K4)` equality guard with a
+  validated pair (both in {2,3,4,5}, ascending), fail-closed otherwise;
+  (2) `swap.py:707,736-742` lift `tier_bits` from engine-wide to per-layer,
+  sizing staging from the widest pair present (`ExpertStage` is already
+  bits-parameterized); (3) `admin.py:1902` drop the hardcode; (4) boot demo1
+  with shallow layers on `(2,3)` and deep on `(3,4)`, measure TTFS against
+  BT-1's 1616 s, report the KV headroom freed. Tests: pair validation, staging
+  sizing, a `(2,3)` apply round-trip in `test_swap_cpu.py`.
+
+#### D. The headline demos
+
+- **#35 — M5-H / Scenario 1: FQ rediscovers the coder quant's expert choices.**
+  Analyse the K-distribution of the 3.42bpw "coder" quant (its high-K experts
+  were chosen with a coding corpus). Use its footprint as the loader's memory
+  envelope. Boot plain 3.0bpw (all K3) with cached segments + HF access,
+  restricted to K3/K4. Replay the MTP78 activation corpus + GSM8K. **Hypothesis:
+  FQ converges on the same experts the 3.42bpw quant picked.** Measure Jaccard
+  against the reference. If it holds, downloading N separate 3.x bpw full quants
+  is wasted bandwidth — which is the whole economic argument.
+
+- **#36 — M5-I / Scenario 2: boot flat K3, grow to the fitted posture live.**
+  Note the design constraint Michel asked about: a literal `tiers=((3,256),)`
+  boot **cannot** grow — zero K4 slots and the engine never reallocates. The
+  version that works today allocates the K4 slots but fills them with an
+  information-free choice, so the loop must discover the right occupants. The
+  fitted policy's per-layer max is already exactly 56, so `((3,200),(4,56))`
+  lines up. 13 slots/layer works today; 56 needs the growth work or a compacted
+  policy.
+
+- **#62 — R10-CMP: score our policy against R10's optimal allocation.**
+  `brandonmusic/GLM-5.2-EXL3-TR3v4-3.5bpw-MTP78` ships 75
+  `R10_FROZEN_DECISIONS_LAYER_*.json` — per-tensor bit assignments from a
+  DP-optimal exact-budget knapsack on `mass × measured-Δloss` with held-out
+  rows. A **better** Scenario 1 reference than the coder quant because it is
+  optimal rather than another heuristic. Compute: (a) how much of R10's total
+  gain a per-expert fixed-cardinality approximation captures; (b) per-layer
+  overlap between our K4 set and R10's high-bit tensors; (c) whether the loss
+  curves are monotone often enough that fixed cardinality is safe. Answers
+  "what does expert granularity cost vs tensor granularity" with numbers.
+
+#### E. Battle tests remaining
+
+- **#47 — BT-3: offline restart.** `HF_HUB_OFFLINE=1` against the primed cache.
+  Proves the warm path needs no network at all.
+- **#48 — BT-4: deliberately degraded boot.** Request a K the box cannot supply
+  and confirm the K-fallback ladder degrades gracefully rather than failing.
+- **#49 — BT-5: convergence repays the deficits.** From BT-4's degraded state,
+  let `ConvergenceWorker` fetch what exists and encode on the fly what does not,
+  live-swapping via `fq_converge_layers`. Measure time-to-converge and per-layer
+  progress; assert the final composition matches the desired posture.
+  **Verify the swap actually installed — this RPC has previously reported
+  success it never performed.**
+- **#69 — BT-5 prerequisite: nothing drains the encode queue.** `encode-queue.jsonl`
+  records on-the-fly encode requests but no consumer processes them. BT-5 cannot
+  pass until something does.
+- **#51 — BT-7: quality delta.** GSM8K on the degraded arm vs the converged arm,
+  **same 250-item subsample and seed** for a paired comparison (250 items =
+  ±2% stderr, so unpaired 1–2 point deltas are noise). Baseline to beat:
+  **89.2% flexible-extract on flat K3.** *This is the only test that asks
+  whether re-tiering improves output rather than just moving bits, and it is
+  the claim reviewers will attack first.*
+- **#52 — BT-8: restart after convergence.** Does the hydrated posture persist
+  across a restart? (Related to #32, M5-E.)
+- **#53 — BT-9: kill -9 mid-swap.** Crash safety of the live path. The engine
+  stages fail-atomic and the slabs are a cache, so the claim is that a torn
+  layer is recoverable by re-applying or rebooting — untested.
+- **#32 — M5-E: prove hydrated-expert state survives restart.**
+
+#### F. Measurement and analysis
+
+- **#61 — FLAT-1: re-measure the collector window effect with the fixed Jaccard
+  guard.** The original "15× the sample buys +0.014" used the corrupted metric
+  (§7.10 retraction 2). The delta may survive; the levels do not.
+- **#39 — Tensor-level FQ: ANSWERED, one offline experiment left.** Online
+  per-slice re-tiering is **not** worth it (see
+  `results/bt/TENSOR-LEVEL-FEASIBILITY.md`). What remains is cheap and offline:
+  assemble two equal-byte checkpoints from existing segments — **A** = 26
+  experts × 3 projections, **B** = proxy-optimal FC1/FC2 split (66 `down_proj` +
+  6 gate/up pairs) — and run one KLD eval each. `slice_nmse` and
+  `slice_proxy_err` disagree in **sign** about `down_proj` and predict opposite
+  winners (**B/A = 1.169** under proxy, **0.795** under nmse), so it cannot come
+  back ambiguous. If B wins, the action is a down-heavy offline **tier shape** —
+  a policy change, not a granularity change.
+- **#68 — ARCHIVE-1: fold heatmap samples into a Parquet dataset.** Nine+ JSON
+  blobs at ~78 KB that must be decoded one at a time. In Parquet LONG form
+  (`run, step, layer, expert, count, tier`) the recurring analyses — EN/ZH
+  contrast, top-K stability, R10-CMP — become `SELECT` statements at ~31 KB per
+  sample. Keep the live endpoint as base64-in-JSON; that decision is measured
+  and correct (`heatmap-format-analysis.md`).
+- **#41 — M5-M: live expert-activation heatmap endpoint + operator page.**
+  Endpoint exists and is instrumented; the operator-facing page does not.
+- **#12 — Phase 0d/0e: specialization claim + rollback threshold.** Blocked by
+  #11.
+
+#### G. Publication and upstream
+
+- **#33 — M5-F: open the evidence-rich PR.** See §11 for the full gate. The base
+  must be **hand-retargeted to `dev/gilded-gnosis`**.
+- **#34 — M5-G: answer the EPLB duplicate-work challenge in the PR.** Reviewers
+  will ask why this is not expert-parallel load balancing. Have the answer
+  written before submitting.
+- **#42 — M5-N: document the TP4-only artifact constraint** on the HF card and
+  in the PR. Segments are rank-sliced; they are not portable to another TP
+  degree.
+- **#23 — Community publication:** reassembly-verified segments + a public tools
+  repo + the card.
+- **#24 — Refresh the public repo** with real GLM-5.2 data (charts, claims) once
+  available.
+- **#27 — Prior-art-driven evolution:** two-producer interop + supply-chain
+  economics evaluation.
+- **#17 — M5: hardening + release as a GG image tag.**
+- **#18 — HUMAN (Michel): post the RFC #49702 comment before 2026-08-18.**
+  *Only Michel can do this one.*
+
+#### H. Campaign and infrastructure
+
+- **#11 — Phase 0c per-expert dKL sensitivity campaign.** *Paused deliberately*
+  2026-08-11 15:00Z to free disk and GPUs, not stalled. K2 75/75 and K4 75/75
+  complete and published; K5 24/75 deprioritised (K5 cannot be served on SM120
+  anyway — 109,568 B shared memory vs the 101,376 B opt-in limit). Paused
+  cleanly via `pause-when-k4-done.sh`: waited for the 75th done-JSON rather than
+  killing mid-encode, drained the encoder, stopped the supervisor, ran a final
+  publish. **Resume by restarting `campaign-supervisor.sh` — done-JSONs make it
+  idempotent.**
+- **#20 — Multi-K campaign**: encode GLM-5.2 at K2/K3/K4/K5 and publish
+  segments. Largely done except K5.
+- **#38 — M5-K: fetch K5 layers 3–10 (49 GB) pruned locally, or scope the claims
+  to 12 layers.**
+- **#13 — M1: stats collector + persistence.** *In progress.*
+  `exl3_fungible/stats.py`: `BaseRouter.set_capture_fn` binding (graph-safe
+  `scatter_add`, capture-fn chaining per `gg-integration-surface.md`),
+  window/decay, stats dump. **Gate: T1 green on 1 GPU and TP4; overhead <0.5%
+  decode tok/s at cc8.**
+- **#14 — M2: policy engine in dryrun.** Blocked by #13.
 
 ## 9. Preemption recovery checklist
 
