@@ -88,43 +88,68 @@ def summarise(doc: dict) -> dict:
     }
 
 
-def render_svg(counts, tiers, path: Path, title: str) -> None:
-    """One SVG per sample: heat on the left, tier map on the right.
+def render_svg(counts, tiers, path: Path, title: str, layers=None,
+               topk: int = 26) -> None:
+    """Three panels: where traffic goes, where the bits are, and the gap.
 
-    SVG rather than PNG so this needs nothing beyond the standard library —
-    the box already lost time to a headless-browser dependency once.
+    The third panel is the one worth having. Heat and tier side by side make
+    you eyeball two pictures and hold the difference in your head; the gap
+    panel computes it:
+
+        green  the K4 budget is spent on a top-K expert          (hit)
+        red    a top-K expert is stuck at K3                     (miss)
+        grey   K4 spent on an expert outside the top-K           (waste)
+
+    Red and grey are the tuning surface. A layer that is mostly green needs
+    nothing; a layer with a red band has traffic the budget is not covering,
+    and a grey band is budget that could be moved. Everything the policy is
+    trying to do is visible as "make red and grey disappear".
     """
     n_l = len(counts)
     n_e = len(counts[0]) if counts else 0
     if not n_l or not n_e:
         return
-    cw, ch = 3, 6           # cell size
-    gap = 40
-    w = n_e * cw * 2 + gap + 80
-    h = n_l * ch + 70
+    cw, ch = 4, 9
+    pad, gap, top = 62, 34, 92
+    pw = n_e * cw
+    w = pad + pw * 3 + gap * 2 + 24
+    h = top + n_l * ch + 58
     peak = max((max(r) for r in counts if r), default=1.0) or 1.0
-
-    px = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
-          f'viewBox="0 0 {w} {h}">',
-          f'<rect width="{w}" height="{h}" fill="#0d1117"/>',
-          f'<text x="10" y="20" fill="#e6edf3" font-family="monospace" '
-          f'font-size="13">{title}</text>',
-          f'<text x="10" y="38" fill="#8b949e" font-family="monospace" '
-          f'font-size="10">activation heat (log)</text>',
-          f'<text x="{n_e * cw + gap + 10}" y="38" fill="#8b949e" '
-          f'font-family="monospace" font-size="10">tier map: '
-          f'<tspan fill="#f0883e">K4</tspan> / '
-          f'<tspan fill="#1f6feb">K3</tspan></text>']
+    layers = layers or list(range(n_l))
 
     import math
+    P = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
+         f'viewBox="0 0 {w} {h}" font-family="ui-monospace,SFMono-Regular,'
+         f'Menlo,monospace">',
+         f'<defs><linearGradient id="hg" x1="0" x2="1">'
+         f'<stop offset="0" stop-color="#0b1021"/>'
+         f'<stop offset="0.35" stop-color="#3b2f6b"/>'
+         f'<stop offset="0.7" stop-color="#c2410c"/>'
+         f'<stop offset="1" stop-color="#fde68a"/></linearGradient></defs>',
+         f'<rect width="{w}" height="{h}" fill="#0d1117"/>',
+         f'<text x="{pad}" y="26" fill="#e6edf3" font-size="14" '
+         f'font-weight="600">{title}</text>']
+
+    heads = [("activation heat  (log scale)", pad),
+             (f"tier map  K4={topk if tiers else 0}/layer", pad + pw + gap),
+             ("budget vs traffic", pad + (pw + gap) * 2)]
+    for label, x in heads:
+        P.append(f'<text x="{x}" y="50" fill="#8b949e" font-size="11">'
+                 f'{label}</text>')
+    # legend for the gap panel
+    lx = pad + (pw + gap) * 2
+    for dx, col, lab in ((0, "#2ea043", "hit"), (54, "#f85149", "miss"),
+                         (116, "#6e7681", "waste")):
+        P.append(f'<rect x="{lx + dx}" y="60" width="9" height="9" '
+                 f'fill="{col}"/>'
+                 f'<text x="{lx + dx + 13}" y="69" fill="#8b949e" '
+                 f'font-size="10">{lab}</text>')
+    # heat colour ramp
+    P.append(f'<rect x="{pad}" y="60" width="120" height="9" fill="url(#hg)"/>'
+             f'<text x="{pad + 126}" y="69" fill="#8b949e" font-size="10">'
+             f'0 &#8594; {peak:,.0f}</text>')
 
     def _runs(vals, key):
-        """Merge horizontally adjacent cells that render identically.
-
-        One <rect> per cell is 19,200 rects and ~1.4 MB per sample. Routing is
-        smooth enough along the expert axis that run-length merging cuts that
-        by roughly an order of magnitude with no visual change.
-        """
         out, start, cur = [], 0, key(vals[0])
         for i in range(1, len(vals)):
             k = key(vals[i])
@@ -134,30 +159,77 @@ def render_svg(counts, tiers, path: Path, title: str) -> None:
         out.append((start, len(vals) - start, cur))
         return out
 
-    def _shade(v):
+    def _heat(v):
         if v <= 0:
             return None
-        # log scale: routing is heavy-tailed and a linear ramp shows one
-        # bright expert per layer and nothing else. Quantized to 24 steps so
-        # neighbouring cells merge.
         t = math.log1p(v) / math.log1p(peak)
-        q = round(t * 24) / 24
-        return f"rgb({int(20 + 235 * q)},{int(20 + 120 * q)},40)"
+        q = round(t * 20) / 20
+        # dark blue -> purple -> orange -> pale yellow: perceptually ordered,
+        # unlike a raw red ramp where mid values are indistinguishable.
+        stops = ((0.0, (11, 16, 33)), (0.35, (59, 47, 107)),
+                 (0.70, (194, 65, 12)), (1.0, (253, 230, 138)))
+        for (a, ca), (b, cb) in zip(stops, stops[1:]):
+            if q <= b:
+                f = (q - a) / (b - a) if b > a else 0
+                return "rgb(%d,%d,%d)" % tuple(
+                    int(ca[i] + (cb[i] - ca[i]) * f) for i in range(3))
+        return "rgb(253,230,138)"
 
     for r in range(n_l):
-        y = 48 + r * ch
-        for c0, ln, col in _runs(counts[r], _shade):
+        y = top + r * ch
+        if r % 5 == 0:
+            P.append(f'<text x="{pad - 8}" y="{y + ch - 1}" fill="#6e7681" '
+                     f'font-size="9" text-anchor="end">L{layers[r]}</text>')
+        for c0, ln, col in _runs(counts[r], _heat):
             if col:
-                px.append(f'<rect x="{10 + c0 * cw}" y="{y}" '
-                          f'width="{ln * cw}" height="{ch}" fill="{col}"/>')
-        if tiers:
-            for c0, ln, is4 in _runs(tiers[r], lambda v: int(v) == 4):
-                if is4:
-                    px.append(
-                        f'<rect x="{n_e * cw + gap + 10 + c0 * cw}" y="{y}" '
-                        f'width="{ln * cw}" height="{ch}" fill="#f0883e"/>')
-    px.append("</svg>")
-    path.write_text("\n".join(px))
+                P.append(f'<rect x="{pad + c0 * cw}" y="{y}" '
+                         f'width="{ln * cw}" height="{ch - 1}" fill="{col}"/>')
+        if not tiers:
+            continue
+        x1 = pad + pw + gap
+        for c0, ln, is4 in _runs(tiers[r], lambda v: int(v) == 4):
+            if is4:
+                P.append(f'<rect x="{x1 + c0 * cw}" y="{y}" '
+                         f'width="{ln * cw}" height="{ch - 1}" fill="#f0883e"/>')
+        # gap panel
+        row = counts[r]
+        hot = set(sorted(range(n_e), key=lambda i: (-row[i], i))[:topk])
+        x2 = pad + (pw + gap) * 2
+
+        def _cls(i, _hot=hot, _t=tiers[r]):
+            k4 = int(_t[i]) == 4
+            if k4 and i in _hot:
+                return "#2ea043"
+            if k4:
+                return "#6e7681"
+            if i in _hot:
+                return "#f85149"
+            return None
+        for c0, ln, col in _runs(list(range(n_e)), _cls):
+            if col:
+                P.append(f'<rect x="{x2 + c0 * cw}" y="{y}" '
+                         f'width="{ln * cw}" height="{ch - 1}" fill="{col}"/>')
+
+    if tiers:
+        hits = miss = waste = 0
+        for r in range(n_l):
+            row = counts[r]
+            hot = set(sorted(range(n_e), key=lambda i: (-row[i], i))[:topk])
+            for i in range(n_e):
+                k4 = int(tiers[r][i]) == 4
+                if k4 and i in hot:
+                    hits += 1
+                elif k4:
+                    waste += 1
+                elif i in hot:
+                    miss += 1
+        tot = max(hits + waste, 1)
+        P.append(f'<text x="{pad}" y="{h - 22}" fill="#8b949e" font-size="11">'
+                 f'budget on target: {hits:,}/{tot:,} '
+                 f'({100 * hits / tot:.1f}%)  &#183;  misplaced {waste:,}'
+                 f'  &#183;  uncovered hot experts {miss:,}</text>')
+    P.append("</svg>")
+    path.write_text("\n".join(P))
 
 
 def main(argv=None) -> int:
@@ -177,9 +249,10 @@ def main(argv=None) -> int:
               f"top-26 share {info['mean_top26_share']:.3f}")
         out = a.out / (s.stem + ".svg")
         render_svg(decode(doc, "count"), decode(doc, "tier"), out,
-                   f"{s.stem}  step={info['step']}  "
-                   f"active={info['active_cells']}  "
-                   f"top26share={info['mean_top26_share']:.3f}")
+                   f"{s.stem}   step {info['step']}   "
+                   f"active {info['active_cells']:,}/{info['cells']:,}   "
+                   f"top-26 mass share {info['mean_top26_share']:.3f}",
+                   layers=doc.get("layers"))
         print(f"  -> {out}")
     return 0
 

@@ -190,7 +190,35 @@ def main(argv=None) -> int:
     print(f"  upper third  (layers {layers[2*third]}-{layers[-1]}): "
           f"{m(hi):.3f}")
 
-    # The hypothesis is about depth, so state whether depth actually mattered.
+    # Test a MONOTONE gradient as well as a U-shape. The first version only
+    # asked "edges vs middle" and reported NO DEPTH STRUCTURE on data whose
+    # divergence falls steadily from 0.373 at layer 3 to 0.256 at layer 77 —
+    # a real and strong effect, invisible to a test shaped like the wrong
+    # hypothesis.
+    import math as _math
+
+    def _rank(v):
+        order = sorted(range(len(v)), key=lambda i: v[i])
+        out = [0] * len(v)
+        for pos, i in enumerate(order):
+            out[i] = pos
+        return out
+
+    _n = len(js)
+    _rd, _rj = _rank(list(range(_n))), _rank(js)
+    _md, _mj = sum(_rd) / _n, sum(_rj) / _n
+    _num = sum((_rd[i] - _md) * (_rj[i] - _mj) for i in range(_n))
+    _den = _math.sqrt(sum((_rd[i] - _md) ** 2 for i in range(_n))
+                      * sum((_rj[i] - _mj) ** 2 for i in range(_n)))
+    rho = _num / _den if _den else 0.0
+    print(f"Spearman(depth, jaccard) = {rho:+.4f}")
+    if rho <= -0.25:
+        print(f"DEPTH GRADIENT: divergence RISES with depth (rho {rho:+.3f}) — "
+              f"deeper layers are more corpus-specific.")
+    elif rho >= 0.25:
+        print(f"DEPTH GRADIENT: divergence FALLS with depth (rho {rho:+.3f}) — "
+              f"shallow layers carry more of the difference.")
+
     edges, centre = m(lo + hi), m(mid)
     if edges < centre - 0.02:
         print(f"\nEDGES DIVERGE MORE than the middle "
