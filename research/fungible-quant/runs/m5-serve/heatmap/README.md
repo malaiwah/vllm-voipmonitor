@@ -10,11 +10,18 @@ panel, and a diverging compare panel. The visual design is specified in
 [`DESIGN.md`](./DESIGN.md); the wire format it consumes is specified in
 [`ENDPOINT-SPEC.md`](./ENDPOINT-SPEC.md).
 
-> **Status.** The maths, the render path and the pixels are tested (47 tests,
-> below). **No human has seen this rendered in a browser** — there is no browser
-> and no rasteriser on the build box. Layout collisions and typography are
-> unverified; everything that decides *which colour a cell gets* is verified
-> cell-by-cell against an independent NumPy implementation.
+> **Status.** The maths, the render path and the pixels are tested (55 tests in
+> `test_heatmap_math.py`, below). **No human has seen this rendered in a
+> browser** — there is no browser and no rasteriser on the build box. Layout
+> collisions and typography are unverified; everything that decides *which
+> colour a cell gets* is verified cell-by-cell against an independent NumPy
+> implementation.
+>
+> **Known visual defect, not yet fixed** ([`REVIEW.md`](./REVIEW.md) F-04):
+> never-routed cells are painted `#FFFFFF`, which is ΔE76 1.66 from the palest
+> ramp swatch `#FCFBFD` and ΔE 0 from the exported figure's white ground — they
+> are invisible in a default PNG export. Tick **flag dead cells** before
+> exporting anything that has any.
 
 ---
 

@@ -979,7 +979,7 @@ def test_all_four_archived_dumps_load():
 # ==========================================================================
 DOM_STUB = r"""
 var LOG = { fillRect:0, strokeRect:0, fillText:0, drawImage:[], putImageData:[],
-            downloads:[], fetches:[] };
+            downloads:[], fetches:[], strokes:[], texts:[], rects:[] };
 var _B64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 function atob(s){
   s=String(s).replace(/=+$/,"");
@@ -999,9 +999,12 @@ function Ctx2D(owner){
 }
 Ctx2D.prototype.setTransform=function(){};
 Ctx2D.prototype.clearRect=function(){};
-Ctx2D.prototype.fillRect=function(){ LOG.fillRect++; };
-Ctx2D.prototype.strokeRect=function(){ LOG.strokeRect++; };
-Ctx2D.prototype.fillText=function(){ LOG.fillText++; };
+Ctx2D.prototype.fillRect=function(x,y,w,h){ LOG.fillRect++;
+  if(LOG.rects.length<8000) LOG.rects.push([String(this.fillStyle),x,y,w,h]); };
+Ctx2D.prototype.strokeRect=function(){ LOG.strokeRect++;
+  LOG.strokes.push([String(this.strokeStyle), this.lineWidth]); };
+Ctx2D.prototype.fillText=function(s){ LOG.fillText++;
+  LOG.texts.push([String(s), String(this.fillStyle)]); };
 Ctx2D.prototype.measureText=function(s){ return {width:String(s).length*6.1}; };
 Ctx2D.prototype.beginPath=function(){};
 Ctx2D.prototype.moveTo=function(){};
@@ -1447,3 +1450,247 @@ def test_bf16_on_the_wire_never_shifts_a_cell_by_more_than_one_lut_step():
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([os.path.abspath(__file__), "-q"]))
+
+
+# ==========================================================================
+# 12. adversarial review (M5)
+#
+# Each test below FAILS on heatmap.html as it stood before the fix landed in
+# the same commit. They are the "pretty and wrong" class: the figure renders,
+# looks plausible, and states something the data does not say.
+# ==========================================================================
+def first_record(path):
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            if line.strip():
+                return line
+    raise AssertionError("empty dump " + path)
+
+
+@need_dumps
+@need_js
+@need_np
+def test_column_mean_marginal_survives_a_single_never_routed_cell():
+    """The marginal strip averages the PLOTTED value, and derive() stores
+    -Infinity for a dead cell (it is drawn off-ramp, not on it).
+
+    A plain mean therefore turns the whole column -Infinity as soon as ONE
+    layer never routed that expert, and lutIndex clamps that to index 0 --
+    the palest swatch. Record 0 of stats-code-axis.jsonl has exactly three
+    such columns, one of which peaks at 3.5x uniform: before the fix all
+    three were painted as the coldest columns on the figure.
+    """
+    import numpy as np
+    ctx = js_ctx()
+    path = os.path.join(DUMPS, "stats-code-axis.jsonl")
+    raw = first_record(path)
+    js_load(ctx, raw, "FD", "code-axis#0")
+
+    rec = json.loads(raw)
+    c = np.asarray(rec["count"], dtype=np.float64)
+    L, E = c.shape
+    assert int((c <= 0).sum()) == 3, "fixture must contain dead cells"
+    rel = c / c.sum(axis=1, keepdims=True) * E
+    with np.errstate(divide="ignore"):
+        v = np.where(rel > 0, np.log2(np.where(rel > 0, rel, 1.0)), -np.inf)
+    v = np.clip(v, -MAG_DOMAIN, MAG_DOMAIN)          # dead stays -inf
+    want = np.where(np.isfinite(v), v, -MAG_DOMAIN).mean(axis=0)
+
+    got = np.array(js_json(ctx, """(function(){
+      var pv=panelValues({kind:"mag",frame:FD}, _identity(FD));
+      return JSON.stringify(Array.prototype.slice.call(
+        colMeans(pv.vals, FD.L, FD.E, pv.lo)));
+    })()"""), dtype=np.float64)
+
+    assert np.isfinite(got).all(), "a column mean went infinite"
+    # derive() keeps the plotted value in a Float32Array, so the agreement
+    # ceiling is float32 epsilon, ~5 orders below one LUT step (8/256).
+    assert np.abs(got - want).max() < 1e-6, np.abs(got - want).max()
+
+    # and the affected columns are NOT painted as the coldest swatch
+    hot = [j for j in range(E) if (c[:, j] <= 0).any()]
+    assert hot, "fixture lost its dead columns"
+    for j in hot:
+        assert lut_index(got[j], -MAG_DOMAIN, MAG_DOMAIN) > 4, (
+            "column %d renders as the palest swatch although its true "
+            "mean is %.3f" % (j, got[j]))
+
+
+@need_js
+def test_column_mean_floors_dead_cells_at_the_domain_edge():
+    """Minimal case, so the intent is unmistakable: one dead cell in a column
+    of otherwise hot cells must not zero out the column."""
+    ctx = js_ctx()
+    got = js_json(ctx, """(function(){
+      var L=3,E=2,v=new Float64Array(L*E);
+      v[0]= 3;  v[1]= 1;      /* layer 0 */
+      v[2]= 3;  v[3]= 1;      /* layer 1 */
+      v[4]=-Infinity; v[5]=1; /* layer 2: column 0 never routed */
+      return JSON.stringify(Array.prototype.slice.call(colMeans(v,L,E,-4)));
+    })()""")
+    assert got == [pytest.approx((3 + 3 - 4) / 3), pytest.approx(1.0)]
+    assert math.isfinite(got[0])
+
+
+@need_dumps
+@need_js
+@need_np
+def test_log_ratio_saturates_an_expert_that_switched_on_or_off():
+    """log2(share_B/share_A) has no finite value when exactly one side is
+    zero, and 0 is the worst possible substitute: 0 is the neutral-gray
+    "no change" colour, painted on precisely the cells this mode exists to
+    find. The page's own banner says "use it only for which experts switched
+    on or off".
+    """
+    import numpy as np
+    ctx = js_ctx()
+    js_load(ctx, first_record(os.path.join(DUMPS, "stats-code-axis.jsonl")),
+            "LA", "A")
+    js_load(ctx, last_record(os.path.join(DUMPS, "stats-synthetic.jsonl")),
+            "LB", "B")
+    ra = np.array(js_json(ctx, '_rel(LA,"count")'))
+    rb = np.array(js_json(ctx, '_rel(LB,"count")'))
+    on = np.where((ra <= 0) & (rb > 0))[0]
+    off = np.where((ra > 0) & (rb <= 0))[0]
+    assert on.size + off.size >= 30, (on.size, off.size)
+
+    ctx.eval('S.cmpMetric="logratio"; S.cmpDomain=4;')
+    try:
+        idx = np.array(js_json(ctx, '_panelIndices(LB, "diff", LA, LB)'))
+        vals = js_json(ctx, '_panelValues(LB, "diff", LA, LB)')
+    finally:
+        ctx.eval('S.cmpMetric="delta";')
+
+    mid = lut_index(0.0, -4.0, 4.0)
+    assert (idx[on] == LUT_N - 1).all(), "switched-ON cells must saturate hot"
+    assert (idx[off] == 0).all(), "switched-OFF cells must saturate cold"
+    assert not (idx[on] == mid).any() and not (idx[off] == mid).any(), \
+        "an on/off switch is rendered as the neutral 'no change' swatch"
+    # ...and both sides dead is genuinely no change
+    both = np.where((ra <= 0) & (rb <= 0))[0]
+    for i in both:
+        assert vals[int(i)] == 0
+    # the finite cells are untouched by the fix
+    fin = np.where((ra > 0) & (rb > 0))[0]
+    want = np.log2(rb[fin] / ra[fin])
+    got = np.array([vals[int(i)] for i in fin], dtype=np.float64)
+    assert np.abs(got - want).max() < 1e-12
+
+
+def _mixed_mass_frames(ctx):
+    """(real-gate-mass frame, mass-aliased frame) over IDENTICAL counts."""
+    count = [[1.0, 3.0, 4.0, 2.0], [2.0, 2.0, 5.0, 1.0]]
+    real = {"layers": [3, 4], "tier_of": [[3] * 4, [3] * 4], "count": count,
+            "mass": [[4.0, 1.0, 2.0, 3.0], [1.0, 5.0, 2.0, 2.0]],
+            "mass_is_real": True}
+    alias = {"layers": [3, 4], "tier_of": [[3] * 4, [3] * 4], "count": count,
+             "mass": count, "mass_is_real": False}
+    ctx.eval("var _RM=" + json.dumps(real) + "; var FM=_loadRec(_RM,'real');")
+    ctx.eval("var _RN=" + json.dumps(alias) + "; var FN=_loadRec(_RN,'alias');")
+    assert ctx.eval("FN.mass===null"), "aliased mass must be dropped"
+    assert ctx.eval("derive(FN,'mass').metricUsed") == "count"
+    assert ctx.eval("derive(FM,'mass').metricUsed") == "mass"
+
+
+@need_js
+def test_compare_refuses_to_difference_gate_mass_against_count():
+    """updateMassGate only inspects the CURRENT frame, so a figure built from
+    two snapshots can still mix the two arrays -- and the compare panel would
+    then paint a fully saturated diverging field out of two frames whose
+    counts are IDENTICAL. That is a picture of traffic that did not move.
+    """
+    ctx = js_ctx()
+    _mixed_mass_frames(ctx)
+    ctx.eval("S.metric='mass'; S.stack=false; S.tierStrip=false; "
+             "S.mismatch=false; S.compare=true; S.cmpA='A'; S.cmpB='B'; "
+             "S.slots.A=FM; S.slots.B=FN; S.live=FM; S.offline=null;")
+    try:
+        kinds = js_json(ctx, "JSON.stringify(buildPanels()"
+                             ".map(function(p){return p.kind;}))")
+        drops = js_json(ctx, "JSON.stringify(PANEL_DROPS)")
+        assert "diff" not in kinds, kinds
+        assert len(drops) == 1 and "side A reads mass" in drops[0], drops
+        assert "side B reads count" in drops[0], drops
+
+        # what the refused panel WOULD have drawn, from identical counts
+        would = js_json(ctx, '_panelValues(FN, "diff", FM, FN)')
+        assert max(abs(x) for x in would) > 1.0, \
+            "fixture is too weak to demonstrate the hazard"
+
+        # control: with metric=count both sides agree and the panel is drawn
+        ctx.eval("S.metric='count';")
+        kinds2 = js_json(ctx, "JSON.stringify(buildPanels()"
+                              ".map(function(p){return p.kind;}))")
+        assert "diff" in kinds2, kinds2
+        assert js_json(ctx, "JSON.stringify(PANEL_DROPS)") == []
+        same = js_json(ctx, '_panelValues(FN, "diff", FM, FN)')
+        assert max(abs(x) for x in same) == 0.0, \
+            "identical counts must difference to exactly zero"
+    finally:
+        ctx.eval("S.metric='count'; S.compare=false; S.slots.A=null; "
+                 "S.slots.B=null; S.live=null; S.cmpA='A'; S.cmpB='live';")
+
+
+@need_js
+def test_stacked_panels_that_fall_back_to_count_are_dropped_not_mislabelled():
+    """The figure header describes panels[0] only. A stack that mixes a real
+    mass panel with a silent count fallback would carry one metric label over
+    two different metrics."""
+    ctx = js_ctx()
+    _mixed_mass_frames(ctx)
+    ctx.eval("S.metric='mass'; S.stack=true; S.compare=false; "
+             "S.tierStrip=false; S.mismatch=false; "
+             "S.slots.A=FM; S.slots.B=FN; S.slots.C=null; S.slots.D=null;")
+    try:
+        names = js_json(ctx, "JSON.stringify(buildPanels()"
+                             ".map(function(p){return p.name;}))")
+        drops = js_json(ctx, "JSON.stringify(PANEL_DROPS)")
+        assert len(names) == 1 and "real" in names[0], names
+        assert len(drops) == 1 and "reads count" in drops[0], drops
+    finally:
+        ctx.eval("S.metric='count'; S.stack=false; S.slots.A=null; "
+                 "S.slots.B=null;")
+
+
+@need_dumps
+@need_js
+@need_np
+def test_rendered_marginal_strip_is_not_flattened_by_a_dead_cell():
+    """The end-to-end version of the column-mean test: render the page and
+    read back the fill colours the marginal strip actually received.
+
+    Before the fix, drawPanel summed d.v directly, so a column with one
+    never-routed cell summed to -Infinity and lutIndex clamped it to swatch 0.
+    """
+    import numpy as np
+    ctx = page_ctx()
+    path = os.path.join(DUMPS, "stats-code-axis.jsonl")
+    raw = first_record(path)
+    ctx.eval("var _RM0=" + raw.strip() + ";")
+    ctx.eval("S.offline=parseSample(_RM0,'code0','file');")
+    ctx.eval('S.metric="count"; S.order="native"; S.cell="3"; S.stack=false;'
+             'S.compare=false; S.mismatch=false; S.tierStrip=false;'
+             'S.marginals=true; S.flagDead=false;'
+             'LOG.rects=[]; render();')
+    strip = js_json(ctx, """(function(){
+      var p=LAYOUT.panels[0], out=[], i;
+      for(i=0;i<LOG.rects.length;i++){
+        var r=LOG.rects[i];
+        if(r[2]===p.margY && r[3]===p.cell) out.push([r[1], r[0]]);
+      }
+      return JSON.stringify(out);
+    })()""")
+    assert len(strip) == 256, len(strip)
+
+    rec = json.loads(raw)
+    c = np.asarray(rec["count"], dtype=np.float64)
+    E = c.shape[1]
+    palest = "rgb(%d,%d,%d)" % make_lut(RAMP_MAG)[0]
+    dead_cols = [j for j in range(E) if (c[:, j] <= 0).any()]
+    assert dead_cols, "fixture lost its dead columns"
+    for j in dead_cols:
+        assert strip[j][1] != palest, (
+            "column %d of the marginal strip renders as the palest swatch "
+            "because one of its 75 layers never routed that expert" % j)
+    # the strip is not uniformly the palest swatch either
+    assert len({s[1] for s in strip}) > 20
