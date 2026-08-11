@@ -327,7 +327,9 @@ cd /home/mbelleau/src/gg-vllm && CUDA_VISIBLE_DEVICES="" \
   python -m pytest tests/exl3_fungible/ -q --noconftest
 ```
 
-`154 passed, 11 skipped` (was `142 passed, 11 skipped`; +12, no regressions).
+`154 passed, 11 skipped` at the time of writing (was `142 passed, 11 skipped`;
++12, no regressions). Other agents land tests in this suite concurrently, so
+the absolute count drifts — the invariant is the +12 and the zero failures.
 
 Code change shipped with them:
 `vllm/model_executor/layers/quantization/exl3_fungible/progressive.py` — close
