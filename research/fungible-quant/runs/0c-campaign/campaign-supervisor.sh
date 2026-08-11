@@ -35,7 +35,12 @@ LOG=$CAMP/campaign-supervisor.log
 TIERS="2 4 5"   # K5 last: serving K5 as a mixed tier is blocked by the
                 # SM120 shared-memory limit (see m5-serve/k5-shared-memory-limit.md),
                 # so K4 segments are worth more right now.
-FIRST=3; LAST=78; STEP=8
+# MoE layers are 3-77. Layer 78 is the MTP (multi-token prediction)
+# layer: it is NOT a main-model MoE layer, capture_stream rejects it
+# ("layers must be a nonempty subset of MoE layers"), and the stats
+# collector never binds it either. LAST=78 made the final window 75-78,
+# which failed every pass and left K2 permanently 3 layers short.
+FIRST=3; LAST=77; STEP=8
 MIN_FREE_GB=180          # refuse to start a window below this
 export HOME=/home/mbelleau
 # credentials for the publish step (missing token => silent hang)
