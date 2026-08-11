@@ -21,6 +21,13 @@ PKG_REL=model_executor/layers/quantization/exl3_fungible
 HOOKS=(
   "model_executor/model_loader/__init__.py"
   "v1/worker/gpu_worker.py"
+  # Gate-mass capture contract: BaseRouter._select_experts hands
+  # topk_weights to capture fns tagged wants_topk_weights. Without this
+  # file deployed the collector cannot see the gate weights at all and
+  # silently downgrades to count-only (mass_is_real=false in the dump).
+  # Safe to copy: this file is byte-identical to the r33 rootfs copy
+  # apart from that change.
+  "model_executor/layers/fused_moe/router/base_router.py"
 )
 
 [ -d "$SRC/vllm/$PKG_REL" ] || { echo "no source package at $SRC/vllm/$PKG_REL" >&2; exit 2; }
