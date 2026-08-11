@@ -44,12 +44,18 @@ from pathlib import Path
 
 def _post(url: str, payload: dict | None, timeout: float = 300.0):
     data = None if payload is None else json.dumps(payload).encode()
-    req = urllib.request.Request(
-        url, data=data,
-        headers={"Content-Type": "application/json"} if data else {})
+    hdrs = {"Content-Type": "application/json"} if data else {}
+    # The heatmap body is ~2.4x larger without this, and the endpoint says so
+    # in its own warnings array.
+    hdrs["Accept-Encoding"] = "gzip"
+    req = urllib.request.Request(url, data=data, headers=hdrs)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.loads(r.read())
+            body = r.read()
+            if r.headers.get("Content-Encoding") == "gzip":
+                import gzip as _gz
+                body = _gz.decompress(body)
+            return json.loads(body)
     except urllib.error.HTTPError as e:
         try:
             return json.loads(e.read())

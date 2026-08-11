@@ -13,7 +13,10 @@ mkdir -p "$OUT"
 for i in $(seq 1 "$N"); do
   ts=$(date -u +%H%M%S)
   f="$OUT/heatmap-$(printf %02d "$i")-$ts.json"
-  if curl -fsS -m 20 "$BASE/fq/heatmap" -o "$f"; then
+  # --compressed: the endpoint WARNS when the client omits it ("this body is
+  # ~2.4x the size of the compressed one"). Reading your own payload's
+  # warnings is cheaper than benchmarking encodings.
+  if curl -fsS --compressed -m 20 "$BASE/fq/heatmap" -o "$f"; then
     # Report the only thing that distinguishes a real sample from an empty
     # one: how much routing mass it actually captured.
     python3 - "$f" <<'PY'
