@@ -195,3 +195,4 @@
 {"layer":4,"expert":64,"k":4,"reason":"substituted-with-k2","requested_utc":"2026-08-11T12:58:27Z"}
 {"layer":4,"expert":65,"k":3,"reason":"substituted-with-k2","requested_utc":"2026-08-11T12:58:27Z"}
 {"layer":4,"expert":65,"k":3,"reason":"substituted-with-k2","requested_utc":"2026-08-11T12:59:01Z"}
+{"layer":5,"expert":2,"k":4,"reason":"substituted-with-k3","requested_utc":"2026-08-11T13:31:43Z"}
