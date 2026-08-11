@@ -95,7 +95,10 @@ exec "$GG" python -m vllm.entrypoints.openai.api_server \
   --quantization exl3 \
   --attention-backend B12X_MLA_SPARSE \
   --moe-backend b12x \
-  --max-model-len ${FQ_MAXLEN:-8192} \
+  `# 32k, not 8k: vLLM rejects prompt+max_tokens beyond the window, and a` \
+  `# truncated GPQA reasoning trace scores as WRONG, so a small window` \
+  `# quietly understates quality rather than failing visibly.` \
+  --max-model-len ${FQ_MAXLEN:-32768} \
   --max-num-seqs ${FQ_MAXSEQS:-32} \
   --gpu-memory-utilization ${FQ_GPUMEM:-0.92} \
   --kv-cache-dtype fp8_ds_mla --hf-overrides '{"use_index_cache":true}' \
