@@ -136,10 +136,29 @@ while true; do
         # A window with NO layer dirs on disk has nothing to resume, so the
         # state can only be stale. Mid-window resume (some dirs present) is
         # preserved, which is the case the state file exists for.
+        # A layer dir holding only *.partial files is an INTERRUPTED capture,
+        # not a finished one. This box is pre-emptible, so that is the normal
+        # crash shape: the shard's state still says the packs were emitted, it
+        # skips the layer ("layer 4 already complete; skip"), and the seal
+        # dies on the missing x.bin. Delete those dirs so they are recaptured.
+        PARTIAL=0
+        for L in $(seq $START $END); do
+          D="$CAPTURE/layer_$(printf %03d $L)"
+          [ -d "$D" ] || continue
+          if [ ! -f "$D/x.bin" ] || [ -n "$(ls "$D"/*.partial 2>/dev/null)" ]; then
+            log "window $START-$END: layer $L capture is incomplete (partial files) — removing"
+            rm -rf "$D"; PARTIAL=1
+          fi
+        done
         HAVE=0
         for L in $(seq $START $END); do
           [ -d "$CAPTURE/layer_$(printf %03d $L)" ] && HAVE=1
         done
+        # Any removal invalidates the shard state that claimed those packs.
+        if [ $PARTIAL -eq 1 ] && [ -f "$CAPTURE/state.json" ]; then
+          log "window $START-$END: clearing capture state after removing partial layers"
+          rm -f "$CAPTURE/state.json"; rm -rf "$CAPTURE/work"
+        fi
         if [ $HAVE -eq 0 ] && [ -f "$CAPTURE/state.json" ]; then
           log "window $START-$END: no layer dirs but state.json exists — clearing stale capture state"
           rm -f "$CAPTURE/state.json"
