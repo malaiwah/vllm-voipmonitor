@@ -23,7 +23,7 @@ K3, K4 = 3, 4
 
 
 def build(reference: Path, num_experts: int, manifest: str | None,
-          mode: str = "observe") -> dict:
+          mode: str = "observe", exclude: set[int] | None = None) -> dict:
     """Two modes, because fq-policy/2 enforces occupancy == capacity.
 
     ``observe`` — zero K4 budget everywhere. A valid all-K3 policy that lets
@@ -43,6 +43,8 @@ def build(reference: Path, num_experts: int, manifest: str | None,
     doc = json.loads(reference.read_text())
     sets = doc["per_layer_k4_sets"]
     layers = sorted(int(l) for l in sets)
+    if exclude:
+        layers = [l for l in layers if l not in exclude]
 
     bits, budget = {}, {}
     for layer in layers:
@@ -89,10 +91,18 @@ def main() -> int:
     ap.add_argument("--manifest", default=None)
     ap.add_argument("--mode", choices=["observe", "seeded"],
                     default="observe")
+    # Layer 78 is GLM-5.2's MTP (multi-token prediction) layer. Its MoE is not
+    # bound as a main-model MoERunner, so the collector never sees it and the
+    # loop refuses to start on a policy that names it ("cannot map policy
+    # layers ... onto collector layers"). It is also all-K3 in the reference
+    # (n_k4 = 0), so excluding it costs the experiment nothing.
+    ap.add_argument("--exclude-layer", type=int, action="append", default=[78],
+                    help="repeatable; default excludes the MTP layer 78")
     ap.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()
 
-    doc = build(a.reference, a.num_experts, a.manifest, a.mode)
+    doc = build(a.reference, a.num_experts, a.manifest, a.mode,
+                exclude=set(a.exclude_layer))
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(doc, indent=1))
 
@@ -102,6 +112,7 @@ def main() -> int:
     print(f"K4 slots total: {total}")
     print(f"per-layer     : min={min(b.values())} max={max(b.values())}")
     print(f"mode          : {a.mode}")
+    print(f"excluded      : {sorted(set(a.exclude_layer))}")
     print(f"start state   : all {a.num_experts} experts at K3 in every layer")
     print(f"manifest      : {doc['manifest'][:16]}...")
     print(f"wrote {a.out}")
