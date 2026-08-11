@@ -80,11 +80,22 @@ mkdir -p "$VLLM_FQ_CACHE"
 # ladder (auto = nearest lower K), log it loudly, and enqueue the miss for an
 # out-of-band encode. Boot never blocks on an encoder.
 export VLLM_FQ_K_FALLBACK=${VLLM_FQ_K_FALLBACK:-auto}
-# Whole-segment prefetch goes through hf_hub_download, which picks up
-# hf_transfer's parallel chunked transfer when this is set. A single urllib
-# stream measured 45 MiB/min on the per-expert path; parallel chunks are the
-# difference between a boot and an overnight job.
-export HF_HUB_ENABLE_HF_TRANSFER=${HF_HUB_ENABLE_HF_TRANSFER:-1}
+# Whole-segment prefetch goes through hf_hub_download, which is the ONLY way
+# to get parallel chunked transfer and Xet dedup -- a raw urllib stream gets
+# neither, and measured 45 MiB/min on the per-expert path.
+#
+# NOT hf_transfer: this huggingface_hub deprecated it ("'hf_transfer' is not
+# used anymore") in favour of Xet, so HF_HUB_ENABLE_HF_TRANSFER is now a no-op
+# that only emits a FutureWarning. HF_XET_HIGH_PERFORMANCE is the live knob.
+export HF_XET_HIGH_PERFORMANCE=${HF_XET_HIGH_PERFORMANCE:-1}
+# Segments download DURING load, so a progressive boot is legitimately slower
+# than reading a local checkpoint -- attempt 5 died on the 600 s default with
+# the load still progressing normally. Prefetch depth+width cut the wall time,
+# but the ceiling has to admit a first boot on a cold cache.
+export VLLM_ENGINE_READY_TIMEOUT_S=${VLLM_ENGINE_READY_TIMEOUT_S:-5400}
+# Layers ahead to prefetch, x2 concurrent objects each. Footprint stays
+# bounded because release_layer() drops each layer once it hits the GPU.
+export VLLM_FQ_PREFETCH_DEPTH=${VLLM_FQ_PREFETCH_DEPTH:-3}
 export VLLM_FQ_ENCODE_QUEUE=${VLLM_FQ_ENCODE_QUEUE:-$RUN/results/demo1/encode-queue.jsonl}
 mkdir -p "$(dirname "$VLLM_FQ_ENCODE_QUEUE")"
 
