@@ -74,7 +74,53 @@ promotion doubles a slab mid-serve.
 This is ordinary capacity planning: reserve the growth you intend to use,
 account for it up front, and refuse growth beyond it.
 
-## Recommendation
+## DECISION (Michel): A with a bit of B
+
+Reserve **one slot per layer, sized at the maximum K the constraints allow**,
+and permit **one growth in flight at a time**. The concurrency limit is what
+makes a single-slot reserve sufficient: there is never more than one
+outstanding grow, so there is never more than one slot in use.
+
+Cost per rank, across the 48 mixed layers:
+
+| reserve | bytes/expert | total/rank |
+|---|---|---|
+| 1 K4 slot per layer | 4,758,540 | **218 MB** |
+| 1 K5 slot per layer (if K5 is ever allowed) | 5,938,188 | 272 MB |
+
+Against 1.70 GiB for the 8-slot version — an 8x saving for a capability the
+loop cannot outrun anyway at one grow per interval.
+
+### Shrinking needs its own reserve — and this is easy to miss
+
+A **paired swap** is net-zero in BOTH tiers: one expert enters K4 as another
+leaves, and simultaneously one enters K3 as another leaves. That is precisely
+why swaps work against exactly-sized slabs and why the engine has been fine
+until now.
+
+Unpaired moves are not net-zero:
+
+| operation | K4 tier | K3 tier | needs a free slot in |
+|---|---|---|---|
+| swap (paired) | ±0 | ±0 | neither |
+| **promotion** (grow) | **+1** | −1 | **K4** |
+| **demotion** (shrink) | −1 | **+1** | **K3** |
+
+So a shrink reserve is required and symmetric: one K3 slot per layer,
+`3,578,892 x 48 = 164 MB/rank`.
+
+**Both directions: ~382 MB/rank**, with one in-flight operation of either
+kind. That is the full cost of making the tiering elastic in both directions,
+and it is under 0.4% of the 95.6 GiB card.
+
+### Why one-at-a-time is not merely a safety limit
+
+It is also what keeps the reserve honest. With N concurrent grows the reserve
+must be N slots or the N+1th fails at an arbitrary moment; with one, the
+reserve is one, and "did it fit?" is answerable at boot rather than
+discovered under load.
+
+## Superseded recommendation (kept for the reasoning)
 
 **Take B.** It converts an unbounded runtime allocation into a bounded,
 declared, preflight-visible one — which is the same principle that made the
