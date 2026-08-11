@@ -203,7 +203,17 @@ def main() -> int:
                   flush=True)
         total += n
     if not total:
-        print("nothing to publish", flush=True)
+        # SUCCESS, not failure. Since the skip-already-published check landed,
+        # "nothing new" is the normal steady state — and the supervisor gates
+        # its capture PRUNE on this exit code, so returning 1 here silently
+        # stopped disk reclamation and refilled /home. Only report failure if
+        # we could not even ask the remote what it has.
+        if already:
+            print("nothing new to publish — remote is in sync", flush=True)
+            return 0
+        print("nothing to publish AND no remote inventory — treating as "
+              "failure so the caller does not prune on a false success",
+              flush=True)
         return 1
 
     import os

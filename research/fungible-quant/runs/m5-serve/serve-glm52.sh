@@ -51,7 +51,24 @@ case "$MODE" in
     export VLLM_FQ_SOURCES=malaiwah/GLM-5.2-EXL3-FQ-segments
     export VLLM_FQ_SOURCES_MODE=append
     # Trust: only fragments signed by our pinned key, and only honest rungs.
-    export VLLM_FQ_TRUST_SIGNERS=$(cat "$HOME/.fq_keys/fq_signing.pub" 2>/dev/null || true)
+    # An EMPTY value here is strictly WORSE than an unset one: the resolver
+    # branches on `is not None` (fragments.py:495), so exporting "" turns
+    # trust filtering OFF entirely — a fragment signed by an unrelated key is
+    # ACCEPTED and VLLM_FQ_TRUST_PREDICATES is bypassed — whereas leaving it
+    # unset falls back to the manifest's signer_pubkey. A missing key file
+    # must therefore abort the boot, not silently downgrade it.
+    FQ_PUB=$HOME/.fq_keys/fq_signing.pub
+    if [ ! -s "$FQ_PUB" ]; then
+      echo "FATAL: $FQ_PUB missing/empty — refusing to boot with trust" \
+           "filtering silently disabled. Derive it with fq_repack.Signer," \
+           "or set FQ_ALLOW_UNTRUSTED=1 to boot deliberately untrusted." >&2
+      [ "${FQ_ALLOW_UNTRUSTED:-0}" = 1 ] || exit 3
+    fi
+    if [ -s "$FQ_PUB" ]; then
+      export VLLM_FQ_TRUST_SIGNERS=$(tr -d ' \n' < "$FQ_PUB")
+    else
+      echo "WARNING: booting with trust filtering DISABLED (operator opt-in)" >&2
+    fi
     export VLLM_FQ_TRUST_PREDICATES=repack-of,encode-of
     export VLLM_FQ_VERIFY=all
     # K5 coverage is partial (the campaign is still encoding). A layer with no
