@@ -1324,5 +1324,126 @@ def test_compare_statistics_reproduce_the_design_measurements():
              "S.slots.A=null; S.slots.B=null;")
 
 
+# ==========================================================================
+# 10. interop with the real endpoint
+#
+# heatmap.py (the serve-side surface, a separate deliverable) and this page are
+# two independent implementations of one wire format. Build an envelope with
+# the ENDPOINT's own encoder and parse it with the PAGE's own parser, so the
+# two cannot drift apart silently.
+# ==========================================================================
+ENDPOINT_PY = os.path.join(
+    "/home/mbelleau/src/gg-vllm/vllm/model_executor/layers/quantization",
+    "exl3_fungible", "heatmap.py")
+
+
+def endpoint_encoders():
+    """Lift the pure encoder functions out of heatmap.py without importing
+    vllm (which needs a built vllm._C that CPU test boxes do not have)."""
+    import ast
+    import base64
+    import numpy as np
+    with open(ENDPOINT_PY, encoding="utf-8") as fh:
+        tree = ast.parse(fh.read())
+    ns = {"np": np, "base64": base64, "json": json}
+    wanted = {"f32_to_bf16_bits", "bf16_bits_to_f32"}
+    found = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name in wanted:
+            exec(compile(ast.Module([node], []), ENDPOINT_PY, "exec"), ns)
+            found.add(node.name)
+    assert found == wanted, "heatmap.py no longer exposes %s" % (wanted - found)
+    return ns
+
+
+need_endpoint = pytest.mark.skipif(
+    not os.path.exists(ENDPOINT_PY),
+    reason="serve-side heatmap.py not present in this tree")
+
+
+@need_dumps
+@need_js
+@need_np
+@need_endpoint
+def test_page_decodes_what_the_real_endpoint_encodes():
+    import base64
+    import numpy as np
+    ns = endpoint_encoders()
+    ctx = js_ctx()
+
+    raw = last_record(os.path.join(DUMPS, "stats-code-axis.jsonl"))
+    rec = json.loads(raw)
+    count = np.array(rec["count"], dtype=np.float32)
+    tier = np.array(rec["tier_of"], dtype=np.uint8)
+    L, E = count.shape
+
+    bits = ns["f32_to_bf16_bits"](count.ravel())
+    env = {
+        "schema": "fq-heatmap/1", "sample_id": 137, "server_boot_id": "b1f0c8a2",
+        "layers": rec["layers"], "num_layers": L, "num_experts": E, "cells": L * E,
+        "mass_is_real": False, "mass": None,
+        "encoding": {"layout": "layer-major", "byte_order": "little",
+                     "count": "bf16", "mass": "bf16", "tier": "u8",
+                     "transfer": "base64"},
+        "count": base64.b64encode(np.asarray(bits, dtype="<u2").tobytes()).decode(),
+        "tier": base64.b64encode(tier.ravel().tobytes()).decode(),
+        "step": rec["step"], "interval": rec["interval"],
+        "window": {"len": 64, "stride": 32, "decay": 0.95, "rolled": 596,
+                   "n_effective": 64, "steps_since_roll": 12, "horizon_steps": 640},
+        "ranks": {"count": 4, "canonical": 0, "agree": True, "reduce": "rank0"},
+        "policy_sha": "9c1f4d0b7a2e5c31",
+        "warnings": ["mass is aliased to count"],
+    }
+    ctx.eval("var ENVR=" + json.dumps(env) + "; var EF=_loadRec(ENVR,'live');")
+    assert ctx.eval("EF.L") == 75 and ctx.eval("EF.E") == 256
+    assert ctx.eval("EF.layers[74]") == 77
+    assert ctx.eval("EF.tier[0]") == 3
+    # mass is null iff mass_is_real is false -- the 50% saving the spec calls free
+    assert ctx.eval("EF.massIsReal") is False
+    assert ctx.eval("EF.mass") is None
+
+    # the page's decoder and the endpoint's own decoder, bit for bit
+    js = np.array(js_json(ctx, "JSON.stringify(Array.prototype.slice.call(EF.count))"),
+                  dtype=np.float64)
+    py = ns["bf16_bits_to_f32"](np.asarray(bits, dtype=np.uint16)).astype(np.float64)
+    assert np.array_equal(js, py)
+
+    orig = count.ravel().astype(np.float64)
+    nz = orig != 0
+    worst = float(np.max(np.abs(js[nz] - orig[nz]) / orig[nz]))
+    assert worst == pytest.approx(0.00389, abs=5e-5), worst   # spec: 0.38898%
+
+
+@need_dumps
+@need_js
+@need_np
+@need_endpoint
+def test_bf16_on_the_wire_never_shifts_a_cell_by_more_than_one_lut_step():
+    """The whole justification for bf16: a 0.39% quantum is invisible on the
+    colour ramp. Check it on the ramp rather than asserting it."""
+    import base64
+    import numpy as np
+    ns = endpoint_encoders()
+    ctx = js_ctx()
+    raw = last_record(os.path.join(DUMPS, "stats-code-axis.jsonl"))
+    rec = json.loads(raw)
+    count = np.array(rec["count"], dtype=np.float32)
+    L, E = count.shape
+    bits = ns["f32_to_bf16_bits"](count.ravel())
+    env = {"schema": "fq-heatmap/1", "layers": rec["layers"], "num_layers": L,
+           "num_experts": E, "cells": L * E, "mass_is_real": False, "mass": None,
+           "encoding": {"layout": "layer-major", "count": "bf16", "tier": "u8"},
+           "count": base64.b64encode(np.asarray(bits, dtype="<u2").tobytes()).decode(),
+           "tier": base64.b64encode(
+               np.array(rec["tier_of"], dtype=np.uint8).ravel().tobytes()).decode()}
+    ctx.eval("var WV=" + json.dumps(env) + "; var WF=_loadRec(WV,'wire');")
+    ctx.eval("var RW=" + raw.strip() + "; var RF2=_loadRec(RW,'exact');")
+    wire = js_json(ctx, '_panelIndices(WF, "mag")')
+    exact = js_json(ctx, '_panelIndices(RF2, "mag")')
+    deltas = [abs(a - b) for a, b in zip(wire, exact) if a != b]
+    assert not deltas or max(deltas) <= 1, max(deltas)
+    assert len(deltas) < 0.15 * L * E, len(deltas)
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([os.path.abspath(__file__), "-q"]))
