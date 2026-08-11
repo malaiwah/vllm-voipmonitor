@@ -1,3 +1,50 @@
+# ⚠️ PARTIALLY RETRACTED — read this first
+
+**The instability half of this document was an artefact of a bug in the guard,
+not a property of the model.**
+
+`_jaccard` clamped an empty union to 1, so a layer with `n_k4 = 0` — whose
+desired set is empty in every snapshot, and which therefore *cannot* churn —
+scored 0.0 and was averaged in. GLM-5.2's fitted policy gives **27 of 75
+layers** `n_k4 = 0`.
+
+Measured on the same two heatmap samples:
+
+| | |
+|---|---|
+| mean over all 75 layers (what the guard computed) | **0.562** |
+| mean over the 48 layers that can actually swap | **0.879** |
+| floor | 0.950 |
+
+So the real interval-to-interval stability is **~0.879, not ~0.61**. That is a
+tuning conversation (0.879 vs a 0.950 floor). 0.562 vs 0.950 looked like a dead
+end. They are not the same situation, and I drew the wrong conclusion from the
+wrong number.
+
+**Still valid** (independent measurements, unaffected by the bug):
+
+- routing flatness: 18,959/19,200 cells active (98.7%), top-26 carry 36.6% of
+  mass, 3.6x concentration over uniform;
+- the ~24% ceiling on expert-quantization error addressable at this budget;
+- everything in `SELECTION-SIGNAL.md` and `R10-ALLOCATOR.md`.
+
+**Retracted or requiring re-measurement:**
+
+- "the desired K4 set churns ~39% between adjacent intervals" — it churns ~12%
+  on layers that can hold K4;
+- "the phase change produced no visible dip" — measured with the corrupted
+  metric, must be redone;
+- FLAT-1's "15x the sample buys +0.014" — both numbers were corrupted; the
+  delta may survive, the levels do not.
+
+Fixed in `loop.py`: empty-vs-empty is no evidence, not maximal instability, so
+those rows are skipped rather than averaged in.
+
+The original text follows unchanged, so the reasoning that led to the wrong
+conclusion stays legible.
+
+---
+
 # The routing distribution bounds the idea, not the machinery
 
 **Two independent measurements on a live GLM-5.2, under sustained single-domain

@@ -4,8 +4,8 @@
  "apply_mode": "atomic",
  "blocked": {
   "dwell": 0,
-  "hysteresis": 88,
-  "layer_cap": 1998
+  "hysteresis": 87,
+  "layer_cap": 1978
  },
  "budget": {
   "headroom_bytes": null,
@@ -33,7 +33,7 @@
   "max_swaps_total": 64
  },
  "decision_sha": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
- "jaccard": 0.6104899497916816,
+ "jaccard": 0.611357508215199,
  "jaccard_held": true,
  "layer_ids": [
   3,
@@ -114,31 +114,31 @@
  ],
  "per_layer": {
   "0": {
-   "eligible": 26,
+   "eligible": 22,
    "executed": 0
   },
   "1": {
-   "eligible": 47,
-   "executed": 0
-  },
-  "16": {
    "eligible": 40,
    "executed": 0
   },
+  "16": {
+   "eligible": 44,
+   "executed": 0
+  },
   "17": {
-   "eligible": 42,
+   "eligible": 44,
    "executed": 0
   },
   "18": {
-   "eligible": 36,
+   "eligible": 43,
    "executed": 0
   },
   "19": {
-   "eligible": 42,
+   "eligible": 43,
    "executed": 0
   },
   "2": {
-   "eligible": 43,
+   "eligible": 42,
    "executed": 0
   },
   "20": {
@@ -146,55 +146,55 @@
    "executed": 0
   },
   "21": {
-   "eligible": 42,
+   "eligible": 45,
    "executed": 0
   },
   "22": {
-   "eligible": 41,
-   "executed": 0
-  },
-  "23": {
-   "eligible": 42,
-   "executed": 0
-  },
-  "24": {
-   "eligible": 40,
-   "executed": 0
-  },
-  "25": {
-   "eligible": 45,
-   "executed": 0
-  },
-  "26": {
-   "eligible": 44,
-   "executed": 0
-  },
-  "27": {
-   "eligible": 39,
-   "executed": 0
-  },
-  "28": {
    "eligible": 43,
    "executed": 0
   },
+  "23": {
+   "eligible": 39,
+   "executed": 0
+  },
+  "24": {
+   "eligible": 39,
+   "executed": 0
+  },
+  "25": {
+   "eligible": 42,
+   "executed": 0
+  },
+  "26": {
+   "eligible": 42,
+   "executed": 0
+  },
+  "27": {
+   "eligible": 40,
+   "executed": 0
+  },
+  "28": {
+   "eligible": 40,
+   "executed": 0
+  },
   "29": {
-   "eligible": 45,
+   "eligible": 41,
    "executed": 0
   },
   "3": {
-   "eligible": 44,
+   "eligible": 37,
    "executed": 0
   },
   "30": {
-   "eligible": 48,
+   "eligible": 43,
    "executed": 0
   },
   "31": {
-   "eligible": 38,
+   "eligible": 39,
    "executed": 0
   },
   "32": {
-   "eligible": 44,
+   "eligible": 43,
    "executed": 0
   },
   "33": {
@@ -202,79 +202,79 @@
    "executed": 0
   },
   "34": {
-   "eligible": 41,
+   "eligible": 39,
    "executed": 0
   },
   "35": {
-   "eligible": 38,
+   "eligible": 39,
    "executed": 0
   },
   "36": {
-   "eligible": 46,
+   "eligible": 41,
    "executed": 0
   },
   "37": {
-   "eligible": 41,
+   "eligible": 43,
    "executed": 0
   },
   "38": {
-   "eligible": 43,
+   "eligible": 44,
    "executed": 0
   },
   "39": {
-   "eligible": 43,
+   "eligible": 46,
    "executed": 0
   },
   "4": {
-   "eligible": 36,
+   "eligible": 34,
    "executed": 0
   },
   "40": {
-   "eligible": 45,
+   "eligible": 41,
    "executed": 0
   },
   "41": {
-   "eligible": 42,
+   "eligible": 37,
    "executed": 0
   },
   "42": {
-   "eligible": 39,
+   "eligible": 45,
    "executed": 0
   },
   "43": {
-   "eligible": 46,
-   "executed": 0
-  },
-  "44": {
-   "eligible": 41,
-   "executed": 0
-  },
-  "45": {
-   "eligible": 39,
-   "executed": 0
-  },
-  "46": {
    "eligible": 43,
    "executed": 0
   },
-  "47": {
-   "eligible": 38,
+  "44": {
+   "eligible": 44,
    "executed": 0
   },
-  "48": {
-   "eligible": 41,
+  "45": {
+   "eligible": 44,
    "executed": 0
   },
-  "49": {
+  "46": {
    "eligible": 42,
    "executed": 0
   },
+  "47": {
+   "eligible": 41,
+   "executed": 0
+  },
+  "48": {
+   "eligible": 42,
+   "executed": 0
+  },
+  "49": {
+   "eligible": 46,
+   "executed": 0
+  },
   "5": {
-   "eligible": 39,
+   "eligible": 42,
    "executed": 0
   },
   "50": {
-   "eligible": 46,
+   "eligible": 41,
    "executed": 0
   },
   "51": {
@@ -282,27 +282,27 @@
    "executed": 0
   },
   "52": {
-   "eligible": 45,
+   "eligible": 43,
    "executed": 0
   },
   "53": {
-   "eligible": 42,
+   "eligible": 35,
    "executed": 0
   },
   "54": {
-   "eligible": 44,
-   "executed": 0
-  },
-  "55": {
    "eligible": 42,
    "executed": 0
   },
+  "55": {
+   "eligible": 43,
+   "executed": 0
+  },
   "6": {
-   "eligible": 37,
+   "eligible": 39,
    "executed": 0
   },
   "7": {
-   "eligible": 37,
+   "eligible": 40,
    "executed": 0
   }
  },
