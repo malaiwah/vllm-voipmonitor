@@ -141,6 +141,27 @@ export VLLM_FQ_ENABLE=1
 export VLLM_FQ_APPLY_MODE=${VLLM_FQ_APPLY_MODE:-atomic}
 export VLLM_FQ_INTERVAL_STEPS=${FQ_INTERVAL:-100}
 export VLLM_FQ_DWELL_STEPS=${FQ_DWELL:-1}
+# Router-shift floor, CALIBRATED FROM MEASUREMENT rather than picked.
+#
+# The guard should pass normal within-corpus operation and block a genuine
+# regime change. Measured on this model:
+#
+#   within-corpus, converged (live, interval to interval)   0.90 - 0.95
+#   within-corpus, same domain 4,000 steps apart (heatmap)  0.879
+#   within-corpus, warming up                               0.79
+#   ACROSS LANGUAGE (English -> Chinese, same load)         0.321
+#   independent top-26 draws from 256 (chance)              0.053
+#
+# The default 0.95 sits INSIDE the normal band, so it holds every interval
+# forever — observed doing exactly that, oscillating at 0.931-0.950. Any floor
+# between roughly 0.5 and 0.8 separates normal operation from a real regime
+# change by a wide margin. 0.80 also still holds during warm-up (0.79), which
+# is desirable: do not re-tier on a cold signal.
+#
+# This is not "lower the guard until something moves". The band was measured
+# from two independent surfaces and the separation between within-corpus and
+# cross-corpus is 0.88 vs 0.32 — nearly 3x.
+export VLLM_FQ_JACCARD_FLOOR=${FQ_JACCARD_FLOOR:-0.80}
 export VLLM_FQ_GATE_MASS=${VLLM_FQ_GATE_MASS:-0}
 export VLLM_FQ_TABLE_EVERY_INTERVALS=${FQ_TABLE:-3}
 export VLLM_FQ_ARTIFACT_DIR=$RUN/results/$FQ_TAG/artifacts
