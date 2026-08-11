@@ -117,22 +117,45 @@ def render_svg(counts, tiers, path: Path, title: str) -> None:
           f'<tspan fill="#1f6feb">K3</tspan></text>']
 
     import math
+
+    def _runs(vals, key):
+        """Merge horizontally adjacent cells that render identically.
+
+        One <rect> per cell is 19,200 rects and ~1.4 MB per sample. Routing is
+        smooth enough along the expert axis that run-length merging cuts that
+        by roughly an order of magnitude with no visual change.
+        """
+        out, start, cur = [], 0, key(vals[0])
+        for i in range(1, len(vals)):
+            k = key(vals[i])
+            if k != cur:
+                out.append((start, i - start, cur))
+                start, cur = i, k
+        out.append((start, len(vals) - start, cur))
+        return out
+
+    def _shade(v):
+        if v <= 0:
+            return None
+        # log scale: routing is heavy-tailed and a linear ramp shows one
+        # bright expert per layer and nothing else. Quantized to 24 steps so
+        # neighbouring cells merge.
+        t = math.log1p(v) / math.log1p(peak)
+        q = round(t * 24) / 24
+        return f"rgb({int(20 + 235 * q)},{int(20 + 120 * q)},40)"
+
     for r in range(n_l):
         y = 48 + r * ch
-        for c in range(n_e):
-            v = counts[r][c]
-            if v > 0:
-                # log scale: routing is heavy-tailed and a linear ramp shows
-                # one bright expert per layer and nothing else.
-                t = math.log1p(v) / math.log1p(peak)
-                red = int(20 + 235 * t)
-                grn = int(20 + 120 * t)
-                px.append(f'<rect x="{10 + c * cw}" y="{y}" width="{cw}" '
-                          f'height="{ch}" fill="rgb({red},{grn},40)"/>')
-            if tiers and int(tiers[r][c]) == 4:
-                px.append(
-                    f'<rect x="{n_e * cw + gap + 10 + c * cw}" y="{y}" '
-                    f'width="{cw}" height="{ch}" fill="#f0883e"/>')
+        for c0, ln, col in _runs(counts[r], _shade):
+            if col:
+                px.append(f'<rect x="{10 + c0 * cw}" y="{y}" '
+                          f'width="{ln * cw}" height="{ch}" fill="{col}"/>')
+        if tiers:
+            for c0, ln, is4 in _runs(tiers[r], lambda v: int(v) == 4):
+                if is4:
+                    px.append(
+                        f'<rect x="{n_e * cw + gap + 10 + c0 * cw}" y="{y}" '
+                        f'width="{ln * cw}" height="{ch}" fill="#f0883e"/>')
     px.append("</svg>")
     path.write_text("\n".join(px))
 
