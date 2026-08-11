@@ -138,11 +138,12 @@ while true; do
         # bit-exact) so the re-captured activations are byte-identical and
         # tiers stay hessian-identical. Holding captures for the whole K2
         # pass instead filled the disk (observed: 455 -> 213 GB).
-        if pgrep -f "fruit_encode_driver.*--encode" >/dev/null; then
-          # Another tier is encoding from this capture right now (e.g. an
-          # opportunistic K5 run on GPUs the campaign left idle). Deleting
-          # it underneath a live reader loses that tier's layers.
-          log "window $START-$END: prune deferred — an encode is still reading the capture"
+        # Defer only while an encoder is reading THIS window. A blanket
+        # "any encoder" check never clears once tiers overlap continuously,
+        # and disk creeps to the floor (observed: 190 GB with two windows
+        # pinned). Match the window's own --layers argument.
+        if pgrep -af "fruit_encode_driver.*--layers $START-$END" >/dev/null; then
+          log "window $START-$END: prune deferred — an encode is still reading it"
         else
           for L in $(seq $START $END); do rm -rf "$CAPTURE/layer_$(printf %03d $L)"; done
           log "window $START-$END: capture pruned after publish"
