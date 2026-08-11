@@ -35,6 +35,12 @@ RE_DIGEST = re.compile(r"bits_digest=([0-9a-f]+)")
 RE_LOCAL = re.compile(r"FQ progressive L\d+: local .*\(no fetch\)")
 RE_PREFETCH = re.compile(r"FQ progressive L\d+: prefetched (\S+)")
 RE_SHARED = re.compile(r"FQ progressive L\d+: shared (\S+)")
+# "cached <file>" is the warm-restart signal: the segment was already in the
+# fragment cache from a previous boot, so neither the network nor the local
+# segment dir was consulted. Without this counter a warm boot looks like it
+# did nothing at all -- zero local, zero prefetched -- which is exactly how a
+# broken cache would also look.
+RE_CACHED = re.compile(r"FQ progressive L\d+: cached (\S+)")
 RE_KV = re.compile(r"Available KV cache memory:\s*(-?[\d.]+)\s*GiB")
 RE_MODELLOAD = re.compile(
     r"Model loading took ([\d.]+) GiB memory and ([\d.]+) seconds")
@@ -64,6 +70,7 @@ def extract(path: Path) -> dict:
     digests: dict[int, str] = {}
     tiers: dict[int, str] = {}
     local = shared = 0
+    cached: set[str] = set()
     prefetched: set[str] = set()
     kv = model_gib = load_s = None
     reclaimed = 0.0
@@ -100,6 +107,8 @@ def extract(path: Path) -> dict:
                 prefetched.add(m.group(1))
             if RE_SHARED.search(line):
                 shared += 1
+            if m := RE_CACHED.search(line):
+                cached.add(m.group(1))
             if m := RE_SUBST.search(line):
                 substitutions.append(m.group(1))
         if m := RE_KV.search(line):
@@ -123,6 +132,7 @@ def extract(path: Path) -> dict:
         "segments_local_no_fetch": local,
         "segments_prefetched_remote": len(prefetched),
         "segments_shared_across_ranks": shared,
+        "segments_from_cache": len(cached),
         "kv_cache_gib": kv,
         "model_gib": model_gib,
         "model_load_s": load_s,
@@ -166,6 +176,8 @@ def compare(cold: dict, warm: dict, *, tolerance_gib: float = 1.0) -> tuple[bool
     row("layers loaded", cold["layers_loaded"], warm["layers_loaded"])
     row("local segments (no fetch)", cold["segments_local_no_fetch"],
         warm["segments_local_no_fetch"])
+    row("segments served from cache", cold["segments_from_cache"],
+        warm["segments_from_cache"])
     row("KV cache (GiB)", cold["kv_cache_gib"], warm["kv_cache_gib"], "{:.2f}")
     out.append("")
 
