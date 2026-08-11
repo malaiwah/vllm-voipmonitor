@@ -111,3 +111,58 @@ not in git — GitHub warned on the 89 MB file before I moved them.
 
 The derived `convergence-*.json` scores stay in git — they are small and are
 what the claims above are read from.
+
+---
+
+# CORRECTED RESULTS (valid runs only)
+
+The corpus runs above were retracted; these replace them. The replay driver now
+reads the corpus through `iter_prompts` (raw text), not the loader's `--show`
+display mode.
+
+## Proof the replay is real this time
+
+| | broken run | corrected run |
+|---|---|---|
+| prompts | 3,063 (axis holds 3,057) | **3,057** |
+| prompt tokens | 226k → 74/prompt | **2,631,231 → 861/prompt** |
+| wall | 154 s | 915 s |
+| throughput | 21 req/s | 3.3 req/s |
+
+861 tokens/prompt matches the corpus's real 3,480-character mean. The 6x
+slowdown is the tell that the work is now 9x larger — it is the fix, not a
+regression.
+
+## Convergence — valid runs
+
+| traffic | stats records | mean Jaccard | vs chance | vs human |
+|---|---:|---:|---:|---:|
+| synthetic math+code, short | 18 | 0.3603 | 1.36x | 54% |
+| synthetic math+code, long | 117 | 0.3789 | 1.43x | 56% |
+| **MTP78 code-agentic axis (REAL)** | **19** | **0.4176** | **1.57x** | **62%** |
+
+75/75 layers scored, ranking by routing hit count. Chance floor 0.2652
+(sampled 0.2641). Human-human ceiling 0.6710.
+
+## The corpus effect is real, and now cleanly separated
+
+The code axis scored **0.4176 on 19 observation records**, beating the long
+synthetic run's 0.3789 on **117 records** — six times fewer observations, a
+higher score. Window length cannot explain that; the traffic can.
+
+This is also the sharpest available test: the reference is the *Coder* variant,
+and axis3_code_agentic is the coding slice of the very corpus its calibration
+used. Routing hotness under the right traffic recovers **62% of the agreement
+two humans reach with each other**, at **1.57x** chance.
+
+## Still true, still limiting
+
+1. Ranking by **hit count, not gate mass** — real mass is implemented and
+   opt-in (`VLLM_FQ_GATE_MASS=1`) but not in these numbers.
+2. Hotness is **not** the human's criterion; part of the residual gap to 0.67
+   is a different objective, not a worse estimate of the same one.
+3. **No promotion occurred.** These runs observe. Live re-tiering needs K4
+   fragments for the served layers.
+4. Single axis. The other three axes have not been replayed, so "the corpus
+   matters" is established, but "the CODE axis specifically matters most" is
+   not — that needs the 4-axis comparison the heatmap work is building toward.
