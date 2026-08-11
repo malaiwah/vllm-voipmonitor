@@ -86,7 +86,9 @@ done
 # Progress signal for a boot still loading: bytes delivered, not liveness.
 if [ -n "${M5LOG:-}" ]; then
   _dl=$(grep -E "FQ downloads" "$M5LOG" 2>/dev/null | tail -1 | sed 's/^.*\] //')
-  _ly=$(grep -c "FQ progressive layer" "$M5LOG" 2>/dev/null)
+  # DISTINCT layers on ONE rank. Counting matched lines sums across all four
+  # TP ranks and reports "248/76", which reads as either nonsense or done.
+  _ly=$(grep "Worker_TP0" "$M5LOG" 2>/dev/null | grep -oE "FQ progressive layer [0-9]+" | sort -u | wc -l)
   [ -n "$_dl" ] && echo "  m5-serve load: ${_ly}/76 layers | $_dl"
 fi
 if [ -n "$M5UP" ]; then
