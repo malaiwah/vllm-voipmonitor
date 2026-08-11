@@ -73,23 +73,35 @@ def main(argv=None) -> int:
               f"floor {a.floor:.3f}  intervals held {len(held)}")
         # The verdict this tool exists for. A rising trend that has not yet
         # reached the floor is a warm-up; a flat one is a design mismatch.
-        window = held[-min(8, len(held)):]
-        rising = window[-1][1] > window[0][1] + 0.01
+        # An 8-sample endpoint comparison called a flat 0.61 series "rising"
+        # because consecutive samples differ by +-0.02 of noise. Compare the
+        # MEDIANS of the first and second halves of the whole series instead:
+        # a real warm-up moves the level, not two arbitrary endpoints.
+        def _median(xs):
+            xs = sorted(xs)
+            n = len(xs)
+            return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
+        vals = [j for _, j in held]
+        half = max(1, len(vals) // 2)
+        early, late = _median(vals[:half]), _median(vals[half:])
+        rising = len(vals) >= 6 and late > early + 0.02
         if best >= a.floor:
             print("VERDICT: the signal cleared the floor at least once — the "
                   "guard is a warm-up delay, not a block.")
         elif rising:
-            print("VERDICT: still rising. Give it more of the SAME domain "
-                  "before concluding anything about the floor.")
+            print(f"VERDICT: still rising ({early:.3f} -> {late:.3f} by "
+                  f"half-series median). Give it more of the SAME domain "
+                  f"before concluding anything about the floor.")
         else:
-            print("VERDICT: plateaued below the floor. More time will not "
-                  "help — either the collector window is too short for the "
-                  "set to stabilise, or the floor is stricter than this "
-                  "model's routing can ever satisfy. Fix the mismatch; do "
-                  "NOT lower the floor to manufacture swaps.")
-    n_applied = sum(n for _, n in applied if n)
-    print(f"\nswaps actually applied: {n_applied} across {len(applied)} "
-          f"intervals")
+            print(f"VERDICT: PLATEAUED at ~{late:.3f}, floor {a.floor:.3f} "
+                  f"(half-series medians {early:.3f} -> {late:.3f}). More "
+                  f"time will not help. Either the collector window is too "
+                  f"short for a top-K set to stabilise, or this model's "
+                  f"routing is too flat for top-K to BE stable. Fix the "
+                  f"mismatch; do NOT lower the floor to manufacture swaps.")
+    n_decided = sum(n for _, n in applied if n)
+    print(f"\nswaps DECIDED: {n_decided} across {len(applied)} intervals "
+          f"(decided != installed — check fq_swaps_applied_total for that)")
     return 0
 
 
