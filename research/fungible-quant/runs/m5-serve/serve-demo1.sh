@@ -30,8 +30,22 @@ GG=$BASE/runs/gg-env/gg-run.sh
 FQ_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1,2,3}
 _busy=$(nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits \
         -i "$FQ_DEVICES" 2>/dev/null | awk -F', *' '$2 > 1024 {printf "%s(%sMiB) ", $1, $2}')
+if [ -n "$_busy" ] && [ "${FQ_REAP_STALE:-1}" = 1 ]; then
+  # Reap first, then re-check. The workers are matched by the DEVICE they
+  # hold, not by a command-line pattern: they exec through the rootfs
+  # ld-linux shim, so their argv does not contain "vllm" or "VLLM::" and
+  # every pattern-based reap silently matched nothing.
+  for _pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader \
+                -i "$FQ_DEVICES" 2>/dev/null); do
+    echo "  reaping stale GPU process $_pid" >&2
+    kill -9 "$_pid" 2>/dev/null
+  done
+  sleep 8
+  _busy=$(nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits \
+          -i "$FQ_DEVICES" 2>/dev/null | awk -F', *' '$2 > 1024 {printf "%s(%sMiB) ", $1, $2}')
+fi
 if [ -n "$_busy" ]; then
-  echo "FATAL: GPUs still occupied: $_busy" >&2
+  echo "FATAL: GPUs still occupied after reap: $_busy" >&2
   echo "  Stale workers from a previous serve? Check:" >&2
   echo "    nvidia-smi --query-compute-apps=pid,used_memory --format=csv" >&2
   echo "  Then kill them and retry. Set FQ_IGNORE_BUSY_GPUS=1 to override." >&2
