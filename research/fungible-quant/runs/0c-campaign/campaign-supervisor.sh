@@ -32,7 +32,9 @@ SNAP_O=$(ls -d /home/mbelleau/.cache/huggingface/hub/models--zai-org--GLM-5.2/sn
 CAPTURE=/home/mbelleau/glm52-capture
 STATE=$CAMP/campaign-state.json
 LOG=$CAMP/campaign-supervisor.log
-TIERS="2 5 4"
+TIERS="2 4 5"   # K5 last: serving K5 as a mixed tier is blocked by the
+                # SM120 shared-memory limit (see m5-serve/k5-shared-memory-limit.md),
+                # so K4 segments are worth more right now.
 FIRST=3; LAST=78; STEP=8
 MIN_FREE_GB=180          # refuse to start a window below this
 export HOME=/home/mbelleau
