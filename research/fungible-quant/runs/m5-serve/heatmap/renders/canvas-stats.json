@@ -1,0 +1,408 @@
+{
+  "light": {
+    "default": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 692,
+      "top": [
+        {
+          "hex": "#FFFFFF",
+          "pct": 31.92
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#A4A4AC",
+          "pct": 2.37
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 1.19
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.89
+        },
+        {
+          "hex": "#A19DCA",
+          "pct": 0.87
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#D2D2DC",
+          "pct": 0.86
+        }
+      ]
+    },
+    "stale_class": true,
+    "mass": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 692,
+      "top": [
+        {
+          "hex": "#FFFFFF",
+          "pct": 31.85
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#A4A4AC",
+          "pct": 2.42
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 0.99
+        },
+        {
+          "hex": "#D2D2DC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.8
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.8
+        },
+        {
+          "hex": "#A5A3CD",
+          "pct": 0.78
+        }
+      ]
+    },
+    "mass_note": "mass: real gate mass",
+    "dead_off": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 692,
+      "top": [
+        {
+          "hex": "#FFFFFF",
+          "pct": 31.92
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#A4A4AC",
+          "pct": 2.37
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 1.19
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.89
+        },
+        {
+          "hex": "#A19DCA",
+          "pct": 0.87
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#D2D2DC",
+          "pct": 0.86
+        }
+      ]
+    },
+    "dead_on": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 693,
+      "top": [
+        {
+          "hex": "#FFFFFF",
+          "pct": 31.92
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#A4A4AC",
+          "pct": 2.37
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 1.19
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.89
+        },
+        {
+          "hex": "#A19DCA",
+          "pct": 0.87
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#D2D2DC",
+          "pct": 0.86
+        }
+      ]
+    },
+    "compare": {
+      "w": 2900,
+      "h": 3062,
+      "distinct": 961,
+      "top": [
+        {
+          "hex": "#FFFFFF",
+          "pct": 29.54
+        },
+        {
+          "hex": "#73C189",
+          "pct": 21.63
+        },
+        {
+          "hex": "#A4A4AC",
+          "pct": 2.39
+        },
+        {
+          "hex": "#D2D2DC",
+          "pct": 0.84
+        },
+        {
+          "hex": "#BBBEC2",
+          "pct": 0.68
+        },
+        {
+          "hex": "#B7BCC3",
+          "pct": 0.65
+        },
+        {
+          "hex": "#B5BBC4",
+          "pct": 0.65
+        },
+        {
+          "hex": "#B8BDC3",
+          "pct": 0.64
+        }
+      ]
+    },
+    "slots": [
+      "stats-axis1_general.jsonl #18 int19 @10:33:59",
+      "stats-axis2_legal.jsonl #18 int38 @10:34:00"
+    ]
+  },
+  "dark": {
+    "default": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 699,
+      "top": [
+        {
+          "hex": "#14141B",
+          "pct": 31.93
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#61616F",
+          "pct": 2.37
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 1.19
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.89
+        },
+        {
+          "hex": "#A19DCA",
+          "pct": 0.87
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#3A3A4A",
+          "pct": 0.86
+        }
+      ]
+    },
+    "stale_class": true,
+    "mass": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 697,
+      "top": [
+        {
+          "hex": "#14141B",
+          "pct": 31.86
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#61616F",
+          "pct": 2.43
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 0.99
+        },
+        {
+          "hex": "#3A3A4A",
+          "pct": 0.86
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.8
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.8
+        },
+        {
+          "hex": "#A5A3CD",
+          "pct": 0.78
+        }
+      ]
+    },
+    "mass_note": "mass: real gate mass",
+    "dead_off": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 699,
+      "top": [
+        {
+          "hex": "#14141B",
+          "pct": 31.93
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#61616F",
+          "pct": 2.37
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 1.19
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.89
+        },
+        {
+          "hex": "#A19DCA",
+          "pct": 0.87
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#3A3A4A",
+          "pct": 0.86
+        }
+      ]
+    },
+    "dead_on": {
+      "w": 2900,
+      "h": 2126,
+      "distinct": 699,
+      "top": [
+        {
+          "hex": "#14141B",
+          "pct": 31.93
+        },
+        {
+          "hex": "#73C189",
+          "pct": 31.16
+        },
+        {
+          "hex": "#61616F",
+          "pct": 2.37
+        },
+        {
+          "hex": "#9894C5",
+          "pct": 1.19
+        },
+        {
+          "hex": "#A39FCB",
+          "pct": 0.89
+        },
+        {
+          "hex": "#A19DCA",
+          "pct": 0.87
+        },
+        {
+          "hex": "#A4A0CC",
+          "pct": 0.86
+        },
+        {
+          "hex": "#3A3A4A",
+          "pct": 0.86
+        }
+      ]
+    },
+    "compare": {
+      "w": 2900,
+      "h": 3062,
+      "distinct": 965,
+      "top": [
+        {
+          "hex": "#14141B",
+          "pct": 29.55
+        },
+        {
+          "hex": "#73C189",
+          "pct": 21.63
+        },
+        {
+          "hex": "#61616F",
+          "pct": 2.39
+        },
+        {
+          "hex": "#3A3A4A",
+          "pct": 0.84
+        },
+        {
+          "hex": "#BBBEC2",
+          "pct": 0.68
+        },
+        {
+          "hex": "#B7BCC3",
+          "pct": 0.65
+        },
+        {
+          "hex": "#B5BBC4",
+          "pct": 0.65
+        },
+        {
+          "hex": "#B8BDC3",
+          "pct": 0.64
+        }
+      ]
+    },
+    "slots": [
+      "stats-axis1_general.jsonl #18 int19 @10:34:11",
+      "stats-axis2_legal.jsonl #18 int38 @10:34:12"
+    ]
+  }
+}
