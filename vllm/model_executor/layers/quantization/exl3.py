@@ -974,6 +974,17 @@ class Exl3Config(QuantizationConfig):
         self._online_model_identity: str | None = None
         self._online_encoder_identity: str | None = None
 
+    def get_supported_lora_modules(self) -> list[str]:
+        """Return module names that support EXL3 LoRA cartridge adapters.
+
+        MSRT (Multi-Stage Rescaled Trellis) cartridges add full-rank trellis-
+        quantized residual weights as LoRA-like adapters. They are applied to
+        MoE expert projections via additional exl3_gemm passes.
+
+        See: research/fungible-quant/MSRT-CARTRIDGE-FEASIBILITY-AND-PLAN.md
+        """
+        return ["gate_proj", "up_proj", "down_proj"]
+
     def get_name(self) -> str:
         return "exl3"
 
