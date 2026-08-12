@@ -56,7 +56,7 @@ measurements, and vLLM integration.
 **Encoding summary**:
 - 11 MoE layers (3-13), 256 experts per layer, 3 projections per expert
 - 8,448 expert-projection pairs encoded
-- Overall MSE: 1.996e-03 (K2+K1trsc+K2trsc, 4bpw)
+- Overall MSE: 1.996e-03 (K2+K1trsc+K2trsc, 5bpw)
 
 ### 4. Weight-Level MSE Measurements
 
@@ -69,10 +69,15 @@ Measured on Fruit SIQ model (3 layers, 10 experts each, 3 projections):
 | SIQ mixed (160K3+96K4) | 3.375 | 7.284e-03 | 0.268× | 1.00× | First 10 are K4 |
 | MSRT K2 only | 2.0 | 1.061e-01 | 3.90× | 14.6× | Base only |
 | MSRT K2+K1trsc | 3.0 | 2.908e-02 | 1.07× | 3.99× | K3-equivalent (7% worse) |
-| **MSRT K2+K1+K2trsc** | **4.0** | **1.995e-03** | **0.073×** | **0.274×** | **3.6× BETTER than K4** |
+| MSRT K2+K2trsc | 4.0 | 7.305e-03 | 0.269× | 1.003× | Matches K4 (from v50) |
+| **MSRT K2+K1+K2trsc** | **5.0** | **1.995e-03** | **0.073×** | **0.274×** | **3.6× better than K4 (but +1bpw)** |
 
-**Key finding**: MSRT at 4bpw (K2+K1trsc+K2trsc) is **3.6× better than native K4**
-at the same bitrate. This confirms the v50/v52 PoC results on the real Fruit model.
+**Key findings**:
+- At **same 4bpw**: MSRT K2+K2trsc (7.305e-03) matches native K4 (7.284e-03) within 0.3%.
+- At **5bpw**: MSRT K2+K1trsc+K2trsc (1.995e-03) is 3.6× better than K4, but uses 25% more bits.
+- The K1trsc intermediate stage (the extra bit) provides the successive refinement that
+  makes the final K2trsc stage more effective — this is the MSRT advantage from v50.
+- MSRT K2+K1trsc at 3bpw is 7% worse than native K3 — MSRT provides no advantage at ≤4bpw.
 
 ### 5. Chart
 
