@@ -95,3 +95,34 @@ in 6 files. The PTX dequant is parametric in `bits` (shifts are `bits`,
 Note: K3 has lower MSE than K4 due to the trellis quantizer's behavior on
 this specific model's weight distribution. KLD provides a complementary
 view that doesn't correlate linearly with MSE.
+
+## Dual-Cartridge Build and Test
+
+### Encoding
+
+Re-encoded BF16 source with dual-cartridge recipe (K2 base + K1trsc all 256
+experts + K2trsc 96 hot experts) using the trellis transpose fix.
+
+- **Base**: K2, 1.9 GB, 11 MoE layers × 256 experts × 3 projections
+- **Cartridge res1** (K1trsc, all 256 experts): 584 MB, 33,792 tensors
+- **Cartridge res2** (K2trsc, 96 hot experts): 380 MB, 12,672 tensors
+- **Combined K3-like** (res1 only): 584 MB — K3-equivalent (3bpw)
+- **Combined K3/K4-like** (res1 all + res2 hot96): 1,010 MB — matches SIQ 3.375bpw
+- **Overall MSE**: 1.9955e-03 (matches prior measurement)
+
+### Verification
+
+- K2 dual base loads in vLLM GG with K2 overlay (6 patched files)
+- Logprobs identical to plain K2 base (same base weights, no cartridges applied)
+- Cartridge trellis shapes match SIQ reference orientation:
+  - res1 (K1): trellis last dim = 16 (1×16) ✓
+  - res2 (K2): trellis last dim = 32 (2×16) ✓
+- Uploaded to [HuggingFace](https://huggingface.co/malaiwah/GLM-5.2-SIQ-Fruit-MSRT)
+  under `k2-dual/` prefix
+
+### Cartridge Hot-Swap Status
+
+The EXL3 LoRA cartridge code (PR #1, `feat/exl3-lora-cartridge` branch) is not
+in the container image. Hot-swapping cartridges without reloading vLLM requires
+that integration. The cartridge artifacts are built and verified at the weight
+level; runtime hot-swap testing requires a container with the cartridge code.
