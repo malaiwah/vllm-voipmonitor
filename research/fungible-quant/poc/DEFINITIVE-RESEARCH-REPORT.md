@@ -1,7 +1,7 @@
 # Definitive Research Report: Fungible Quantization for GLM-5.2
 
 **Date:** 2026-08-11
-**Versions:** v1-v36 (36 PoC experiments, 65+ papers reviewed, 13 literature rounds)
+**Versions:** v1-v38 (38 PoC experiments, 70+ papers reviewed, 14 literature rounds)
 **Hardware:** RTX 5090 (AIBoss), EXL3 trellis quantization
 **Model:** GLM-5.2 (78 layers, 256 experts, hidden=6144, intermediate=2048)
 
@@ -23,7 +23,7 @@
 │  Tiers 5-7 bpw: Rescaled trellis on residual (v35 BREAKTHROUGH)│
 │    K2 + K3 trellis_res  → 5.0 bpw  (32% better than LM)   │
 │    K2 + K4 trellis_res  → 6.0 bpw  (47% better than LM!)  │
-│    K3 + K4 trellis_res  → 7.0 bpw  (31% better than LM)   │
+│    K2 + K5 trellis_res  → 7.0 bpw  (44% better than LM!)  │
 │                                                              │
 │  Tiers 8-10 bpw: Lloyd-Max on residual (LM wins at high bpw) │
 │    K2 + 6-bit LM_128c   → 8.0 bpw  (crossover)             │
@@ -52,7 +52,7 @@
 | Fungibility | Single encoded model, any bpw 2-10 without re-encoding |
 | Entropy coding | Optional, saves 5-13% of LM bits (v29) |
 
-### Pareto Frontier (10 experts, layer 10 gate_proj, v36)
+### Pareto Frontier (10 experts, layer 10 gate_proj, v37)
 
 | bpw | Best tier | MSE | vs K4 | vs prev best |
 |-----|-----------|-----|-------|--------------|
@@ -61,10 +61,17 @@
 | 4.0 | K4 | 7.286e-03 | 100% | — |
 | 5.0 | K2+K3trsc | 1.892e-03 | 26% | 32% better than K4+1LM |
 | 6.0 | K2+K4trsc | 5.276e-04 | 7.2% | 47% better than K4+2LM! |
-| 7.0 | K3+K4trsc | 2.139e-04 | 2.9% | 31% better than K4+3LM |
+| 7.0 | K2+K5trsc | 1.726e-04 | 2.4% | 44% better than K4+3LM! |
 | 8.0 | K2+6LM | 8.767e-05 | 1.2% | 8% better than K4+4LM |
 | 9.0 | K3+6LM | 2.629e-05 | 0.4% | — |
 | 10.0 | K4+6LM | 9.613e-06 | 0.1% | — |
+
+With entropy coding (v38), LM tiers save 0.56 bpw:
+| Method | Raw bpw | Entropy bpw | MSE |
+|--------|---------|-------------|-----|
+| K2+6LM | 8.0 | 7.441 | 8.77e-05 |
+| K3+6LM | 9.0 | 8.436 | 2.63e-05 |
+| K4+6LM | 10.0 | 9.421 | 9.61e-06 |
 
 ### v35 BREAKTHROUGH: Rescaled trellis-on-residual
 
@@ -162,13 +169,18 @@ Tier-specific c512: only 2-5% better, not worth 4× overhead.
 Codebook mismatch: trellis designed for σ≈1, residual has σ≈0.1.
 Unscaled trellis completely fails on residual.
 
-### v35-v36: Rescaled trellis-on-residual — BREAKTHROUGH
+### v35-v37: Rescaled trellis-on-residual — BREAKTHROUGH
 
 Rescaling residual to match codebook range fixes the mismatch.
 K2+K4trsc (6 bpw): 5.276e-04 vs LM 9.885e-04 → 47% better!
+K2+K5trsc (7 bpw): 1.726e-04 vs LM 3.085e-04 → 44% better!
 K2 base + large trellis residual is optimal for 5-7 bpw.
 LM still wins at 8+ bpw (adaptive clusters beat fixed TCQ).
 
+### v38: Entropy-aware hybrid Pareto
+
+LM entropy savings: K2+6LM 7.441 vs 8.0 (0.559 bpw saved).
+Trellis entropy not measured (complex Viterbi path dependencies).
 ---
 
 ## 3. Confirmed Non-Viable Approaches
@@ -258,19 +270,21 @@ For each tile:
 
 ## 6. Summary
 
-The hybrid 9-tier K2/K3/K4/K2+K3trsc/K2+K4trsc/K3+K4trsc/K2+6LM/K3+6LM/K4+6LM
+The hybrid 9-tier K2/K3/K4/K2+K3trsc/K2+K4trsc/K2+K5trsc/K2+6LM/K3+6LM/K4+6LM
 approach is the optimal fungible quantization method for GLM-5.2:
 
 - **Continuously variable** 2.0-10.0 bpw from a single encoded model
-- **Rescaled trellis** for 5-7 bpw: 31-47% better than Lloyd-Max (v35-v36)
+- **Rescaled trellis** for 5-7 bpw: 32-47% better than Lloyd-Max (v35-v37)
 - **Lloyd-Max** for 8-10 bpw: adaptive clusters win at high bitrate
 - **Near-zero overhead** (<0.015 bpw, 32KB codebooks)
 - **Calibration-free** (variance proxy, v12)
 - **Runtime-efficient** (trellis dequant + rescale + trellis dequant or gather)
 - **No re-encoding** needed for different bpw targets
-- **Entropy coding** optional, saves 5-13% of LM bits
-- **65+ papers reviewed**, no alternative beats this approach
-- **36 PoC versions** on real GLM-5.2 weights with real EXL3 trellis
+- **Entropy coding** optional, saves 5-13% of LM bits (0.56 bpw at 6-bit LM)
+- **70+ papers reviewed**, no alternative beats this approach
+- **38 PoC versions** on real GLM-5.2 weights with real EXL3 trellis
 - **Universal codebooks**: shared across all layers/projections (v28)
 - **Key insight**: TCQ optimal for weight distribution, LM optimal for residual
   distribution, rescaled TCQ optimal for residual at lower bitrates
+- **Successively refinable**: TCQ is successively refinable (Jafarkhani 1999),
+  enabling fungible quantization from a single encoding
