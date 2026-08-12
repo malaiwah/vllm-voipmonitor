@@ -83,19 +83,39 @@ Measured on Fruit SIQ model (3 layers, 10 experts each, 3 projections):
 
 ![Fruit MSE Chart](fruit_mse_chart.png)
 
-## KLD Measurements
+## KLD Measurements (Output Distribution Level)
 
-KLD (Kullback-Leibler Divergence) measurements require running vLLM GG on AIBoss
-with the Fruit model. This requires:
-1. Building a vLLM container with the EXL3 LoRA cartridge code
-2. Running the SIQ model as baseline
-3. Running the K2 base + loading cartridges via LoRA hot-swap
-4. Collecting logits and computing KLD
+KLD measurements completed on AIBoss RTX 5090 using vLLM GG (in-process engine,
+`VLLM_ENABLE_V1_MULTIPROCESSING=0`, `--device nvidia.com/gpu=all`). 10 prompts
+× 20 top logprobs per model.
 
-This is substantial infrastructure work that was not completed in this session.
-The weight-level MSE measurements provide strong evidence that the MSRT cartridge
-approach is effective. The KLD measurements would confirm this at the output
-distribution level.
+| Comparison | Mean KLD | Notes |
+|------------|----------|-------|
+| **SIQ vs K2** | **0.0125** | Closest to SIQ |
+| SIQ vs K3 | 0.1885 | |
+| SIQ vs K4 | 0.1761 | |
+| SIQ vs K5 | 0.1831 | |
+| K2 vs K3 | 0.1318 | |
+| K3 vs K4 | 0.1010 | |
+| K4 vs K5 | 0.0278 | |
+
+![KLD Chart](kld_chart.png)
+
+**Key findings**:
+- K2 is closest to SIQ (KLD=0.013) despite having the worst weight MSE (0.106).
+  This confirms weight MSE and output KLD measure different things — MSE
+  measures weight reconstruction fidelity, KLD measures behavioral similarity.
+- K3-K5 are similar to each other (KLD≈0.18) but farther from SIQ than K2.
+  SIQ's mixed K3/K4 expert allocation shifts the output distribution differently
+  than any uniform EXL3 tier.
+- Inter-tier KLD decreases with higher K: K2→K3=0.132, K3→K4=0.101, K4→K5=0.028.
+  Each additional bit produces smaller distributional changes.
+
+**K2 loading**: Required Python-level guards patched in 6 b12x/vLLM files via
+volume-mount overlay. The PTX kernel is parametric in `bits` (shifts are
+`bits`, `2*bits`, `3*bits`) and handles K2 natively — all restrictions were
+Python validation, not compiled PTX limitations. See KLD-FINAL-STATUS.md for
+the full list of patched files and guard locations.
 
 ## References
 
