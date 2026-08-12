@@ -959,6 +959,7 @@ class Exl3Config(QuantizationConfig):
         codebook: str | None = None,
         version: str | None = None,
         tensor_storage: dict[str, Any] | None = None,
+        cartridge_runtime: bool = False,
     ) -> None:
         super().__init__()
         self.bits = bits
@@ -966,6 +967,11 @@ class Exl3Config(QuantizationConfig):
         self.codebook = codebook
         self.version = version
         self.tensor_storage = tensor_storage or {}
+        if not isinstance(cartridge_runtime, bool):
+            raise TypeError(
+                f"EXL3 cartridge_runtime must be a boolean, got {cartridge_runtime!r}"
+            )
+        self.cartridge_runtime = cartridge_runtime
         self._eager_checked = False
         self.rank_sliced_metadata: dict[str, Any] | None = None
         self.rank_sliced_rotation_layout = _PER_EXPERT_ROTATION_LAYOUT
@@ -984,7 +990,6 @@ class Exl3Config(QuantizationConfig):
         See: research/fungible-quant/MSRT-CARTRIDGE-FEASIBILITY-AND-PLAN.md
         """
         return ["gate_proj", "up_proj", "down_proj"]
-
     def get_name(self) -> str:
         return "exl3"
 
@@ -1009,6 +1014,7 @@ class Exl3Config(QuantizationConfig):
             codebook=config.get("codebook"),
             version=config.get("version"),
             tensor_storage=config.get("tensor_storage"),
+            cartridge_runtime=config.get("cartridge_runtime", False),
         )
         # Mixed-bitrate routed experts use the dedicated
         # `r7_routed_experts` metadata block rather than `tensor_storage`.
@@ -2576,6 +2582,12 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             scheduler_config = (
                 vllm_config.scheduler_config if vllm_config is not None else None
             )
+            if self.quant_config.cartridge_runtime:
+                assert vllm_config is not None
+                if vllm_config.parallel_config.data_parallel_size != 1:
+                    raise NotImplementedError(
+                        "EXL3 cartridge runtime currently requires data_parallel_size=1"
+                    )
             # No silent fallback: a wrong capacity here puts the target and the
             # rank-sliced MTP draft on different plans with no error, which is
             # exactly the class of mismatch that corrupts only at scale.
@@ -2602,6 +2614,9 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             # which also covers speculators that bypass load_eagle_model.
             layer.exl3_is_draft = (
                 getattr(vllm_config.model_config, "runner_type", None) == "draft"
+            )
+            layer.exl3_cartridge_enabled = (
+                self.quant_config.cartridge_runtime and not layer.exl3_is_draft
             )
             layer.exl3_layer_bitrates = self.quant_config.rank_sliced_layer_bitrates(
                 str(layer.layer_name)
@@ -2712,39 +2727,20 @@ class Exl3MoEMethod(FusedMoEMethodBase):
         if _dbg and _dbg in str(getattr(layer, "layer_name", "")):
             import torch as _t
 
-            _out = [
-                f"R7DBG {layer.layer_name} rank={layer.exl3_tp_rank} "
-                f"shared_h={getattr(layer, 'exl3_shared_h_rotations', None)} "
-                f"rank_sliced={_rs} local_experts={layer.local_num_experts}"
-            ]
-            for _g, _a, _k in (
-                ("w13", "suh", (0, "w1")),
-                ("w13", "suh", (5, "w3")),
-                ("w13", "svh", (5, "w1")),
-                ("w13", "trellis", (5, "w1")),
-                ("w2", "suh", (5, "w2")),
-                ("w2", "svh", (5, "w2")),
-                ("w2", "trellis", (5, "w2")),
-            ):
-                _tt = getattr(layer, f"{_g}_{_a}").exl3_tensors.get(_k)
-                if _tt is None:
-                    _out.append(f"  {_g}_{_a}{_k}: MISSING")
-                else:
-                    _v = _tt.to(_t.float64)
-                    _out.append(
-                        f"  {_g}_{_a}{_k}: shape={tuple(_tt.shape)} "
-                        f"dtype={_tt.dtype} sum={_v.sum().item():.6f}"
-                    )
-            print(chr(10).join(_out), flush=True)
-        if getattr(layer, "exl3_r7_graph", False):
-            # Prefer the native two- or three-tier B12X mixed-Trellis kernel.
-            if _r7_fused_enabled() and self._prepare_r7_b12x_weights(layer):
-                layer.exl3_r7_fused = True
-                return
-            self._prepare_r7_graph_weights(layer)
-            return
-        if _rs:
+        if self.quant_config.rank_sliced_metadata is not None:
+            cartridge_enabled = bool(layer.exl3_cartridge_enabled)
+            if cartridge_enabled and layer.exl3_mixed_bitrate:
+                raise NotImplementedError(
+                    "EXL3 cartridge runtime currently requires a uniform "
+                    "rank-sliced base checkpoint"
+                )
             self._prepare_rank_sliced_weights(layer)
+            if cartridge_enabled:
+                from .exl3_lora_cartridge import (
+                    prepare_exl3_cudagraph_cartridge_runtime,
+                )
+
+                prepare_exl3_cudagraph_cartridge_runtime(layer)
             return
 
     def _validate_codebooks(self, layer: RoutedExperts) -> None:
@@ -4736,6 +4732,18 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             self.quant_config.rank_sliced_metadata is not None,
         ):
             output = self._apply_rank_sliced(layer, x_2d, weights, ids)
+            if bool(layer.exl3_cartridge_enabled):
+                from .exl3_lora_cartridge import (
+                    apply_exl3_cudagraph_cartridge,
+                )
+
+                output = apply_exl3_cudagraph_cartridge(
+                    output,
+                    x_2d,
+                    weights,
+                    ids,
+                    layer,
+                )
             return output.reshape(*original_shape, output.shape[-1])
         if getattr(layer, "exl3_r7_fused", False):
             # The prepared mapping implements the mixed-Trellis launch contract,
