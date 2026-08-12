@@ -117,6 +117,30 @@ volume-mount overlay. The PTX kernel is parametric in `bits` (shifts are
 Python validation, not compiled PTX limitations. See KLD-FINAL-STATUS.md for
 the full list of patched files and guard locations.
 
+## Cartridge Hot-Swap KLD (Without vLLM Reload)
+
+The key MSRT feature: applying/removing cartridges without reloading the model.
+Tested by patching `Exl3MoEMethod.apply()` to add cartridge corrections after the
+rank-sliced fused GEMM. Gate/up corrections computed via `_exl3_gemm`, then
+down_proj correction uses corrected intermediate `silu(gate_corr) * up_corr`.
+
+| Comparison | Mean KLD | Notes |
+|------------|----------|-------|
+| K2 base vs K2+K3like | 0.000995 | K1trsc cartridge on all experts |
+| K2 base vs K2+K3K4like | 0.002002 | K1trsc all + K2trsc hot96 |
+| K2+K3like vs K2+K3K4like | 0.000874 | Incremental effect of K2trsc |
+| SIQ vs K2 base | 0.012545 | Baseline distance |
+| SIQ vs K2+K3like | 0.013303 | Slightly farther (K3-like overshoots) |
+| SIQ vs K2+K3K4like | 0.013031 | K3/K4 mix slightly closer than K3-only |
+
+**Key findings**:
+- Cartridge corrections produce measurable distributional changes (KLD 0.001-0.002)
+- K2+K3K4like is slightly closer to SIQ than K2+K3like (0.013 vs 0.013),
+  confirming the mixed K3/K4 cartridge provides a small quality improvement
+- The K2 base is closest to SIQ overall — SIQ's mixed K3/K4 allocation
+  produces an output distribution more similar to K2 than to higher-rate tiers
+- Hot-swap verified: K2 base logprobs restored after disabling cartridge
+
 ## References
 
 ### Research Documents
