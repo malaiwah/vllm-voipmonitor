@@ -2723,10 +2723,6 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                     for _expert in range(1, layer.local_num_experts):
                         if (_expert, _shard) not in _tensors:
                             _tensors[(_expert, _shard)] = _source
-        _dbg = os.environ.get("VLLM_EXL3_R7_DEBUG", "")
-        if _dbg and _dbg in str(getattr(layer, "layer_name", "")):
-            import torch as _t
-
         if self.quant_config.rank_sliced_metadata is not None:
             cartridge_enabled = bool(layer.exl3_cartridge_enabled)
             if cartridge_enabled and layer.exl3_mixed_bitrate:
