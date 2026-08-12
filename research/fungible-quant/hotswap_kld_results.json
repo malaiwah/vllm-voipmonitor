@@ -1,0 +1,8 @@
+{
+  "kld_k2base_vs_k2k3like": 0.0009951080959801008,
+  "kld_k2base_vs_k2k3k4like": 0.0020023592348257847,
+  "kld_k2k3like_vs_k2k3k4like": 0.0008737485676403943,
+  "kld_siq_vs_k2base": 0.012545061393141427,
+  "kld_siq_vs_k2k3like": 0.013302803338632135,
+  "kld_siq_vs_k2k3k4like": 0.013030905726355832
+}
