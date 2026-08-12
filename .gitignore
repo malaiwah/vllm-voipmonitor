@@ -265,3 +265,6 @@ csrc/cpu/cpu_attn_dispatch_generated.h
 # Raw routing-stat dumps: tens of MB each, published to HF instead
 # (see results/k3-fq/CONVERGENCE-RESULTS.md for sha256 + location)
 research/fungible-quant/runs/m5-serve/results/*/stats*.jsonl
+
+# PoC virtualenv (local only, not for commit)
+.poc-venv/
