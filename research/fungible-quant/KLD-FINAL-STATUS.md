@@ -16,6 +16,8 @@ key algorithmic results) were successfully completed.
 
 ## What Doesn't Work
 
+### Blocker 1: vLLM V1 subprocess GPU access
+
 vLLM's V1 engine uses subprocess isolation (EngineCore), and the subprocess
 can't access the GPU under podman:
 
@@ -31,6 +33,29 @@ doesn't inherit the NVIDIA GPU device context. Potential fixes:
 3. Run vLLM as a server (REST API) instead of Python API
 4. Use V0 engine (not available in this GG build — V1 is forced)
 
+### Blocker 2: EXL3 rank-sliced bitrate restriction (K2 not supported)
+
+The GG vLLM EXL3 loader restricted rank-sliced bitrates to {3,4,5,6},
+rejecting K2 base checkpoints with:
+
+```
+ValueError: rank-sliced EXL3 requires an integral 3/4/5/6 bitrate, got 2
+```
+
+This restriction was at `exl3.py:3173`. The trellis shape validation at
+line 2111 already accepts K=1..8 (`1 <= shape[2]//16 <= 8`), so K2 trellis
+tensors (shape[2]=32) are structurally valid — the restriction was only
+in the rank-sliced bitrate check.
+
+**Fix applied** on `feat/exl3-lora-cartridge` branch (commit bb99f519fd):
+Extended the accepted range to {2,3,4,5,6}. This fix is in PR #1 but
+NOT in the public GG container image (`glm52-turnkey:r31-vllm258`).
+To use K2, the container must be rebuilt from the branch, or the fix
+must be cherry-picked into the container's vLLM installation.
+
+**Alternative**: Use K3 as the base tier instead of K2. K3 is supported
+by the public container image. This trades higher base memory for
+immediate compatibility.
 ## Results We Have
 
 | Measurement | Status | Result |
