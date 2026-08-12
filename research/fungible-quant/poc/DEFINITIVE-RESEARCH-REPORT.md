@@ -1,34 +1,41 @@
 # Definitive Research Report: Fungible Quantization for GLM-5.2
 
 **Date:** 2026-08-11
-**Versions:** v1-v30 (30 PoC experiments, 55+ papers reviewed, 11 literature rounds)
+**Versions:** v1-v36 (36 PoC experiments, 65+ papers reviewed, 13 literature rounds)
 **Hardware:** RTX 5090 (AIBoss), EXL3 trellis quantization
 **Model:** GLM-5.2 (78 layers, 256 experts, hidden=6144, intermediate=2048)
 
 ---
 
-## 1. BEST METHOD: Tile-Level Mixed Precision with Clustered Codebooks
+## 1. BEST METHOD: Hybrid Trellis + Rescaled-Trellis + Lloyd-Max
 
 ### Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│  Per-tile encoding (16×16 = 256 weights)            │
-│                                                       │
-│  Tier 0: K2 trellis           → 2.0 bpw             │
-│  Tier 1: K3 trellis           → 3.0 bpw             │
-│  Tier 2: K4 trellis           → 4.0 bpw             │
-│  Tier 3: K4 + 1-bit LM_128c   → 5.0 bpw             │
-│  Tier 4: K4 + 2-bit LM_128c   → 6.0 bpw             │
-│  Tier 5: K4 + 3-bit LM_128c   → 7.0 bpw             │
-│  Tier 6: K2 + 6-bit LM_128c   → 8.0 bpw (crossover) │
-│  Tier 7: K4 + 6-bit LM_128c   → 10.0 bpw            │
-│                                                       │
-│  LM = Lloyd-Max scalar quantizer on residual         │
-│  128c = 128 shared codebooks (clustered by sigma)     │
-│  Codebooks universal across layers/projections (v28) │
-│  Entropy coding saves 5-13% of LM bits (v29)         │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  Per-tile encoding (16×16 = 256 weights)                   │
+│                                                              │
+│  Tiers 2-4 bpw: Trellis only                                │
+│    K2 trellis           → 2.0 bpw                          │
+│    K3 trellis           → 3.0 bpw                          │
+│    K4 trellis           → 4.0 bpw                          │
+│                                                              │
+│  Tiers 5-7 bpw: Rescaled trellis on residual (v35 BREAKTHROUGH)│
+│    K2 + K3 trellis_res  → 5.0 bpw  (32% better than LM)   │
+│    K2 + K4 trellis_res  → 6.0 bpw  (47% better than LM!)  │
+│    K3 + K4 trellis_res  → 7.0 bpw  (31% better than LM)   │
+│                                                              │
+│  Tiers 8-10 bpw: Lloyd-Max on residual (LM wins at high bpw) │
+│    K2 + 6-bit LM_128c   → 8.0 bpw  (crossover)             │
+│    K3 + 6-bit LM_128c   → 9.0 bpw                          │
+│    K4 + 6-bit LM_128c   → 10.0 bpw                         │
+│                                                              │
+│  trsc = rescaled trellis: scale residual to codebook range, │
+│         quantize with trellis, scale back                   │
+│  LM = Lloyd-Max scalar quantizer with 128 sigma-clusters   │
+│  Codebooks universal across layers/projections (v28)       │
+│  Entropy coding saves 5-13% of LM bits (v29)               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Properties
@@ -45,25 +52,27 @@
 | Fungibility | Single encoded model, any bpw 2-10 without re-encoding |
 | Entropy coding | Optional, saves 5-13% of LM bits (v29) |
 
-### Pareto Frontier (corrected, 3 experts, layer 10 gate_proj, c128 codebooks)
+### Pareto Frontier (10 experts, layer 10 gate_proj, v36)
 
-| bpw | Best tier | MSE | vs K4 |
-|-----|-----------|-----|-------|
-| 2.0 | K2 | 1.061e-01 | 1456% |
-| 3.0 | K3 | 2.718e-02 | 373% |
-| 4.0 | K4 | 7.288e-03 | 100% |
-| 5.0 | K4+1LM | 2.798e-03 | 38% |
-| 6.0 | K4+2LM | 9.926e-04 | 14% |
-| 7.0 | K4+3LM | 3.109e-04 | 4.3% |
-| 8.0 | K2+6LM | 8.811e-05 | 1.2% |
-| 10.0 | K4+6LM | 1.022e-05 | 0.1% |
+| bpw | Best tier | MSE | vs K4 | vs prev best |
+|-----|-----------|-----|-------|--------------|
+| 2.0 | K2 | 1.061e-01 | 1456% | — |
+| 3.0 | K3 | 2.718e-02 | 373% | — |
+| 4.0 | K4 | 7.286e-03 | 100% | — |
+| 5.0 | K2+K3trsc | 1.892e-03 | 26% | 32% better than K4+1LM |
+| 6.0 | K2+K4trsc | 5.276e-04 | 7.2% | 47% better than K4+2LM! |
+| 7.0 | K3+K4trsc | 2.139e-04 | 2.9% | 31% better than K4+3LM |
+| 8.0 | K2+6LM | 8.767e-05 | 1.2% | 8% better than K4+4LM |
+| 9.0 | K3+6LM | 2.629e-05 | 0.4% | — |
+| 10.0 | K4+6LM | 9.613e-06 | 0.1% | — |
 
-With entropy coding (v29), effective bpw shifts left by 0.1-0.5:
-| Method | Raw bpw | Entropy bpw | MSE |
-|--------|---------|-------------|-----|
-| K4+2LM | 6.0 | 5.898 | 9.93e-04 |
-| K4+3LM | 7.0 | 6.700 | 3.11e-04 |
-| K4+4LM | 8.0 | 7.494 | 9.65e-05 |
+### v35 BREAKTHROUGH: Rescaled trellis-on-residual
+
+Scaling the residual to match the trellis codebook's expected input range
+enables TCQ to outperform Lloyd-Max on the residual at 5-7 bpw:
+- K2's larger residual (σ≈0.29) gives trellis more signal
+- TCQ's 2^L states beat scalar LM at lower bitrates
+- At 8+ bpw, LM's adaptive clusters win (2048 effective levels)
 
 ---
 
@@ -133,7 +142,33 @@ residuals, VQ can't capture additional structure.
 ### v30: Optimal clusters + stacking
 
 c128 is the practical sweet spot (90%+ of gain, <0.003 bpw overhead).
-Stacking clustered codebooks still 32-123% worse than single large LM.
+### v31: Definitive LM Pareto
+
+8-tier system with c128 codebooks, 10 experts, gate+down identical (ratio ≤ 1.002).
+Entropy coding saves 1-7% of LM bits.
+
+### v32: Entropy-aware Pareto + BPDQ
+
+Entropy-aware Pareto gives 14-49% MSE improvement over raw Pareto.
+BPDQ bit-plane is 4-23% worse than Lloyd-Max.
+
+### v33: Sparse/adaptive/tier-specific clusters — all worse
+
+Sparse LM: 24% worse (bitmap overhead). Adaptive LM: 35% worse.
+Tier-specific c512: only 2-5% better, not worth 4× overhead.
+
+### v34: Trellis-on-residual (unscaled) — 2-34× WORSE
+
+Codebook mismatch: trellis designed for σ≈1, residual has σ≈0.1.
+Unscaled trellis completely fails on residual.
+
+### v35-v36: Rescaled trellis-on-residual — BREAKTHROUGH
+
+Rescaling residual to match codebook range fixes the mismatch.
+K2+K4trsc (6 bpw): 5.276e-04 vs LM 9.885e-04 → 47% better!
+K2 base + large trellis residual is optimal for 5-7 bpw.
+LM still wins at 8+ bpw (adaptive clusters beat fixed TCQ).
+
 ---
 
 ## 3. Confirmed Non-Viable Approaches
@@ -153,8 +188,10 @@ Stacking clustered codebooks still 32-123% worse than single large LM.
 | AlphaQ PL_Alpha_Hill | Hurts | CV=0.11%, negligible differentiation |
 | BitsMoE SVD | No gain | Spectral energy CV=2.35%, too small |
 | Fruit model per-expert | 0% gain | 49.6% CV is tier artifact, not per-expert |
-| Normalized codebooks (v26) | Bug | Reshape bug made results artifacts; re-verified v28 |
----
+| Trellis-on-residual (unscaled) | 2-34× worse | Codebook mismatch (v34) |
+| Sparse residual LM | 24% worse | Bitmap overhead (v33) |
+| Per-tile adaptive LM | 35% worse | Sigma-clustering already handles variation |
+| BPDQ bit-plane | 4-23% worse | Sign-magnitude suboptimal for Gaussian |
 
 RRQ, Drop-by-Drop, ResQ, R2Q, AQLM, MoPEQ, HyperQuant, ICQuant, Q-Palette,
 BitsMoE, MxMoE, TileQ, AlphaQ, PolarQuant, TileFuse, MXFP4, CodeQuant,
@@ -163,8 +200,9 @@ VPTQ, GPTVQ, QuIP#, HAWQ-V3, MC-MoE, MorphServe, DynaExq, MoE-APEX,
 HOBBIT, DyMoE, FlexQuant, CXL-MoE, QJL, Subtractive dithering,
 Entropy-constrained quantization, Neural weight compression survey,
 Half-bitwidth mixing, D4 lattice, Embedded TCQ, Stochastic rounding,
-Joint pruning+quantization, cuDNN Grouped GEMM+Quant, ParetoQ, HBLLM
-(wavelet), CARVQ (group RVQ), FraQAT (fractional QAT), and more.
+(wavelet), CARVQ (group RVQ), FraQAT (fractional QAT), HARP (adaptive rotation),
+MSQ (bit sparsification), QTIP (TCQ), Proteus (lookup-free TCQ), NanoQuant (sub-1-bit),
+ReSpinQuant (subspace rotation), BPDQ (bit-plane decomposition), and more.
 
 ### Key literature insights (rounds 10-11)
 
@@ -220,17 +258,19 @@ For each tile:
 
 ## 6. Summary
 
-The tile-level 8-tier K2/K3/K4/K4+1LM/K4+2LM/K4+3LM/K2+6LM/K4+6LM approach
-with 128 universal clustered codebooks is the optimal fungible quantization
-method for GLM-5.2:
+The hybrid 9-tier K2/K3/K4/K2+K3trsc/K2+K4trsc/K3+K4trsc/K2+6LM/K3+6LM/K4+6LM
+approach is the optimal fungible quantization method for GLM-5.2:
 
 - **Continuously variable** 2.0-10.0 bpw from a single encoded model
+- **Rescaled trellis** for 5-7 bpw: 31-47% better than Lloyd-Max (v35-v36)
+- **Lloyd-Max** for 8-10 bpw: adaptive clusters win at high bitrate
 - **Near-zero overhead** (<0.015 bpw, 32KB codebooks)
 - **Calibration-free** (variance proxy, v12)
-- **Runtime-efficient** (trellis dequant + gather lookup)
+- **Runtime-efficient** (trellis dequant + rescale + trellis dequant or gather)
 - **No re-encoding** needed for different bpw targets
 - **Entropy coding** optional, saves 5-13% of LM bits
-- **55+ papers reviewed**, no alternative beats this approach
-- **30 PoC versions** on real GLM-5.2 weights with real EXL3 trellis
-- **Crossover at 8 bpw**: K2+6LM beats K4+4LM (v27b)
+- **65+ papers reviewed**, no alternative beats this approach
+- **36 PoC versions** on real GLM-5.2 weights with real EXL3 trellis
 - **Universal codebooks**: shared across all layers/projections (v28)
+- **Key insight**: TCQ optimal for weight distribution, LM optimal for residual
+  distribution, rescaled TCQ optimal for residual at lower bitrates
