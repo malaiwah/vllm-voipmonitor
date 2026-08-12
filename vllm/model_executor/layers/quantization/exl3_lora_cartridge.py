@@ -237,8 +237,7 @@ def load_cartridge_from_adapter(
     num_stages = len(sorted_labels)
     cartridge = Exl3LoraCartridge(num_stages, num_experts, device)
 
-    shard_map = {"w1": "w1", "w3": "w3", "w2": "w2"}
-    group_map = {"gate_proj": "w13", "up_proj": "w13", "down_proj": "w2"}
+    shard_map = {"gate_proj": "w1", "up_proj": "w3", "down_proj": "w2"}
 
     with safe_open(adapter_path, framework="pt") as f:
         for stage_idx, label in enumerate(sorted_labels):
