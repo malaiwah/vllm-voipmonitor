@@ -31,77 +31,139 @@ Non-MoE at FP8 consumes ~9.3 GiB/rank. Remaining budget:
 
 **RTX 5090 cannot fit GLM-5.2 at any useful MoE bitrate at TP4.** Needs TP8+ or datacenter GPU.
 
-## MSRT Quality (PoC Measurements, 10 experts, layer 10 gate_proj)
+## Measured Quality — Complete Pareto (v50, 10 experts, layer 10 + layer 40)
+
+All values measured with real EXL3 trellis on RTX 5090. MSRT = rescaled trellis
+residual stages. "trsc" = rescaled trellis on residual.
+
+### 2 bpw
+
+| Config | MSE | GEMM passes |
+|--------|-----|-------------|
+| K2 only | 1.061e-01 | 1 |
+
+### 3 bpw — K3 wins, MSRT gives no advantage
+
+| Config | MSE | vs K3 | GEMM passes |
+|--------|-----|-------|-------------|
+| **K3 only** | **2.718e-02** | **1.00×** | **1** |
+| K2+K1trsc | 2.908e-02 | 1.07× worse | 2 |
+| K2+K1 (no rescale) | 1.783e-01 | 6.56× worse | 2 |
+
+**At 3bpw, K3 is strictly better than K2+K1trsc (by 7%).** The 1-bit rescaled
+trellis residual is too small to improve on K2's quantization error.
+
+### 4 bpw — K4 and K2+K2trsc tied
+
+| Config | MSE | vs K4 | GEMM passes |
+|--------|-----|-------|-------------|
+| **K4 only** | **7.286e-03** | **1.00×** | **1** |
+| K2+K2trsc | 7.305e-03 | 1.00× (tie) | 2 |
+| K3+K1trsc | 7.515e-03 | 1.03× worse | 2 |
+| K2+K1trsc+K1trsc | 7.964e-03 | 1.09× worse | 3 |
+
+### 5 bpw — MSRT advantage begins
+
+| Config | MSE | vs K3 | vs K4 | GEMM passes |
+|--------|-----|-------|-------|-------------|
+| **K2+K3trsc** | **1.892e-03** | **0.070×** | **0.260×** | **2** |
+| K3+K2trsc | 1.952e-03 | 0.072× | 0.268× | 2 |
+| K2+K1trsc+K2trsc | 1.995e-03 | 0.073× | 0.274× | 3 |
+
+**At 5bpw, MSRT is 14× better than K3 and 3.8× better than K4.**
+
+### 6+ bpw (from v41-v46)
 
 | Config | bpw | MSE | vs K3 | vs K4 | GEMM passes |
 |--------|-----|-----|-------|-------|-------------|
-| K2 only | 2.0 | 1.061e-01 | 3.90× | 14.6× | 1 |
-| K3 only | 3.0 | 2.718e-02 | 1.00× | 3.73× | 1 |
-| K4 only | 4.0 | 7.286e-03 | 0.268× | 1.00× | 1 |
-| **K2+K1 (MSRT 3bpw)** | **3.0** | **5.144e-04** | **0.019×** | **0.071×** | **2** |
-| K2+K3 (MSRT 5bpw) | 5.0 | 1.892e-03 | 0.070× | 0.260× | 2 |
-| K2+K1+K3 (MSRT 6bpw) | 6.0 | 5.144e-04 | 0.019× | 0.071× | 3 |
-| K2+K1+K2+K3 (MSRT 8bpw) | 8.0 | 3.868e-05 | 0.001× | 0.005× | 4 |
+| K2+K1trsc+K3trsc | 6.0 | 5.144e-04 | 0.019× | 0.071× | 3 |
+| K2+K1trsc+K4trsc | 7.0 | 1.415e-04 | 0.005× | 0.019× | 3 |
+| K2+K1+K2+K3trsc | 8.0 | 3.868e-05 | 0.001× | 0.005× | 4 |
+| K2+K1+K1+K2+K3trsc | 9.0 | 1.095e-05 | 0.0004× | 0.0015× | 5 |
+| K2+K1+K1+K1+K2+K3trsc | 10.0 | 3.381e-06 | 0.0001× | 0.0005× | 6 |
+
+### Key Insight: Where MSRT Wins
+
+| Bitrate range | Best method | Why |
+|---------------|------------|-----|
+| 2-4 bpw | Single-tier trellis (K2, K3, K4) | Residual too large for small K to help |
+| 5-7 bpw | MSRT (K2 base + K3-K5 rescaled) | Residual fits trellis codebook well after rescaling |
+| 8-10 bpw | MSRT (K2 base + progressive K1 + K2/K3) | Successive refinement optimal |
+
+**MSRT provides no advantage below 5bpw.** At 3bpw, K3 is 7% better than
+K2+K1trsc. At 4bpw, K4 and K2+K2trsc are tied. The MSRT advantage starts
+at 5bpw and grows with bitrate.
 
 ## Feasible Strategies Per Card
 
 ### H100 80GB (MoE budget: ~60 GiB/rank)
 
-| Strategy | eff bpw | GiB/rank | Fits? | MSE | vs K3 |
+| Strategy | eff bpw | GiB/rank | Fits? | MSE | Notes |
 |----------|---------|----------|-------|-----|-------|
-| K2 base only | 2.00 | 43.3 | ✓ | 1.06e-01 | 3.90× |
-| **K2 + K1 cartridge (top 96)** | **2.38** | **51.4** | **✓** | **~6e-02** | **~2.2×** |
-| K2 + K1 cartridge (all 256) | 3.00 | 65.0 | ✗ | 5.14e-04 | 0.019× |
-| K3 base only | 3.00 | 65.0 | ✗ | 2.72e-02 | 1.00× |
+| K2 base only | 2.00 | 43.3 | ✓ | 1.06e-01 | Lowest quality |
+| **K2 + K2trsc (top 96)** | **2.75** | **54.1** | **✓** | **~7e-03** | **K4-quality on 37.5% of experts** |
+| K3 base only | 3.00 | 65.0 | ✗ | 2.72e-02 | Doesn't fit with FP8 non-MoE |
 
-**Best H100 option: K2 base + K1 cartridge on top 96 experts (37.5%)**
-- 51.4 GiB MoE + 9.3 GiB non-MoE = 60.7 GiB total
-- Cartridge adds 1 GEMM pass for 96/256 experts (avg 3 per token of 8)
-- Runtime overhead: ~0.38 extra GEMM launches per token batch
+**Best H100 option: K2 base (all) + K2trsc cartridge (top 96 experts)**
+- 54.1 GiB MoE + 9.3 GiB non-MoE = 63.4 GiB — fits in 70 GiB budget
+- Cartridge experts get K4-equivalent quality (MSE 7.3e-03)
+- Non-cartridge experts stay at K2 (MSE 1.06e-01)
+- 2 GEMM passes for cartridge experts, 1 for non-cartridge
+
+**Note: K3 at 3bpw (65.0 GiB) does NOT fit** on H100 with FP8 non-MoE
+(65.0 + 9.3 = 74.3 GiB > 70 GiB budget). It fits only with FP4 non-MoE
+(65.0 + 4.3 = 69.3 GiB), leaving almost no room for KV cache.
 
 ### H200 141GB (MoE budget: ~110 GiB/rank)
 
-| Strategy | eff bpw | GiB/rank | Fits? | MSE | vs K3 |
+| Strategy | eff bpw | GiB/rank | Fits? | MSE | Notes |
 |----------|---------|----------|-------|-----|-------|
-| K2 + K1 (all) MSRT 3bpw | 3.00 | 65.0 | ✓ | 5.14e-04 | 0.019× |
-| Mixed K3/K4 (160/96) | 3.38 | 73.1 | ✓ | ~mixed | ~0.5× |
-| K2 + K1+K3 cartridge (top 96) | 3.50 | 75.8 | ✓ | ~1e-03 | ~0.04× |
-| K4 base only | 4.00 | 86.6 | ✓ | 7.29e-03 | 0.268× |
-| **K2 + K1+K3 cartridge (top 160)** | **4.50** | **97.5** | **✓** | **~5e-04** | **~0.019×** |
-| MSRT K2+K3 (5bpw) | 5.00 | 108.3 | ✓ | 1.89e-03 | 0.070× |
+| K3 base only | 3.00 | 65.0 | ✓ | 2.72e-02 | Comfortable fit |
+| Mixed K3/K4 (160/96) | 3.38 | 73.1 | ✓ | ~mixed | Current willfalco quant |
+| K4 base only | 4.00 | 86.6 | ✓ | 7.29e-03 | |
+| **K2+K3trsc (5bpw, all)** | **5.00** | **108.3** | **✓** | **1.89e-03** | **MSRT: 14× better than K3** |
+| K2+K1trsc+K3trsc (6bpw) | 6.00 | 129.9 | ✗ | 5.14e-04 | Doesn't fit |
 
-**Best H200 option: K2 base + K1+K3 cartridge on top 160 experts (62.5%)**
-- 97.5 GiB MoE + 9.3 GiB non-MoE = 106.8 GiB total
-- Cartridge: 2 extra GEMM passes for 160/256 experts (avg 5 per token)
-- Quality approaches full MSRT 6bpw at 75% of the memory
+**Best H200 option: MSRT K2+K3trsc (5bpw, all experts)**
+- 108.3 GiB MoE + 9.3 GiB non-MoE = 117.6 GiB — fits in 120 GiB budget
+- MSE 1.892e-03 — 14× better than K3, 3.8× better than K4
+- 2 GEMM passes per expert
 
 ### B200 192GB (MoE budget: ~155 GiB/rank)
 
-| Strategy | eff bpw | GiB/rank | Fits? | MSE | vs K3 |
+| Strategy | eff bpw | GiB/rank | Fits? | MSE | Notes |
 |----------|---------|----------|-------|-----|-------|
-| MSRT K2+K1+K3 (6bpw) | 6.00 | 129.9 | ✓ | 5.14e-04 | 0.019× |
-| MSRT K2+K1+K2+K3 (8bpw) | 8.00 | 173.3 | ✗ | 3.87e-05 | 0.001× |
+| K2+K1trsc+K3trsc (6bpw) | 6.00 | 129.9 | ✓ | 5.14e-04 | 53× better than K3 |
+| K2+K1+K2+K3trsc (8bpw) | 8.00 | 173.3 | ✗ | 3.87e-05 | Needs TP8 |
 
-**Best B200 option: MSRT K2+K1+K3 (6bpw, all experts)**
-- 129.9 GiB MoE + 9.3 GiB non-MoE = 139.2 GiB total
-- 3 GEMM passes per expert (base + 2 cartridge stages)
-- 53× better than K3 at 2× the memory
+**Best B200 option: MSRT K2+K1trsc+K3trsc (6bpw, all experts)**
+- 129.9 GiB MoE + 9.3 GiB non-MoE = 139.2 GiB — fits in 155 GiB budget
+- MSE 5.144e-04 — 53× better than K3, 14× better than K4
+- 3 GEMM passes per expert
 
 ## Recommendation: Base K and Additive Bits
 
-### Base weight: **K2 (2 bits)**
+### Base weight choice depends on target bitrate
 
-- K2 is the lowest viable base (K1 has MSE 0.106 — too lossy)
-- K2 uses 48.6 GiB/rank, leaving budget for cartridge
-- K2+K1 MSRT at same 3bpw as K3 is **53× better** in MSE
+| Target bpw | Base K | Rationale |
+|------------|--------|-----------|
+| 2-4 bpw | K2, K3, or K4 (single-tier) | MSRT gives no advantage below 5bpw |
+| 5-7 bpw | **K2** (2 bits) | K2's larger residual gives MSRT more signal |
+| 8-10 bpw | **K2** (2 bits) | K2 base + progressive refinement optimal |
 
-### Additive cartridge options (per expert, selectively applied):
+**K2 is the best base for MSRT at 5+ bpw** because its larger residual
+(σ≈0.29 vs K3's σ≈0.09) gives the rescaled trellis more signal to work with.
 
-| Cartridge | Add bits | Total bpw | Extra GEMMs | Quality gain |
-|-----------|---------|-----------|-------------|-------------|
-| +K1 | 1 | 3.0 | +1 | 53× over K3 (at same bpw) |
-| +K1+K3 | 4 | 6.0 | +2 | 14× over K4 |
-| +K1+K2+K3 | 6 | 8.0 | +3 | 188× over K4 |
+### Additive cartridge options (for 5+ bpw only):
+
+| Cartridge | Add bits | Total bpw | Extra GEMMs | Quality vs K3 | Quality vs K4 |
+|-----------|---------|-----------|-------------|---------------|---------------|
+| +K3 | 3 | 5.0 | +1 | 14× better | 3.8× better |
+| +K1+K3 | 4 | 6.0 | +2 | 53× better | 14× better |
+| +K1+K2+K3 | 6 | 8.0 | +3 | 703× better | 188× better |
+
+**Warning: These cartridge options only make sense at 5+ bpw.**
+At 3-4 bpw, single-tier trellis (K3 or K4) is equal or better.
 
 ### Cartridge selectivity (group of experts):
 
@@ -122,6 +184,3 @@ with 8 active experts and cartridge on 96 experts (37.5%):
 - Extra GEMM launches: 3 per token (vs 8 base GEMMs)
 - Overhead: 37.5% more launches, same bandwidth (total bits unchanged)
 - **Negligible for decode** (launches are μs-scale, GEMMs are ms-scale)
-
-For prefill (large batch), GEMMs are compute-bound. Extra stages at same total
-bitrate have same total FLOPs — overhead is just launch latency.
