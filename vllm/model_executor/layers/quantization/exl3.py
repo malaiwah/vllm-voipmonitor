@@ -3170,9 +3170,9 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                 f"{layer_bitrates!r}"
             )
         bits = int(layer_bitrates[0])
-        if bits not in (3, 4, 5, 6):
+        if bits not in (2, 3, 4, 5, 6):
             raise ValueError(
-                f"rank-sliced EXL3 requires an integral 3/4/5/6 bitrate, got {bits!r}"
+                f"rank-sliced EXL3 requires an integral 2/3/4/5/6 bitrate, got {bits!r}"
             )
 
         w13 = self._rank_sliced_backing(layer, "w13_trellis")
