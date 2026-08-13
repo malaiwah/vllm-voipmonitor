@@ -2588,6 +2588,19 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                     raise NotImplementedError(
                         "EXL3 cartridge runtime currently requires data_parallel_size=1"
                     )
+                if vllm_config.parallel_config.tensor_parallel_size != 1:
+                    raise NotImplementedError(
+                        "EXL3 cartridge runtime currently requires "
+                        "tensor_parallel_size=1"
+                    )
+                if vllm_config.use_v2_model_runner:
+                    raise NotImplementedError(
+                        "EXL3 cartridge runtime does not support the V2 model runner"
+                    )
+                if vllm_config.lora_config is not None:
+                    raise NotImplementedError(
+                        "EXL3 cartridge runtime cannot be combined with LoRA adapters"
+                    )
             # No silent fallback: a wrong capacity here puts the target and the
             # rank-sliced MTP draft on different plans with no error, which is
             # exactly the class of mismatch that corrupts only at scale.
@@ -2615,9 +2628,10 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             layer.exl3_is_draft = (
                 getattr(vllm_config.model_config, "runner_type", None) == "draft"
             )
-            layer.exl3_cartridge_enabled = (
+            layer.exl3_cartridge_capable = (
                 self.quant_config.cartridge_runtime and not layer.exl3_is_draft
             )
+            layer.exl3_cartridge_enabled = False
             layer.exl3_layer_bitrates = self.quant_config.rank_sliced_layer_bitrates(
                 str(layer.layer_name)
             )
@@ -2724,19 +2738,13 @@ class Exl3MoEMethod(FusedMoEMethodBase):
                         if (_expert, _shard) not in _tensors:
                             _tensors[(_expert, _shard)] = _source
         if self.quant_config.rank_sliced_metadata is not None:
-            cartridge_enabled = bool(layer.exl3_cartridge_enabled)
-            if cartridge_enabled and layer.exl3_mixed_bitrate:
+            cartridge_capable = bool(layer.exl3_cartridge_capable)
+            if cartridge_capable and layer.exl3_mixed_bitrate:
                 raise NotImplementedError(
                     "EXL3 cartridge runtime currently requires a uniform "
                     "rank-sliced base checkpoint"
                 )
             self._prepare_rank_sliced_weights(layer)
-            if cartridge_enabled:
-                from .exl3_lora_cartridge import (
-                    prepare_exl3_cudagraph_cartridge_runtime,
-                )
-
-                prepare_exl3_cudagraph_cartridge_runtime(layer)
             return
 
     def _validate_codebooks(self, layer: RoutedExperts) -> None:
@@ -4727,19 +4735,19 @@ class Exl3MoEMethod(FusedMoEMethodBase):
             "exl3_rank_sliced",
             self.quant_config.rank_sliced_metadata is not None,
         ):
-            output = self._apply_rank_sliced(layer, x_2d, weights, ids)
             if bool(layer.exl3_cartridge_enabled):
                 from .exl3_lora_cartridge import (
                     apply_exl3_cudagraph_cartridge,
                 )
 
                 output = apply_exl3_cudagraph_cartridge(
-                    output,
                     x_2d,
                     weights,
                     ids,
                     layer,
                 )
+            else:
+                output = self._apply_rank_sliced(layer, x_2d, weights, ids)
             return output.reshape(*original_shape, output.shape[-1])
         if getattr(layer, "exl3_r7_fused", False):
             # The prepared mapping implements the mixed-Trellis launch contract,

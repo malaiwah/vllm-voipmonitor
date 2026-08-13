@@ -233,7 +233,7 @@ from vllm.v1.worker.ubatch_utils import (
     split_attn_metadata,
 )
 from vllm.v1.worker.utils import is_residual_scattered_for_sp
-from vllm.v1.worker.workspace import lock_workspace
+from vllm.v1.worker.workspace import lock_workspace, unlock_workspace
 
 from .utils import (
     AttentionGroup,
@@ -6840,6 +6840,20 @@ class GPUModelRunner(
         )
 
         return int(total_estimate)
+
+    @torch.inference_mode()
+    def clear_cudagraphs(self) -> None:
+        """Release captured graphs before a model topology change."""
+        if self.compilation_config.cudagraph_mode == CUDAGraphMode.NONE:
+            return
+        set_cudagraph_capturing_enabled(False)
+        CUDAGraphWrapper.clear_all_graphs()
+        BreakableCUDAGraphWrapper.clear_all_graphs()
+        if self.encoder_cudagraph_manager is not None:
+            self.encoder_cudagraph_manager.clear()
+        unlock_workspace()
+        torch.accelerator.synchronize()
+        torch.accelerator.empty_cache()
 
     @instrument(span_name="Capture model")
     def capture_model(self) -> int:
