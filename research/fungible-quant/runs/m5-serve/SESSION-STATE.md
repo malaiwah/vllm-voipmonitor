@@ -1,25 +1,31 @@
-# Where things stand — 2026-08-11 ~19:00 UTC
+# Where things stand — 2026-08-14 ~03:15 UTC
 
-Written before a context compaction so the next session can resume without
-re-deriving anything.
+## Submission state
+
+- GG source: `/home/mbelleau/src/gg-vllm`
+- Branch: `fq/m1-stats-collector`
+- Head: `14b5c5f5f` (`fq: harden live mixed-tier reconfiguration`)
+- Rebased onto `origin/dev/gilded-gnosis` at `fa033bd4e`.
+- Pushed to `malaiwah/vllm-voipmonitor`.
+- Pull request: https://github.com/local-inference-lab/vllm/pull/307
+- PR metadata verified: open, non-draft, correct base/head/body, mergeable.
+- `pre-run-check` is blocked only by the repository trust gate. A maintainer
+  must add `verified`, `ready`, or `ready-run-all-tests`; the author cannot add
+  these labels. Request:
+  https://github.com/local-inference-lab/vllm/pull/307#issuecomment-5288889824
+- Post-rebase CPU checks: 224 passed / 10 deselected, plus 4/4 warmup tests.
 
 ## Live state
 
-Both vLLM instances are DOWN as of 18:55. GPUs 0-3 and 4-7 need a reap check
-before any launch (`bash reap-devices.sh 0,1,2,3` — never `pgrep -f <port>`,
-see below). Disk 154 G free, below the 180 G flag; the 302 GB shared segment
-cache is the reason and is the asset BT-2 proved, so it is watched, not pruned.
+All vLLM instances are down. GPUs 0-3 were reaped and reported 0 MiB before the
+last launch. Do not start another full boot: the second random-seed control
+twice reached model loading and was killed by the instance's 640 GiB cgroup
+limit (`memory.events`: `oom_kill 3`). JarvisAI credits are nearly exhausted.
+The remaining graph/control/quality experiments were deliberately dropped;
+use the existing eager, K2/K4 swap, convergence, and quality evidence.
 
-Launch either instance with:
-
-    cd runs/m5-serve
-    nohup setsid env FQ_TAG=demo1 FQ_DEVICES_ENV=0,1,2,3 FQ_FAST=1 \
-      FQ_GPUMEM=0.95 FQ_MAXLEN=8192 VLLM_FQ_LIVE_APPLY=1 \
-      bash serve-demo1.sh policy-demo1-fitted.json 8100 \
-      > results/demo1/serve-<name>.log 2>&1 < /dev/null & disown
-
-`tee` into a directory that does not exist yet fails silently and you get no
-log; `$PWD` in a tmux send-keys resolves to the *sender's* cwd.
+Disk and model assets remain under persistent `/home`. The rootfs runtime is
+ephemeral and must be restored on a replacement instance.
 
 ## What is proven, with the artifact that proves it
 
