@@ -220,6 +220,30 @@ class UnquantizedLinearMethod(LinearMethodBase):
             from vllm.model_executor.layers.utils import dispatch_cpu_unquantized_gemm
 
             dispatch_cpu_unquantized_gemm(layer, remove_weight=True)
+        # Tiny-N tall-K linears (e.g. Qwen3.5 GDN in_proj_ba, 5120x96) hand cuBLAS
+        # a TN problem at decode row counts and get a 16x16 wmma tile kernel at
+        # ~33 GB/s effective (20-28 us/call). The identical product with the weight
+        # pre-transposed to K x N runs 3.6x faster (5.6 us) at m>=2. Keep an NN
+        # copy for these shapes; ~1 MB/layer. Measured on RTX PRO 6000 Blackwell
+        # SE: Amdahl ceiling +3.89..4.24 % decode GPU time (F13); the +8.0 %
+        # local end-to-end was proot-dispatch-inflated and is retired as a claim.
+        # At m=1 cuBLAS picks a GEMV that prefers the original TN layout (6.3 vs
+        # 4.7 us), so the transpose path is gated on m>=2.
+        import os
+
+        if (
+            os.environ.get("VLLM_TINY_N_MM_TRANSPOSE", "1") != "0"
+            and getattr(layer, "weight", None) is not None
+            and layer.weight.dim() == 2
+            and layer.weight.shape[0] <= 128
+            and layer.weight.shape[1] >= 4096
+            and layer.weight.is_cuda
+        ):
+            layer.register_buffer(
+                "weight_kn",
+                layer.weight.data.t().contiguous(),
+                persistent=False,
+            )
 
     def apply(
         self,
@@ -229,6 +253,19 @@ class UnquantizedLinearMethod(LinearMethodBase):
     ) -> torch.Tensor:
         if envs.VLLM_BATCH_INVARIANT and current_platform.is_cuda_alike():
             return linear_batch_invariant(x, layer.weight, bias)
+        w_kn = getattr(layer, "weight_kn", None)
+        # Route through the pre-transposed KxN copy only at m>=2: at m=1
+        # cuBLAS runs a GEMV that is 33 % faster on the original TN layout
+        # (4.7 vs 6.3 us, F13). This covers prefill and multi-row decode
+        # (MTP verify passes) while leaving single-row decode on the fast path.
+        if (
+            w_kn is not None
+            and bias is None
+            and x.numel() > x.shape[-1]
+        ):
+            return torch.mm(x.reshape(-1, x.shape[-1]), w_kn).view(
+                *x.shape[:-1], w_kn.shape[1]
+            )
         return dispatch_unquantized_gemm()(layer, x, layer.weight, bias)
 
 
