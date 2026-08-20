@@ -533,8 +533,8 @@ class Exl3Int8EmbeddingMethod(QuantizeMethodBase):
         layer.register_buffer("q_weight", q_weight, persistent=False)
         layer.register_buffer("embed_scale", scales, persistent=False)
         layer.embed_output_dtype = dtype
-        # Native target/MTP sharing inspects ``weight.shape[-1]`` before it
-        # shares the whole module. Keep that surface without retaining storage.
+        # Preserve the generic embedding-width surface without retaining dense
+        # storage. Equality checks must use q_weight and embed_scale instead.
         layer.register_parameter(
             "weight",
             Parameter(torch.empty((0, hidden), dtype=dtype, device=device), False),
@@ -1838,6 +1838,7 @@ class Exl3Config(QuantizationConfig):
         hf_config: PretrainedConfig | None = None,
         revision: str | None = None,
     ) -> None:
+        self._require_untied_int8_embedding(hf_config)
         if _online_trellis_bits() is not None:
             self._configure_online_cache_identity(
                 model_name,
@@ -2094,6 +2095,26 @@ class Exl3Config(QuantizationConfig):
             raise ValueError("quantization_config.json has no EXL3 tensor records")
         if bad:
             raise ValueError("Invalid EXL3 tensor metadata: " + "; ".join(bad[:16]))
+
+    @staticmethod
+    def _require_untied_int8_embedding(
+        hf_config: PretrainedConfig | None,
+    ) -> None:
+        if hf_config is None or _embed_online_bits() is None:
+            return
+        configs: list[Any] = [hf_config]
+        try:
+            text_config = hf_config.get_text_config()
+        except (AttributeError, TypeError):
+            text_config = None
+        if text_config is not None and text_config is not hf_config:
+            configs.append(text_config)
+        if any(getattr(config, "tie_word_embeddings", False) for config in configs):
+            raise ValueError(
+                "VLLM_EXL3_EMBED_ONLINE_BITS=8 is incompatible with tied "
+                "word embeddings"
+            )
+
 
     def _force_independent_lm_head(self, hf_config: PretrainedConfig | None) -> None:
         if hf_config is None or not self.has_quantized_lm_head():
