@@ -34,6 +34,13 @@ def limit_draft_tokens(
             "Speculator returned unsupported draft shape "
             f"{tuple(draft_tokens.shape)}; expected a 2D tensor."
         )
+    if num_speculative_tokens == 0:
+        # The scheduler can legitimately select zero draft tokens (e.g. every
+        # scheduled request needs <=1 output token, so drafting is pure
+        # overhead). The empty-draft case a few lines below is already
+        # tolerated, so accept the zero depth that produces it rather than
+        # failing the step.
+        return draft_tokens[:, :0]
     if not 1 <= num_speculative_tokens <= max_num_speculative_tokens:
         raise RuntimeError(
             "Scheduler selected an invalid speculative-token count "

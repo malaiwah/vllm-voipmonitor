@@ -177,6 +177,14 @@ class AutoRegressiveSpeculator(DraftModelSpeculator):
     ) -> torch.Tensor:
         if num_speculative_tokens is None:
             num_speculative_tokens = self.num_speculative_steps
+        if num_speculative_tokens == 0:
+            # The scheduler may legitimately ask for zero draft tokens: e.g.
+            # every scheduled request needs <=1 output token, so speculation
+            # cannot pay off and drafting is pure overhead. Propose nothing
+            # instead of failing the whole step. (The V1 runner tolerated 0;
+            # only this V2 path raised, which made the two features
+            # incompatible.)
+            return self.draft_tokens[: input_batch.num_reqs, :0]
         if not 1 <= num_speculative_tokens <= self.num_speculative_steps:
             raise ValueError(
                 "num_speculative_tokens must be between 1 and "

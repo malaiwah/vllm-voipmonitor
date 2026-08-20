@@ -83,6 +83,8 @@ class Qwen3_5MultiTokenPredictor(nn.Module):
         self.embed_tokens = VocabParallelEmbedding(
             self.vocab_size,
             config.hidden_size,
+            quant_config=vllm_config.quant_config,
+            prefix=f"{prefix}.embed_tokens" if prefix else "mtp.embed_tokens",
         )
 
         # Workaround: mtp.fc is stored as BF16 in NVFP4 checkpoints but is
@@ -292,7 +294,20 @@ class Qwen3_5MTP(LocalArgmaxMixin, nn.Module, SupportsMultiModal):
         hidden_states: torch.Tensor,
         spec_step_idx: int = 0,
     ) -> torch.Tensor | None:
-        return self.logits_processor(self.lm_head, hidden_states)
+        # Draft-only FP4 lm_head (VLLM_EXL3_FP4_DRAFT_HEAD=1): route the draft
+        # argmax through the FP4 copy built at load; the target model's verify
+        # compute_logits never sets the flag, so verification stays K6-exact.
+        # A draft argmax flip only costs a rejected draft token (fp8_draft_head
+        # precedent). Draft/verify are separate CUDA graphs, so the flag bakes
+        # correctly into each capture.
+        lm_head = self.lm_head
+        if getattr(lm_head, "fp4_draft_weights", None) is not None:
+            lm_head._use_fp4_draft = True
+            try:
+                return self.logits_processor(lm_head, hidden_states)
+            finally:
+                lm_head._use_fp4_draft = False
+        return self.logits_processor(lm_head, hidden_states)
 
     def load_weights(self, weights: Iterable[tuple[str, torch.Tensor]]) -> set[str]:
         def remap_weight_names(weights):
