@@ -8,13 +8,13 @@ import torch
 
 import vllm.model_executor.layers.vocab_parallel_embedding as embedding_module
 import vllm.v1.spec_decode.llm_base_proposer as proposer_module
-from vllm.model_executor.layers.vocab_parallel_embedding import VocabParallelEmbedding
-
 from vllm.model_executor.layers.quantization.exl3 import (
     Exl3Config,
-    Exl3Int8EmbeddingMethod,
+    Exl3OnlineEmbeddingMethod,
+    _encode_int6_embedding,
     _encode_int8_embedding,
 )
+from vllm.model_executor.layers.vocab_parallel_embedding import VocabParallelEmbedding
 from vllm.v1.worker.gpu.spec_decode.eagle.utils import _should_share
 
 
@@ -73,6 +73,57 @@ def test_int8_chunking_is_bit_identical() -> None:
     assert torch.equal(scale_one, scale_full)
 
 
+def _dequantize_int6(
+    packed: torch.Tensor,
+    scales: torch.Tensor,
+) -> torch.Tensor:
+    prefix = packed.shape[:-1]
+    hidden = packed.shape[-1] // 3 * 4
+    triples = packed.reshape(*prefix, hidden // 4, 3).to(torch.int32)
+    values = triples[..., 0] | (triples[..., 1] << 8) | (triples[..., 2] << 16)
+    unsigned = torch.stack(
+        (
+            values & 0x3F,
+            (values >> 6) & 0x3F,
+            (values >> 12) & 0x3F,
+            (values >> 18) & 0x3F,
+        ),
+        dim=-1,
+    ).reshape(*prefix, hidden)
+    return (unsigned - 32).float() * scales.float().unsqueeze(-1)
+
+
+def test_int6_known_packing_and_round_trip_are_exact() -> None:
+    weight = torch.tensor([[-7.75, 0.0, 7.75, -0.25]])
+
+    packed, scales = _encode_int6_embedding(weight, chunk_rows=1)
+
+    assert packed.dtype == torch.uint8
+    assert scales.dtype == torch.float16
+    assert torch.equal(packed, torch.tensor([[1, 248, 127]], dtype=torch.uint8))
+    assert torch.equal(scales, torch.tensor([0.25], dtype=torch.float16))
+    assert torch.equal(_dequantize_int6(packed, scales), weight)
+
+
+def test_int6_chunking_is_bit_identical_and_uses_three_quarters_storage() -> None:
+    weight = torch.linspace(-5.0, 7.0, 11 * 12).reshape(11, 12)
+
+    q_one, scale_one = _encode_int6_embedding(weight, chunk_rows=1)
+    q_four, scale_four = _encode_int6_embedding(weight, chunk_rows=4)
+    q_full, scale_full = _encode_int6_embedding(weight, chunk_rows=64)
+
+    assert q_one.shape == (11, 9)
+    assert torch.equal(q_one, q_four)
+    assert torch.equal(q_one, q_full)
+    assert torch.equal(scale_one, scale_four)
+    assert torch.equal(scale_one, scale_full)
+
+
+def test_int6_rejects_nonpackable_hidden_size() -> None:
+    with pytest.raises(ValueError, match="divisible by 4"):
+        _encode_int6_embedding(torch.zeros((2, 6)))
+
+
 def test_quant_method_targets_exact_embedding_type_and_excludes_lm_head(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -81,16 +132,30 @@ def test_quant_method_targets_exact_embedding_type_and_excludes_lm_head(
     embedding_subclass = type("EmbeddingSubclass", (embedding_type,), {})
     config = Exl3Config()
     monkeypatch.setenv("VLLM_EXL3_EMBED_ONLINE_BITS", "8")
-
-    assert isinstance(
-        config.get_quant_method(embedding_type(), "model.embed_tokens"),
-        Exl3Int8EmbeddingMethod,
-    )
+    int8_method = config.get_quant_method(embedding_type(), "model.embed_tokens")
+    assert isinstance(int8_method, Exl3OnlineEmbeddingMethod)
+    assert int8_method.bits == 8
     assert not isinstance(
         config.get_quant_method(lm_head_type(), "lm_head"),
-        Exl3Int8EmbeddingMethod,
+        Exl3OnlineEmbeddingMethod,
     )
+    monkeypatch.setenv("VLLM_EXL3_EMBED_ONLINE_BITS", "6")
+    int6_method = config.get_quant_method(embedding_type(), "model.embed_tokens")
+    assert isinstance(int6_method, Exl3OnlineEmbeddingMethod)
+    assert int6_method.bits == 6
     assert config.get_quant_method(embedding_subclass(), "model.embed_tokens") is None
+
+
+@pytest.mark.parametrize("value", ["5", "7", "not-an-integer"])
+def test_quant_method_rejects_unsupported_embedding_width(
+    monkeypatch: pytest.MonkeyPatch,
+    value: str,
+) -> None:
+    embedding_type = type("VocabParallelEmbedding", (torch.nn.Module,), {})
+    monkeypatch.setenv("VLLM_EXL3_EMBED_ONLINE_BITS", value)
+
+    with pytest.raises(ValueError, match="unset, 0, 6, or 8"):
+        Exl3Config().get_quant_method(embedding_type(), "model.embed_tokens")
 
 
 def test_quant_method_is_inert_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -131,9 +196,7 @@ def _share_native_embedding(
     if has_own_embed_tokens is not None:
         draft_model.has_own_embed_tokens = has_own_embed_tokens
     proposer = SimpleNamespace(model=draft_model)
-    target_language_model = SimpleNamespace(
-        model=SimpleNamespace(embed_tokens=target)
-    )
+    target_language_model = SimpleNamespace(model=SimpleNamespace(embed_tokens=target))
 
     proposer_module.SpecDecodeBaseProposer._maybe_share_embeddings(
         proposer, target_language_model
@@ -212,7 +275,7 @@ def test_native_mtp_sharing_validates_width_and_quantization(
 
 
 def test_embedding_dequantizes_multidimensional_ids_and_zero_rows() -> None:
-    method = Exl3Int8EmbeddingMethod()
+    method = Exl3OnlineEmbeddingMethod(8)
     embedding = torch.nn.Module()
     weight = torch.tensor(
         [[0.0, 0.0, 0.0], [1.0, -1.0, 0.5], [2.0, 4.0, -2.0]],
@@ -232,6 +295,32 @@ def test_embedding_dequantizes_multidimensional_ids_and_zero_rows() -> None:
     assert torch.count_nonzero(output[input_ids == 0]) == 0
 
 
+def test_int6_embedding_dequantizes_multidimensional_ids_and_zero_rows() -> None:
+    method = Exl3OnlineEmbeddingMethod(6)
+    embedding = torch.nn.Module()
+    weight = torch.tensor(
+        [
+            [0.0, 0.0, 0.0, 0.0],
+            [-7.75, 0.0, 7.75, -0.25],
+            [2.0, 4.0, -2.0, 1.0],
+        ],
+        dtype=torch.float32,
+    )
+    embedding.register_parameter(
+        "weight", torch.nn.Parameter(weight.clone(), requires_grad=False)
+    )
+    method.process_weights_after_loading(embedding)
+    input_ids = torch.tensor([[0, 2], [1, 0]])
+
+    output = method.embedding(embedding, input_ids)
+    expected = _dequantize_int6(embedding.q_weight, embedding.embed_scale)[input_ids]
+
+    assert embedding.q_weight.shape == (3, 3)
+    assert output.shape == (2, 2, 4)
+    assert torch.equal(output, expected)
+    assert torch.count_nonzero(output[input_ids == 0]) == 0
+
+
 def test_vocab_parallel_int8_embedding_masks_and_all_reduces(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -243,6 +332,7 @@ def test_vocab_parallel_int8_embedding_masks_and_all_reduces(
     monkeypatch.setattr(
         embedding_module, "get_virtual_tp_vocab_padding_size", lambda size: size
     )
+
     def eager_mask(
         input_: torch.Tensor,
         org_start: int,
@@ -260,9 +350,7 @@ def test_vocab_parallel_int8_embedding_masks_and_all_reduces(
 
     monkeypatch.setattr(embedding_module, "get_masked_input_and_mask", eager_mask)
     local_outputs: list[torch.Tensor] = []
-    peer_output = torch.tensor(
-        [[[0.0, 0.0], [5.0, 6.0]], [[0.0, 0.0], [7.0, 8.0]]]
-    )
+    peer_output = torch.tensor([[[0.0, 0.0], [5.0, 6.0]], [[0.0, 0.0], [7.0, 8.0]]])
 
     def fake_all_reduce(output: torch.Tensor) -> torch.Tensor:
         local_outputs.append(output.clone())
@@ -279,12 +367,10 @@ def test_vocab_parallel_int8_embedding_masks_and_all_reduces(
         quant_config=Exl3Config(),
         prefix="model.embed_tokens",
     )
-    assert isinstance(embedding.quant_method, Exl3Int8EmbeddingMethod)
+    assert isinstance(embedding.quant_method, Exl3OnlineEmbeddingMethod)
     embedding.weight.data.zero_()
     embedding.quant_method.process_weights_after_loading(embedding)
-    embedding.q_weight.copy_(
-        torch.tensor([[2, 4], [6, 8]], dtype=torch.int8)
-    )
+    embedding.q_weight.copy_(torch.tensor([[2, 4], [6, 8]], dtype=torch.int8))
     embedding.embed_scale.fill_(0.5)
 
     output = embedding(torch.tensor([[0, 2], [1, 3]]))
@@ -304,6 +390,6 @@ def test_tied_embeddings_are_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     hf_config = SimpleNamespace(tie_word_embeddings=True)
 
     with pytest.raises(ValueError, match="tied word embeddings"):
-        Exl3Config._require_untied_int8_embedding(hf_config)
+        Exl3Config._require_untied_embedding(hf_config)
     with pytest.raises(ValueError, match="tied word embeddings"):
-        Exl3Int8EmbeddingMethod().tie_weights(torch.nn.Module(), torch.nn.Module())
+        Exl3OnlineEmbeddingMethod(8).tie_weights(torch.nn.Module(), torch.nn.Module())

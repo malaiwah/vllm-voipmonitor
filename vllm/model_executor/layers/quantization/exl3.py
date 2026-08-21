@@ -76,11 +76,12 @@ _RANK_SLICED_RUNTIMES: dict[tuple[Any, ...], dict[str, Any]] = {}
 _MIXED_TRELLIS_RUNTIMES: dict[tuple[Any, ...], dict[str, Any]] = {}
 _NEXT_RUNTIME_SCOPE_ID = 0
 _MIXED_TRELLIS_ROUTE_BLOCK_SIZE = 8
-_EMBED_INT8_CHUNK_ROWS = 16384
+_EMBED_CHUNK_ROWS = 16384
+_EMBED_INT6_EPS = 1.0e-8
 
 
 def _embed_online_bits() -> int | None:
-    """Return 8 when online int8 embeddings are enabled, otherwise None."""
+    """Return the enabled online embedding width, or None when disabled."""
     raw = os.environ.get("VLLM_EXL3_EMBED_ONLINE_BITS")
     if raw is None or not raw.strip() or raw.strip() == "0":
         return None
@@ -88,24 +89,26 @@ def _embed_online_bits() -> int | None:
         bits = int(raw)
     except ValueError:
         bits = -1
-    if bits != 8:
+    if bits not in {6, 8}:
         raise ValueError(
-            "VLLM_EXL3_EMBED_ONLINE_BITS must be unset, 0, or 8; "
-            f"got {raw!r}"
+            f"VLLM_EXL3_EMBED_ONLINE_BITS must be unset, 0, 6, or 8; got {raw!r}"
         )
     return bits
 
 
-def _encode_int8_embedding(
-    weight: torch.Tensor,
-    chunk_rows: int = _EMBED_INT8_CHUNK_ROWS,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Encode rows independently as symmetric int8 with fp16 scales."""
+def _validate_embedding_input(weight: torch.Tensor, chunk_rows: int) -> None:
     if weight.ndim != 2:
         raise ValueError(f"embedding weight must be rank 2, got {weight.ndim}")
     if chunk_rows <= 0:
         raise ValueError(f"chunk_rows must be positive, got {chunk_rows}")
 
+
+def _encode_int8_embedding(
+    weight: torch.Tensor,
+    chunk_rows: int = _EMBED_CHUNK_ROWS,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Encode rows independently as symmetric int8 with fp16 scales."""
+    _validate_embedding_input(weight, chunk_rows)
     rows, hidden = weight.shape
     q_weight = torch.empty((rows, hidden), dtype=torch.int8, device=weight.device)
     scales = torch.empty(rows, dtype=torch.float16, device=weight.device)
@@ -125,8 +128,62 @@ def _encode_int8_embedding(
     return q_weight, scales
 
 
-class Exl3Int8EmbeddingMethod(QuantizeMethodBase):
-    """Load a normal embedding, then replace its BF16 rows with int8 rows."""
+def _encode_int6_embedding(
+    weight: torch.Tensor,
+    chunk_rows: int = _EMBED_CHUNK_ROWS,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Encode signed int6 rows and pack every four values into three bytes."""
+    _validate_embedding_input(weight, chunk_rows)
+    rows, hidden = weight.shape
+    if hidden % 4:
+        raise ValueError(
+            "VLLM_EXL3_EMBED_ONLINE_BITS=6 requires hidden size divisible by 4, "
+            f"got {hidden}"
+        )
+    q_weight = torch.empty(
+        (rows, hidden // 4 * 3), dtype=torch.uint8, device=weight.device
+    )
+    scales = torch.empty(rows, dtype=torch.float16, device=weight.device)
+    for start in range(0, rows, chunk_rows):
+        stop = min(start + chunk_rows, rows)
+        chunk = weight[start:stop].to(torch.float32)
+        row_max = chunk.abs().amax(dim=1)
+        scale = row_max.clamp(min=_EMBED_INT6_EPS) / 31.0
+        unsigned = (
+            (chunk / scale.unsqueeze(1))
+            .round()
+            .clamp(-32, 31)
+            .add(32)
+            .to(torch.uint8)
+            .reshape(stop - start, hidden // 4, 4)
+            .to(torch.int32)
+        )
+        packed = (
+            unsigned[..., 0]
+            | (unsigned[..., 1] << 6)
+            | (unsigned[..., 2] << 12)
+            | (unsigned[..., 3] << 18)
+        )
+        q_weight[start:stop] = torch.stack(
+            (
+                (packed & 0xFF).to(torch.uint8),
+                ((packed >> 8) & 0xFF).to(torch.uint8),
+                ((packed >> 16) & 0xFF).to(torch.uint8),
+            ),
+            dim=-1,
+        ).reshape(stop - start, hidden // 4 * 3)
+        scales[start:stop] = scale.to(torch.float16)
+    return q_weight, scales
+
+
+class Exl3OnlineEmbeddingMethod(QuantizeMethodBase):
+    """Replace a loaded BF16 embedding with per-row int8 or packed int6."""
+
+    def __init__(self, bits: int) -> None:
+        super().__init__()
+        if bits not in {6, 8}:
+            raise ValueError(f"online embedding bits must be 6 or 8, got {bits}")
+        self.bits = bits
 
     def create_weights(
         self,
@@ -156,13 +213,15 @@ class Exl3Int8EmbeddingMethod(QuantizeMethodBase):
         rows, hidden = weight.shape
         dtype = weight.dtype
         device = weight.device
-        q_weight, scales = _encode_int8_embedding(weight)
+        encoder = _encode_int6_embedding if self.bits == 6 else _encode_int8_embedding
+        q_weight, scales = encoder(weight)
 
         del layer.weight
         del weight
         layer.register_buffer("q_weight", q_weight, persistent=False)
         layer.register_buffer("embed_scale", scales, persistent=False)
         layer.embed_output_dtype = dtype
+        layer.embed_online_bits = self.bits
         # Preserve the generic embedding-width surface without retaining dense
         # storage. Equality checks must use q_weight and embed_scale instead.
         layer.register_parameter(
@@ -172,7 +231,8 @@ class Exl3Int8EmbeddingMethod(QuantizeMethodBase):
         if device.type == "cuda":
             torch.cuda.empty_cache()
         logger.info(
-            "EXL3 int8 embedding conversion complete: rows=%d hidden=%d",
+            "EXL3 int%d embedding conversion complete: rows=%d hidden=%d",
+            self.bits,
             rows,
             hidden,
         )
@@ -185,15 +245,31 @@ class Exl3Int8EmbeddingMethod(QuantizeMethodBase):
     ) -> torch.Tensor:
         del layer, x, bias
         raise NotImplementedError(
-            "Exl3Int8EmbeddingMethod supports embedding lookup only"
+            "Exl3OnlineEmbeddingMethod supports embedding lookup only"
         )
 
     def embedding(self, layer: torch.nn.Module, input_: torch.Tensor) -> torch.Tensor:
         """Gather and dequantize using CUDA-graph-capturable tensor operations."""
         dtype = layer.embed_output_dtype
-        rows = layer.q_weight[input_].to(dtype)
         scales = layer.embed_scale[input_].to(dtype).unsqueeze(-1)
-        return rows * scales
+        if layer.embed_online_bits == 8:
+            return layer.q_weight[input_].to(dtype) * scales
+
+        packed = layer.q_weight[input_]
+        prefix_shape = packed.shape[:-1]
+        hidden = packed.shape[-1] // 3 * 4
+        packed = packed.reshape(*prefix_shape, hidden // 4, 3).to(torch.int32)
+        values = packed[..., 0] | (packed[..., 1] << 8) | (packed[..., 2] << 16)
+        unsigned = torch.stack(
+            (
+                values & 0x3F,
+                (values >> 6) & 0x3F,
+                (values >> 12) & 0x3F,
+                (values >> 18) & 0x3F,
+            ),
+            dim=-1,
+        ).reshape(*prefix_shape, hidden)
+        return (unsigned - 32).to(dtype) * scales
 
     def tie_weights(
         self,
@@ -202,7 +278,7 @@ class Exl3Int8EmbeddingMethod(QuantizeMethodBase):
     ) -> torch.nn.Module:
         del layer, embed_tokens
         raise ValueError(
-            "VLLM_EXL3_EMBED_ONLINE_BITS=8 is incompatible with tied "
+            f"VLLM_EXL3_EMBED_ONLINE_BITS={self.bits} is incompatible with tied "
             "word embeddings"
         )
 
@@ -353,12 +429,8 @@ def _load_b12x_mixed_trellis() -> Any:
     if _B12X_MIXED_TRELLIS_API is not None:
         return _B12X_MIXED_TRELLIS_API
     try:
-        module = importlib.import_module(
-            "b12x.moe._shared.kernels.w4a16.mixed_trellis"
-        )
-        prepare = importlib.import_module(
-            "b12x.moe._shared.kernels.w4a16.prepare"
-        )
+        module = importlib.import_module("b12x.moe._shared.kernels.w4a16.mixed_trellis")
+        prepare = importlib.import_module("b12x.moe._shared.kernels.w4a16.prepare")
         host = importlib.import_module("b12x.moe._shared.kernels.w4a16.host")
     except Exception as exc:
         raise RuntimeError(
@@ -538,7 +610,7 @@ class Exl3Config(QuantizationConfig):
         hf_config: PretrainedConfig | None = None,
         revision: str | None = None,
     ) -> None:
-        self._require_untied_int8_embedding(hf_config)
+        self._require_untied_embedding(hf_config)
         rank_sliced = getattr(hf_config, "hybrid_tr3_tail", None)
         if (
             isinstance(rank_sliced, dict)
@@ -738,7 +810,7 @@ class Exl3Config(QuantizationConfig):
             raise ValueError("Invalid EXL3 tensor metadata: " + "; ".join(bad[:16]))
 
     @staticmethod
-    def _require_untied_int8_embedding(
+    def _require_untied_embedding(
         hf_config: PretrainedConfig | None,
     ) -> None:
         if hf_config is None or _embed_online_bits() is None:
@@ -751,8 +823,9 @@ class Exl3Config(QuantizationConfig):
         if text_config is not None and text_config is not hf_config:
             configs.append(text_config)
         if any(getattr(config, "tie_word_embeddings", False) for config in configs):
+            bits = _embed_online_bits()
             raise ValueError(
-                "VLLM_EXL3_EMBED_ONLINE_BITS=8 is incompatible with tied "
+                f"VLLM_EXL3_EMBED_ONLINE_BITS={bits} is incompatible with tied "
                 "word embeddings"
             )
 
@@ -805,9 +878,11 @@ class Exl3Config(QuantizationConfig):
         self, layer: torch.nn.Module, prefix: str
     ) -> QuantizeMethodBase | None:
         self._require_enforce_eager()
-        if layer.__class__.__name__ == "VocabParallelEmbedding":
-            if _embed_online_bits() is not None:
-                return Exl3Int8EmbeddingMethod()
+        if (
+            layer.__class__.__name__ == "VocabParallelEmbedding"
+            and (bits := _embed_online_bits()) is not None
+        ):
+            return Exl3OnlineEmbeddingMethod(bits)
         is_lm_head = layer.__class__.__name__ == "ParallelLMHead"
         if is_lm_head and not prefix:
             prefix = "lm_head"
@@ -2600,7 +2675,7 @@ class Exl3MoEMethod(FusedMoEMethodBase):
 
 __all__ = [
     "Exl3Config",
-    "Exl3Int8EmbeddingMethod",
+    "Exl3OnlineEmbeddingMethod",
     "Exl3LinearMethod",
     "Exl3MoEMethod",
 ]
