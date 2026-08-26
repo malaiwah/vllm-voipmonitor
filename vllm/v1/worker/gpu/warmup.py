@@ -109,6 +109,11 @@ def run_mixed_prefill_decode_warmup(
         return block_ids
 
     sampling_params = SamplingParams(max_tokens=2, temperature=0.0)
+    rope_profile_factor = (
+        model_runner.request_static_yarn.factors[0]
+        if model_runner.request_static_yarn is not None
+        else None
+    )
 
     decode_prefill_output = SchedulerOutput.make_empty()
     decode_prefill_output.scheduled_new_reqs = [
@@ -122,6 +127,7 @@ def run_mixed_prefill_decode_warmup(
             num_computed_tokens=0,
             lora_request=None,
             prefill_token_ids=decode_token_ids,
+            rope_profile_factor=rope_profile_factor,
         ),
     ]
     decode_prefill_output.num_scheduled_tokens = {
@@ -152,6 +158,7 @@ def run_mixed_prefill_decode_warmup(
             num_computed_tokens=0,
             lora_request=None,
             prefill_token_ids=prefill_token_ids,
+            rope_profile_factor=rope_profile_factor,
         ),
     ]
     mixed_output.num_scheduled_tokens = {

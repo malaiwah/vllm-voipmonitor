@@ -134,7 +134,6 @@ from vllm.v1.worker.gpu.spec_decode.utils import (
 from vllm.v1.worker.gpu.states import RequestState
 from vllm.v1.worker.gpu.structured_outputs import StructuredOutputsWorker
 from vllm.v1.worker.lora_model_runner_mixin import LoRAModelRunnerMixin
-from vllm.v1.worker.rope_profiles import RequestStaticYarnConfig
 from vllm.v1.worker.utils import KVBlockZeroer, copy_kv_cache_blocks_inplace
 from vllm.v1.worker.workspace import lock_workspace, use_workspace_lane
 
@@ -222,16 +221,7 @@ class GPUModelRunner(LoRAModelRunnerMixin):
         self.max_num_tokens = self.scheduler_config.max_num_batched_tokens
         self.max_num_reqs = self.scheduler_config.max_num_seqs
         self.is_encoder_decoder = self.model_config.is_encoder_decoder
-        self.request_static_yarn = RequestStaticYarnConfig.from_model_config(
-            self.model_config
-        )
-        if self.request_static_yarn is not None:
-            self.request_static_yarn.validate_serving_config(self.vllm_config)
-            logger.info(
-                "Enabled request-static YaRN factors %s with offsets %s",
-                self.request_static_yarn.factors,
-                self.request_static_yarn.factor_offsets,
-            )
+        self.request_static_yarn = self.model_config.request_static_yarn_config
 
         self.output_copy_stream = torch.cuda.Stream(self.device)
 
@@ -1162,17 +1152,18 @@ class GPUModelRunner(LoRAModelRunnerMixin):
             max_tokens = sampling_params.max_tokens if sampling_params else 1
             rope_position_offset = 0
             if self.request_static_yarn is not None:
-                required_tokens = prompt_len + max_tokens
-                factor = self.request_static_yarn.select_factor(required_tokens)
-                rope_position_offset = self.request_static_yarn.factor_offsets[factor]
-                logger.info(
-                    "Request %s selected request-static YaRN factor %g "
-                    "(prompt=%d, max_output=%d)",
+                factor = new_req_data.rope_profile_factor
+                assert factor is not None
+                rope_position_offset = self.request_static_yarn.offset_for_factor(
+                    factor
+                )
+                logger.debug(
+                    "Request %s selected request-static YaRN factor %g",
                     req_id,
                     factor,
-                    prompt_len,
-                    max_tokens,
                 )
+            else:
+                assert new_req_data.rope_profile_factor is None
             self.req_states.add_request(
                 req_id=req_id,
                 prompt_len=prompt_len,

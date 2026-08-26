@@ -228,10 +228,6 @@ from vllm.v1.worker.gpu_input_batch import CachedRequestState, InputBatch
 from vllm.v1.worker.gpu_ubatch_wrapper import UBatchWrapper
 from vllm.v1.worker.kv_connector_model_runner_mixin import KVConnectorModelRunnerMixin
 from vllm.v1.worker.lora_model_runner_mixin import LoRAModelRunnerMixin
-from vllm.v1.worker.rope_profiles import (
-    RequestStaticYarnConfig,
-    select_request_static_yarn_factor,
-)
 from vllm.v1.worker.ubatch_utils import (
     UBatchSlices,
     check_ubatch_thresholds,
@@ -544,24 +540,17 @@ class GPUModelRunner(
         self.mm_registry = MULTIMODAL_REGISTRY
         self.uses_mrope = model_config.uses_mrope
         self.uses_xdrope_dim = model_config.uses_xdrope_dim
-        self.request_static_yarn_factors: tuple[float, ...] | None = None
-        self.request_static_yarn_factor_offsets: dict[float, int] | None = None
-        self.request_static_yarn_original_max_position: int | None = None
-        request_static_yarn = RequestStaticYarnConfig.from_model_config(
-            self.model_config
+        self.request_static_yarn = model_config.request_static_yarn_config
+        self.request_static_yarn_factors = (
+            self.request_static_yarn.factors
+            if self.request_static_yarn is not None
+            else None
         )
-        if request_static_yarn is not None:
-            request_static_yarn.validate_serving_config(self.vllm_config)
-            self.request_static_yarn_factors = request_static_yarn.factors
-            self.request_static_yarn_factor_offsets = request_static_yarn.factor_offsets
-            self.request_static_yarn_original_max_position = (
-                request_static_yarn.original_max_position
-            )
-            logger.info(
-                "Enabled request-static YaRN factors %s with offsets %s",
-                request_static_yarn.factors,
-                request_static_yarn.factor_offsets,
-            )
+        self.request_static_yarn_factor_offsets = (
+            dict(self.request_static_yarn.factor_offsets)
+            if self.request_static_yarn is not None
+            else None
+        )
         self.supports_mm_inputs = self.mm_registry.supports_multimodal_inputs(
             model_config
         )
@@ -1333,20 +1322,20 @@ class GPUModelRunner(
                 block_ids=new_req_data.block_ids,
                 num_computed_tokens=new_req_data.num_computed_tokens,
                 output_token_ids=[],
+                rope_profile_factor=new_req_data.rope_profile_factor,
                 lora_request=new_req_data.lora_request,
             )
-            if self.request_static_yarn_factors is not None:
-                req_state.rope_profile_factor = self._select_request_static_yarn_factor(
-                    req_state
-                )
-                logger.info(
-                    "Request %s selected request-static YaRN factor %g "
-                    "(prompt=%d, max_output=%d)",
+            if self.request_static_yarn is not None:
+                factor = req_state.rope_profile_factor
+                assert factor is not None
+                self.request_static_yarn.offset_for_factor(factor)
+                logger.debug(
+                    "Request %s selected request-static YaRN factor %g",
                     req_id,
-                    req_state.rope_profile_factor,
-                    req_state.num_prompt_tokens,
-                    (sampling_params.max_tokens if sampling_params is not None else 1),
+                    factor,
                 )
+            else:
+                assert req_state.rope_profile_factor is None
             self.requests[req_id] = req_state
             self.late_interaction_runner.register_request(req_id, pooling_params)
 
@@ -1998,26 +1987,6 @@ class GPUModelRunner(
 
         return encoder_seq_lens, encoder_seq_lens_cpu
 
-    def _select_request_static_yarn_factor(
-        self, req_state: CachedRequestState
-    ) -> float:
-        factors = self.request_static_yarn_factors
-        original_max_position = self.request_static_yarn_original_max_position
-        assert factors is not None
-        assert original_max_position is not None
-        max_output_tokens = (
-            req_state.sampling_params.max_tokens
-            if req_state.sampling_params is not None
-            else 1
-        )
-        assert max_output_tokens is not None
-        required_tokens = req_state.num_prompt_tokens + max_output_tokens
-        return select_request_static_yarn_factor(
-            required_tokens,
-            original_max_position,
-            factors,
-        )
-
     def _prepare_inputs(
         self,
         scheduler_output: "SchedulerOutput",
@@ -2276,6 +2245,7 @@ class GPUModelRunner(
             assert token_offsets is not None
             for req_index, req_id in enumerate(self.input_batch.req_ids[:num_reqs]):
                 factor = self.requests[req_id].rope_profile_factor
+                assert factor is not None
                 req_offsets[req_index] = self.request_static_yarn_factor_offsets[factor]
             np.take(
                 req_offsets,
@@ -5829,9 +5799,7 @@ class GPUModelRunner(
                 logprobs_tensors.logprob_token_ids[dst_slice].copy_(
                     token_ids, non_blocking=True
                 )
-                logprobs_tensors.logprobs[dst_slice].copy_(
-                    logprobs, non_blocking=True
-                )
+                logprobs_tensors.logprobs[dst_slice].copy_(logprobs, non_blocking=True)
                 logprobs_tensors.selected_token_ranks[dst_slice].copy_(
                     ranks, non_blocking=True
                 )

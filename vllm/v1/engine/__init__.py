@@ -135,6 +135,8 @@ class EngineCoreRequest(
     # request_finished hook. Used to free P-side prefill blocks when a
     # KV-transfer request is rejected on the D node before engine admission.
     abort_immediately: bool = False
+    rope_profile_factor: float | None = None
+    rope_profile_id: str | None = None
 
     @property
     def params(self) -> SamplingParams | PoolingParams:
