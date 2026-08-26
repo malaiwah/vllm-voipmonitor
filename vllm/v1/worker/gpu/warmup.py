@@ -279,6 +279,14 @@ def warmup_kernels(
         nonlocal next_block_id
         return list(range(next_block_id, next_block_id := next_block_id + num_blocks))
 
+    rope_profile_factor = None
+    rope_profile_id = None
+    if model_runner.request_static_yarn is not None:
+        rope_profile_factor = model_runner.request_static_yarn.factors[0]
+        rope_profile_id = model_runner.request_static_yarn.profile_id_for_factor(
+            rope_profile_factor
+        )
+
     # Step 1: Prefill all requests with 1 + decode_query_len prompt tokens each.
     new_reqs = [
         NewRequestData.from_request(
@@ -288,6 +296,8 @@ def warmup_kernels(
                 sampling_params,
                 pooling_params,
                 mm_features=warmup_mm_features,
+                rope_profile_factor=rope_profile_factor,
+                rope_profile_id=rope_profile_id,
             ),
             block_ids=tuple(_alloc_blocks(n) for n in prefill_block_counts),
             prefill_token_ids=prompt_token_ids,
