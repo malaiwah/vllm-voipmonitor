@@ -174,13 +174,10 @@ class RequestTracker:
         # NOTE: Initialized in `update_state_after_alloc`
         disagg_spec = tmp_disagg_tracker.pop(new_request.req_id, None)
 
-        if new_request.sampling_params:
-            request_configs = extract_request_configs(
-                new_request.sampling_params,
-                new_request.rope_profile_id,
-            )
-        else:
-            request_configs = None
+        request_configs = extract_request_configs(
+            new_request.sampling_params,
+            new_request.rope_profile_id,
+        )
 
         mm_hashes, mm_positions = extract_mm_features(new_request, modify=True)
 
@@ -1159,13 +1156,10 @@ class LMCacheConnectorV1Impl:
             apply_mm_hashes_to_token_ids(token_ids_tensor, mm_hashes, mm_positions)
             token_ids = token_ids_tensor.tolist()
 
-        if request.sampling_params:
-            request_configs = extract_request_configs(
-                request.sampling_params,
-                request.rope_profile_id,
-            )
-        else:
-            request_configs = None
+        request_configs = extract_request_configs(
+            request.sampling_params,
+            request.rope_profile_id,
+        )
 
         if self.skip_last_n_tokens > 0:
             assert token_ids is not None

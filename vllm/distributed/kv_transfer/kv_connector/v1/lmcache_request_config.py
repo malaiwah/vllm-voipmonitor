@@ -5,12 +5,13 @@ from vllm.sampling_params import SamplingParams
 
 
 def extract_request_configs(
-    sampling_params: SamplingParams,
+    sampling_params: SamplingParams | None,
     rope_profile_id: str | None = None,
 ) -> dict | None:
     request_configs = None
     if (
-        sampling_params.extra_args is not None
+        sampling_params is not None
+        and sampling_params.extra_args is not None
         and "kv_transfer_params" in sampling_params.extra_args
     ):
         kv_transfer_params = sampling_params.extra_args.get("kv_transfer_params")
