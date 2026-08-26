@@ -134,6 +134,7 @@ from vllm.v1.worker.gpu.spec_decode.utils import (
 from vllm.v1.worker.gpu.states import RequestState
 from vllm.v1.worker.gpu.structured_outputs import StructuredOutputsWorker
 from vllm.v1.worker.lora_model_runner_mixin import LoRAModelRunnerMixin
+from vllm.v1.worker.rope_profiles import RequestStaticYarnConfig
 from vllm.v1.worker.utils import KVBlockZeroer, copy_kv_cache_blocks_inplace
 from vllm.v1.worker.workspace import lock_workspace, use_workspace_lane
 
@@ -221,6 +222,16 @@ class GPUModelRunner(LoRAModelRunnerMixin):
         self.max_num_tokens = self.scheduler_config.max_num_batched_tokens
         self.max_num_reqs = self.scheduler_config.max_num_seqs
         self.is_encoder_decoder = self.model_config.is_encoder_decoder
+        self.request_static_yarn = RequestStaticYarnConfig.from_model_config(
+            self.model_config
+        )
+        if self.request_static_yarn is not None:
+            self.request_static_yarn.validate_serving_config(self.vllm_config)
+            logger.info(
+                "Enabled request-static YaRN factors %s with offsets %s",
+                self.request_static_yarn.factors,
+                self.request_static_yarn.factor_offsets,
+            )
 
         self.output_copy_stream = torch.cuda.Stream(self.device)
 
@@ -311,6 +322,11 @@ class GPUModelRunner(LoRAModelRunnerMixin):
             max_num_tokens=self.max_num_tokens,
             device=self.device,
         )
+        self.request_static_yarn_model_positions: torch.Tensor | None = None
+        if self.request_static_yarn is not None:
+            self.request_static_yarn_model_positions = torch.zeros_like(
+                self.input_buffers.positions
+            )
         if self.use_pp:
             self.pp_handler = PPHandler(
                 max_num_reqs=self.max_num_reqs,
@@ -1143,12 +1159,27 @@ class GPUModelRunner(LoRAModelRunnerMixin):
 
             prompt_len = len(new_req_data.prompt_token_ids)
             sampling_params = new_req_data.sampling_params
+            max_tokens = sampling_params.max_tokens if sampling_params else 1
+            rope_position_offset = 0
+            if self.request_static_yarn is not None:
+                required_tokens = prompt_len + max_tokens
+                factor = self.request_static_yarn.select_factor(required_tokens)
+                rope_position_offset = self.request_static_yarn.factor_offsets[factor]
+                logger.info(
+                    "Request %s selected request-static YaRN factor %g "
+                    "(prompt=%d, max_output=%d)",
+                    req_id,
+                    factor,
+                    prompt_len,
+                    max_tokens,
+                )
             self.req_states.add_request(
                 req_id=req_id,
                 prompt_len=prompt_len,
                 all_token_ids=new_req_data.prefill_token_ids,
                 num_computed_tokens=new_req_data.num_computed_tokens,
-                max_tokens=sampling_params.max_tokens if sampling_params else 1,  # type: ignore[arg-type]
+                max_tokens=max_tokens,
+                rope_position_offset=rope_position_offset,
             )
             req_index = self.req_states.req_id_to_index[req_id]
             if self.verification_capacity_manager is not None:
@@ -1321,7 +1352,20 @@ class GPUModelRunner(LoRAModelRunnerMixin):
             self.req_states.num_computed_tokens.gpu,
             self.input_buffers.positions,
             self.input_buffers.seq_lens,
+            self.request_static_yarn_model_positions,
+            (
+                self.req_states.rope_position_offset.gpu
+                if self.request_static_yarn is not None
+                else None
+            ),
         )
+        if (
+            self.request_static_yarn_model_positions is not None
+            and num_tokens_after_padding > num_tokens
+        ):
+            self.request_static_yarn_model_positions[
+                num_tokens:num_tokens_after_padding
+            ].zero_()
         seq_lens = self.input_buffers.seq_lens[:num_reqs_padded]
 
         dcp_local_seq_lens = None
@@ -1786,6 +1830,10 @@ class GPUModelRunner(LoRAModelRunnerMixin):
                 # values above.
                 **self.model_state.prepare_inputs(input_batch, self.req_states),
             }
+            if self.request_static_yarn_model_positions is not None:
+                model_inputs["positions"] = self.request_static_yarn_model_positions[
+                    : input_batch.num_tokens_after_padding
+                ]
         if not self.is_first_pp_rank:
             # Update for non-first PP ranks.
             model_inputs["input_ids"] = None

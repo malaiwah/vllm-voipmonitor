@@ -228,6 +228,10 @@ from vllm.v1.worker.gpu_input_batch import CachedRequestState, InputBatch
 from vllm.v1.worker.gpu_ubatch_wrapper import UBatchWrapper
 from vllm.v1.worker.kv_connector_model_runner_mixin import KVConnectorModelRunnerMixin
 from vllm.v1.worker.lora_model_runner_mixin import LoRAModelRunnerMixin
+from vllm.v1.worker.rope_profiles import (
+    RequestStaticYarnConfig,
+    select_request_static_yarn_factor,
+)
 from vllm.v1.worker.ubatch_utils import (
     UBatchSlices,
     check_ubatch_thresholds,
@@ -540,6 +544,24 @@ class GPUModelRunner(
         self.mm_registry = MULTIMODAL_REGISTRY
         self.uses_mrope = model_config.uses_mrope
         self.uses_xdrope_dim = model_config.uses_xdrope_dim
+        self.request_static_yarn_factors: tuple[float, ...] | None = None
+        self.request_static_yarn_factor_offsets: dict[float, int] | None = None
+        self.request_static_yarn_original_max_position: int | None = None
+        request_static_yarn = RequestStaticYarnConfig.from_model_config(
+            self.model_config
+        )
+        if request_static_yarn is not None:
+            request_static_yarn.validate_serving_config(self.vllm_config)
+            self.request_static_yarn_factors = request_static_yarn.factors
+            self.request_static_yarn_factor_offsets = request_static_yarn.factor_offsets
+            self.request_static_yarn_original_max_position = (
+                request_static_yarn.original_max_position
+            )
+            logger.info(
+                "Enabled request-static YaRN factors %s with offsets %s",
+                request_static_yarn.factors,
+                request_static_yarn.factor_offsets,
+            )
         self.supports_mm_inputs = self.mm_registry.supports_multimodal_inputs(
             model_config
         )
@@ -777,6 +799,9 @@ class GPUModelRunner(
         self.positions = torch.zeros(
             self.max_num_tokens, dtype=torch.int64, device=self.device
         )
+        self.request_static_yarn_model_positions: torch.Tensor | None = None
+        if self.request_static_yarn_factors is not None:
+            self.request_static_yarn_model_positions = torch.zeros_like(self.positions)
         self.query_start_loc = self._make_buffer(
             self.max_num_reqs + 1, dtype=torch.int32
         )
@@ -835,6 +860,15 @@ class GPUModelRunner(
             # See page 5 of https://arxiv.org/abs/2409.12191
             self.mrope_positions = self._make_buffer(
                 (3, self.max_num_tokens + 1), dtype=torch.int64
+            )
+        self.request_static_yarn_token_offsets: CpuGpuBuffer | None = None
+        self.request_static_yarn_req_offsets_np: np.ndarray | None = None
+        if self.request_static_yarn_factors is not None:
+            self.request_static_yarn_token_offsets = self._make_buffer(
+                self.max_num_tokens, dtype=torch.int64
+            )
+            self.request_static_yarn_req_offsets_np = np.zeros(
+                self.max_num_reqs, dtype=np.int64
             )
 
         # Only relevant for models using XD-RoPE (e.g, HunYuan-VL)
@@ -1040,12 +1074,16 @@ class GPUModelRunner(
                 return self.mrope_positions.gpu[:, :num_tokens]
             if self.uses_xdrope_dim > 0:
                 return self.xdrope_positions.gpu[:, :num_tokens]
+            if self.request_static_yarn_model_positions is not None:
+                return self.request_static_yarn_model_positions[:num_tokens]
             return self.positions[:num_tokens]
         else:
             if self.uses_mrope:
                 return self.mrope_positions.gpu[:, num_tokens]
             if self.uses_xdrope_dim > 0:
                 return self.xdrope_positions.gpu[:, num_tokens]
+            if self.request_static_yarn_model_positions is not None:
+                return self.request_static_yarn_model_positions[num_tokens]
             return self.positions[num_tokens]
 
     def _make_buffer(
@@ -1297,6 +1335,18 @@ class GPUModelRunner(
                 output_token_ids=[],
                 lora_request=new_req_data.lora_request,
             )
+            if self.request_static_yarn_factors is not None:
+                req_state.rope_profile_factor = self._select_request_static_yarn_factor(
+                    req_state
+                )
+                logger.info(
+                    "Request %s selected request-static YaRN factor %g "
+                    "(prompt=%d, max_output=%d)",
+                    req_id,
+                    req_state.rope_profile_factor,
+                    req_state.num_prompt_tokens,
+                    (sampling_params.max_tokens if sampling_params is not None else 1),
+                )
             self.requests[req_id] = req_state
             self.late_interaction_runner.register_request(req_id, pooling_params)
 
@@ -1948,6 +1998,26 @@ class GPUModelRunner(
 
         return encoder_seq_lens, encoder_seq_lens_cpu
 
+    def _select_request_static_yarn_factor(
+        self, req_state: CachedRequestState
+    ) -> float:
+        factors = self.request_static_yarn_factors
+        original_max_position = self.request_static_yarn_original_max_position
+        assert factors is not None
+        assert original_max_position is not None
+        max_output_tokens = (
+            req_state.sampling_params.max_tokens
+            if req_state.sampling_params is not None
+            else 1
+        )
+        assert max_output_tokens is not None
+        required_tokens = req_state.num_prompt_tokens + max_output_tokens
+        return select_request_static_yarn_factor(
+            required_tokens,
+            original_max_position,
+            factors,
+        )
+
     def _prepare_inputs(
         self,
         scheduler_output: "SchedulerOutput",
@@ -2199,17 +2269,44 @@ class GPUModelRunner(
             cu_num_tokens,
         )
 
+        token_offsets = self.request_static_yarn_token_offsets
+        if self.request_static_yarn_factor_offsets is not None:
+            req_offsets = self.request_static_yarn_req_offsets_np
+            assert req_offsets is not None
+            assert token_offsets is not None
+            for req_index, req_id in enumerate(self.input_batch.req_ids[:num_reqs]):
+                factor = self.requests[req_id].rope_profile_factor
+                req_offsets[req_index] = self.request_static_yarn_factor_offsets[factor]
+            np.take(
+                req_offsets,
+                req_indices,
+                out=token_offsets.np[:total_num_scheduled_tokens],
+            )
+            token_offsets.copy_to_gpu(total_num_scheduled_tokens)
+
         if self.uses_mrope:
             # Only relevant for models using M-RoPE (e.g, Qwen2-VL)
             self.mrope_positions.gpu[:, :total_num_scheduled_tokens].copy_(
                 self.mrope_positions.cpu[:, :total_num_scheduled_tokens],
                 non_blocking=True,
             )
+            if token_offsets is not None:
+                self.mrope_positions.gpu[:, :total_num_scheduled_tokens] += (
+                    token_offsets.gpu[:total_num_scheduled_tokens]
+                )
         elif self.uses_xdrope_dim > 0:
             # Only relevant for models using XD-RoPE (e.g, HunYuan-VL)
             self.xdrope_positions.gpu[:, :total_num_scheduled_tokens].copy_(
                 self.xdrope_positions.cpu[:, :total_num_scheduled_tokens],
                 non_blocking=True,
+            )
+        elif token_offsets is not None:
+            model_positions = self.request_static_yarn_model_positions
+            assert model_positions is not None
+            torch.add(
+                self.positions[:total_num_scheduled_tokens],
+                token_offsets.gpu[:total_num_scheduled_tokens],
+                out=model_positions[:total_num_scheduled_tokens],
             )
         if self.use_async_spec_decode and (self.uses_mrope or self.uses_xdrope_dim > 0):
             drift = self.num_computed_tokens[req_indices_gpu].to(
@@ -3655,6 +3752,10 @@ class GPUModelRunner(
             positions = self.mrope_positions.gpu[:, :num_input_tokens]
         elif self.uses_xdrope_dim > 0:
             positions = self.xdrope_positions.gpu[:, :num_input_tokens]
+        elif self.request_static_yarn_model_positions is not None:
+            positions = self.request_static_yarn_model_positions[:num_input_tokens]
+            if num_input_tokens > num_scheduled_tokens:
+                positions[num_scheduled_tokens:num_input_tokens].zero_()
         else:
             positions = self.positions[:num_input_tokens]
             if num_input_tokens > num_scheduled_tokens:
@@ -6140,6 +6241,8 @@ class GPUModelRunner(
                 positions = self.mrope_positions.gpu[:, :num_tokens_padded]
             elif self.uses_xdrope_dim > 0:
                 positions = self.xdrope_positions.gpu[:, :num_tokens_padded]
+            elif self.request_static_yarn_model_positions is not None:
+                positions = self.request_static_yarn_model_positions[:num_tokens_padded]
             else:
                 positions = self.positions[:num_tokens_padded]
 

@@ -52,12 +52,97 @@ from vllm.v1.worker.gpu.lora_utils import LoraState
 from vllm.v1.worker.gpu.mm.encoder_cache import EncoderCache
 from vllm.v1.worker.gpu.mm.lora import set_active_mm_loras
 from vllm.v1.worker.gpu_input_batch import InputBatch
-from vllm.v1.worker.gpu_model_runner import GPUModelRunner
+from vllm.v1.worker.gpu_model_runner import (
+    GPUModelRunner,
+    select_request_static_yarn_factor,
+)
+from vllm.v1.worker.rope_profiles import RequestStaticYarnConfig
 from vllm.v1.worker.utils import select_common_block_size
 
 BLOCK_SIZE = 16
 NUM_BLOCKS = 10
 DEVICE_TYPE = current_platform.device_type
+
+
+@pytest.mark.parametrize(
+    ("required_tokens", "expected_factor"),
+    [
+        (1, 1.0),
+        (262_144, 1.0),
+        (262_145, 2.0),
+        (524_288, 2.0),
+        (524_289, 4.0),
+        (1_000_000, 4.0),
+    ],
+)
+def test_select_request_static_yarn_factor(
+    required_tokens: int, expected_factor: float
+):
+    assert (
+        select_request_static_yarn_factor(
+            required_tokens,
+            262_144,
+            (1.0, 2.0, 4.0),
+        )
+        == expected_factor
+    )
+
+
+def test_request_static_yarn_config_builds_cache_offsets(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.delenv("VLLM_REQUEST_STATIC_YARN_FACTORS", raising=False)
+    model_config = SimpleNamespace(
+        hf_text_config=SimpleNamespace(
+            rope_parameters={
+                "request_static_factors": [1.0, 2.0, 4.0],
+                "original_max_position_embeddings": 262_144,
+            }
+        )
+    )
+
+    config = RequestStaticYarnConfig.from_model_config(model_config)
+
+    assert config is not None
+    assert config.factor_offsets == {
+        1.0: 0,
+        2.0: 1_048_576,
+        4.0: 3_145_728,
+    }
+    assert config.position_offset(524_289) == 3_145_728
+
+
+def test_request_static_yarn_rejects_unsafe_cache_reuse():
+    config = RequestStaticYarnConfig((1.0,), {1.0: 0}, 262_144)
+    safe_config = SimpleNamespace(
+        cache_config=SimpleNamespace(enable_prefix_caching=False),
+        kv_transfer_config=None,
+    )
+    config.validate_serving_config(safe_config)
+
+    with pytest.raises(ValueError, match="prefix caching"):
+        config.validate_serving_config(
+            SimpleNamespace(
+                cache_config=SimpleNamespace(enable_prefix_caching=True),
+                kv_transfer_config=None,
+            )
+        )
+    with pytest.raises(ValueError, match="KV transfer/offload"):
+        config.validate_serving_config(
+            SimpleNamespace(
+                cache_config=SimpleNamespace(enable_prefix_caching=False),
+                kv_transfer_config=object(),
+            )
+        )
+
+
+def test_select_request_static_yarn_factor_rejects_oversized_request():
+    with pytest.raises(ValueError, match="largest request-static YaRN profile"):
+        select_request_static_yarn_factor(
+            1_048_577,
+            262_144,
+            (1.0, 2.0, 4.0),
+        )
 
 
 def initialize_kv_cache(runner: GPUModelRunner):
