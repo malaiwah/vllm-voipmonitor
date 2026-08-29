@@ -337,7 +337,12 @@ def test_mla_dcp_manager_selects_direct_backends(monkeypatch):
 
     group = MagicMock(world_size=2)
     monkeypatch.setattr(dcp_manager, "get_dcp_group", lambda: group)
-    direct_a2a = MagicMock()
+    direct_a2a = MagicMock(
+        max_num_tokens=16,
+        world_size=2,
+        heads_per_rank=2,
+        head_dim=8,
+    )
     direct_query = MagicMock()
     direct_kv = MagicMock()
     monkeypatch.setattr(
@@ -359,7 +364,7 @@ def test_mla_dcp_manager_selects_direct_backends(monkeypatch):
         device=torch.device("cpu"),
         num_heads=2,
         query_head_dim=8,
-        output_head_dim=4,
+        output_head_dim=8,
         query_dtype=torch.bfloat16,
         output_dtype=torch.bfloat16,
         padded_num_heads=None,
@@ -368,12 +373,15 @@ def test_mla_dcp_manager_selects_direct_backends(monkeypatch):
     )
     workspace = torch.empty(96, 8)
 
-    assert manager.query_gather == direct_query.gather
+    assert isinstance(manager.query_gather, functools.partial)
+    assert manager.query_gather.func == manager._direct_workspace_query_gather
+    assert manager.query_gather.args == (direct_query,)
     manager.init_kv_gather(workspace, 64)
     gathered_kv, local_kv = torch.empty(4, 8), torch.empty(2, 8)
     manager.kv_gather(gathered_kv, local_kv)
     direct_kv.gather.assert_called_once_with(gathered_kv, local_kv)
-    output, lse = torch.empty(1), torch.empty(1)
+    output = torch.empty(1, 8, 8)[:, :4]
+    lse = torch.empty(1, 8)[:, :4]
     seq_lens = torch.ones(1, dtype=torch.int32)
     query_start_loc = torch.tensor([0, 1], dtype=torch.int32)
     manager.combine(
@@ -388,6 +396,44 @@ def test_mla_dcp_manager_selects_direct_backends(monkeypatch):
         seq_lens=seq_lens,
         query_start_loc=query_start_loc,
         is_lse_base_on_e=False,
+    )
+
+
+def test_mla_dcp_manager_falls_back_for_strided_attention_output(monkeypatch):
+    manager = object.__new__(dcp.MLADCPManager)
+    manager.group = MagicMock()
+    direct_a2a = MagicMock(
+        max_num_tokens=16,
+        world_size=2,
+        heads_per_rank=2,
+        head_dim=8,
+    )
+    partial_output = torch.empty(4, 3, 8).transpose(0, 1)
+    partial_lse = torch.empty(3, 4)
+    seq_lens = torch.ones(1, dtype=torch.int32)
+    query_start_loc = torch.tensor([0, 3], dtype=torch.int32)
+    fallback_result = torch.empty(3, 2, 8)
+    fallback_combine = MagicMock(return_value=fallback_result)
+    monkeypatch.setattr(dcp, "dcp_a2a_lse_reduce", fallback_combine)
+
+    result = manager._direct_workspace_combine(
+        direct_a2a,
+        partial_output,
+        partial_lse,
+        is_lse_base_on_e=False,
+        seq_lens=seq_lens,
+        query_start_loc=query_start_loc,
+    )
+
+    assert result is fallback_result
+    direct_a2a.lse_reduce.assert_not_called()
+    fallback_combine.assert_called_once_with(
+        partial_output,
+        partial_lse,
+        cp_group=manager.group,
+        is_lse_base_on_e=False,
+        seq_lens=seq_lens,
+        query_start_loc=query_start_loc,
     )
 
 

@@ -815,6 +815,31 @@ def reserve_query_head_storage(
 _A2A_SUPPORTED_DTYPES = (torch.float16, torch.bfloat16)
 
 
+def _direct_a2a_layout_supported(
+    partial_output: torch.Tensor,
+    partial_lse: torch.Tensor,
+    world_size: int,
+    heads_per_rank: int,
+    head_dim: int,
+) -> bool:
+    if partial_output.ndim != 3 or partial_lse.ndim != 2:
+        return False
+
+    num_tokens = partial_output.shape[0]
+    total_heads = world_size * heads_per_rank
+    return (
+        partial_output.shape == (num_tokens, total_heads, head_dim)
+        and partial_lse.shape == (num_tokens, total_heads)
+        and partial_output.stride(2) == 1
+        and partial_output.stride(1) == head_dim
+        and partial_output.stride(0) >= total_heads * head_dim
+        and partial_output.stride(0) % 8 == 0
+        and partial_lse.stride(1) == 1
+        and partial_lse.stride(0) >= total_heads
+        and head_dim % 8 == 0
+    )
+
+
 class DirectDCPA2AWorkspace(DirectCPWorkspace):
     """Persistent symmetric buffers for direct DCP output exchange."""
 
@@ -1309,16 +1334,32 @@ class MLADCPManager:
         seq_lens: torch.Tensor | None = None,
         query_start_loc: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        # Forced MQA path pass all batch tokens (including prefill) into combine,
-        # which may exceed the direct symmetric-memory workspace. Fall back to
-        # the nccl a2a combine for those cases.
-        if partial_output.shape[0] <= direct_workspace.max_num_tokens:
+        # Forced MQA may pass more tokens than fit in the symmetric workspace.
+        # Attention backends may also return head-major or otherwise strided
+        # views that the direct kernel cannot consume. The generic A2A pack
+        # kernel supports those layouts.
+        fits_workspace = 0 < partial_output.shape[0] <= direct_workspace.max_num_tokens
+        layout_supported = _direct_a2a_layout_supported(
+            partial_output,
+            partial_lse,
+            direct_workspace.world_size,
+            direct_workspace.heads_per_rank,
+            direct_workspace.head_dim,
+        )
+        if fits_workspace and layout_supported:
             return direct_workspace.lse_reduce(
                 partial_output,
                 partial_lse,
-                is_lse_base_on_e,
-                seq_lens,
-                query_start_loc,
+                seq_lens=seq_lens,
+                query_start_loc=query_start_loc,
+                is_lse_base_on_e=is_lse_base_on_e,
+            )
+        if fits_workspace:
+            logger.info_once(
+                "Falling back to NCCL DCP A2A because direct symmetric-memory "
+                "DCP A2A does not support output strides %s and LSE strides %s.",
+                partial_output.stride(),
+                partial_lse.stride(),
             )
         return dcp_a2a_lse_reduce(
             partial_output,
